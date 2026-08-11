@@ -1,22 +1,24 @@
 # Kata
 
-A personal app for learning software design fundamentals through generated C#
+A personal app for learning software design fundamentals through authored C#
 exercises. Three screens only — Curriculum → Module → Exercise — with no
-in-browser editor: a React (Vite, TypeScript) frontend against an ASP.NET Core
-minimal API, plus a small `kata verify` CLI that runs `dotnet test` in the
-learner's own IDE workspace and posts a Verification Run back to the app.
+in-browser editor: a read-only React (Vite, TypeScript) PWA served as static
+files from GitHub Pages, reading content committed to this repo and keeping the
+learner's progress in the browser's IndexedDB. No backend, no accounts, and no
+code execution — the learner clones an Exercise folder and runs `dotnet test`
+in their own IDE.
 
-Progression is checkpoint-based. A Module's Exit Gate opens only when all of its
-Exercise Test Suites are green **and** the Behavioral Checklist has been
-submitted; passing records a Checkpoint and unlocks the next Module. There are
-no timelines, streaks, schedules, scores, or grades anywhere in the system.
+Progression is Checkpoint-based. A Module's Exit Gate opens on one thing:
+Behavioral Checklist submitted — the sole condition, self-assessed. Passing
+records a Checkpoint and unlocks the next Module. There are no timelines,
+streaks, schedules, scores, or grades anywhere in the system.
 
 ## Start here
 
 | Doc | What it is |
 |---|---|
 | [`docs/design.md`](docs/design.md) | Product intent — thesis, pedagogy, curriculum, non-goals |
-| [`docs/engineering.md`](docs/engineering.md) | Architecture, the four Target Interfaces, data model, build order |
+| [`docs/engineering.md`](docs/engineering.md) | Architecture, the two Target Interfaces (`ICurriculum`, `IProgress`), content schema, storage, build order |
 | [`docs/ubiquitous-language.md`](docs/ubiquitous-language.md) | Vocabulary contract — every UI label uses these terms exactly |
 | [`design/README.md`](design/README.md) | Frontend design handoff spec — read before building any screen |
 | [`design/DevGym.dc.html`](design/DevGym.dc.html) | Interactive prototype (historical filename, visual reference only) — open in a browser as-is |
@@ -32,8 +34,8 @@ Design package complete. Implementation not started.
 
 **Resolved: Kata.** `design/brand/` held three explorations — DevGym, Praxis,
 Kata — and Kata is the adopted name. The rename landed in a single pass across
-the docs, `design/README.md`, the nav lockup, the CLI command (`kata verify`),
-and the brand mark (`design/assets/kata-mark.svg`).
+the docs, `design/README.md`, the nav lockup, and the brand mark
+(`design/assets/kata-mark.svg`).
 
 `design/DevGym.dc.html`, `design/brand/Brand DevGym.dc.html` /
 `Brand Praxis.dc.html`, `design/assets/devgym-mark.svg`, and
