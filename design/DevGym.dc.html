@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/modernist-86c43557-9db6-4330-a863-9ea3a48fad23/styles.css">
+  <script src="_ds/modernist-86c43557-9db6-4330-a863-9ea3a48fad23/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--color-bg); }
+    a { color: var(--color-accent); }
+    a:hover { color: var(--color-accent-600); }
+    @keyframes dg-pulse { 50% { opacity: 0.35; } }
+  </style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-direction: column;">
+  <div class="nav" style="background: var(--color-bg); position: sticky; top: 0; z-index: 10;">
+    <div class="nav-brand" onClick="{{ goCurriculum }}" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+      <svg width="18" height="18" viewBox="0 0 48 48" style="display: block;"><rect x="4" y="8" width="12" height="32" fill="var(--color-text)"></rect><rect x="32" y="8" width="12" height="32" fill="var(--color-text)"></rect><rect x="16" y="21" width="16" height="6" fill="var(--color-accent)"></rect></svg>
+      DevGym
+    </div>
+    <span class="text-muted" style="font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;">Checkpoints {{ checkpointCount }} / 5</span>
+  </div>
+  <main style="flex: 1;">
+    <sc-if value="{{ isCurriculum }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Curriculum" style="max-width: 1200px; margin: 0 auto; padding: 56px 40px 80px;">
+        <div style="display: grid; grid-template-columns: 1fr 340px; gap: 48px; align-items: end; padding-bottom: 36px;">
+          <div>
+            <h6 style="color: var(--color-accent); margin: 0 0 12px;">Curriculum — fixed order, foundations down</h6>
+            <h1 style="font-size: 54px; margin: 0; max-width: 15ch;">Learn design by producing code.</h1>
+          </div>
+          <p class="text-muted" style="margin: 0 0 6px; font-size: 14px;">Five Modules. Advance by passing each Exit Gate — Test Suites green at the Target Interface, Behavioral Checklist submitted. No timelines, no streaks.</p>
+        </div>
+        <sc-for list="{{ modules }}" as="m" hint-placeholder-count="5">
+          <div onClick="{{ m.open }}" style="{{ m.rowStyle }}" style-hover="background: color-mix(in srgb, var(--color-text) 4%, transparent)">
+            <div style="font-family: var(--font-heading); font-weight: 800; font-size: 30px; letter-spacing: -0.02em;">{{ m.ord }}</div>
+            <div>
+              <h3 style="font-size: 22px; margin: 0 0 4px;">{{ m.title }}</h3>
+              <p class="text-muted" style="margin: 0; font-size: 13px; max-width: 62ch;">{{ m.desc }}</p>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+              <span class="{{ m.tagClass }}">{{ m.statusText }}</span>
+              <sc-if value="{{ m.passed }}" hint-placeholder-val="{{ false }}">
+                <span class="text-muted" style="font-size: 11px;">Checkpoint · {{ m.checkpointDate }}</span>
+              </sc-if>
+            </div>
+            <div style="justify-self: end;">
+              <sc-if value="{{ m.locked }}" hint-placeholder-val="{{ false }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><rect width="18" height="11" x="3" y="11" rx="0"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </sc-if>
+              <sc-if value="{{ m.unlockedFlag }}" hint-placeholder-val="{{ true }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+        <div style="border-top: 2px solid var(--color-divider);"></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isModule }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Module" style="max-width: 1200px; margin: 0 auto; padding: 28px 40px 80px;">
+        <button class="btn btn-ghost" onClick="{{ goCurriculum }}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+          Curriculum
+        </button>
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-top: 20px; padding-bottom: 8px;">
+          <div>
+            <h6 style="color: var(--color-accent); margin: 0 0 10px;">Module {{ mod.ord }}</h6>
+            <h1 style="font-size: 44px; margin: 0; max-width: 22ch;">{{ mod.title }}</h1>
+          </div>
+          <span class="{{ mod.tagClass }}" style="margin-bottom: 8px; flex: none;">{{ mod.statusText }}</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 350px; gap: 56px; margin-top: 40px; align-items: start;">
+          <div>
+            <section>
+              <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px;">
+                <h6 style="margin: 0;">Concept Page</h6>
+                <span class="text-muted" style="font-size: 11px;">{{ mod.conceptNote }}</span>
+              </div>
+              <sc-if value="{{ mod.pending }}" hint-placeholder-val="{{ false }}">
+                <p class="text-muted" style="max-width: 60ch;">Concept Page pending — drafted by the Generator once this Module unlocks; one human edit, then frozen.</p>
+              </sc-if>
+              <sc-for list="{{ mod.conceptParas }}" as="p" hint-placeholder-count="2">
+                <p style="max-width: 66ch; font-size: 15px;">{{ p.text }}</p>
+              </sc-for>
+            </section>
+            <div class="hr" style="margin: 32px 0;"></div>
+            <section>
+              <h6 style="margin: 0 0 16px;">Model Examples</h6>
+              <sc-if value="{{ mod.pending }}" hint-placeholder-val="{{ false }}">
+                <p class="text-muted">Model Examples arrive with the Concept Page.</p>
+              </sc-if>
+              <sc-for list="{{ mod.examples }}" as="ex" hint-placeholder-count="2">
+                <figure style="margin: 0 0 28px;">
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2px; background: var(--color-divider); border: 2px solid var(--color-divider);">
+                    <div style="background: var(--color-surface); padding: 16px 18px; min-width: 0;">
+                      <div style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 8px;">Before</div>
+                      <pre style="margin: 0; font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 13px; line-height: 1.65; overflow-x: auto;">{{ ex.before }}</pre>
+                    </div>
+                    <div style="background: var(--color-surface); padding: 16px 18px; min-width: 0;">
+                      <div style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 8px;">After</div>
+                      <pre style="margin: 0; font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 13px; line-height: 1.65; overflow-x: auto;">{{ ex.after }}</pre>
+                    </div>
+                  </div>
+                  <figcaption>{{ ex.cap }}</figcaption>
+                </figure>
+              </sc-for>
+            </section>
+            <div class="hr" style="margin: 32px 0;"></div>
+            <section>
+              <h6 style="margin: 0 0 16px;">Exercises</h6>
+              <sc-if value="{{ mod.noExercises }}" hint-placeholder-val="{{ false }}">
+                <p class="text-muted">No Exercises yet — the first is generated from an Exercise Spec.</p>
+              </sc-if>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <sc-for list="{{ mod.exercises }}" as="x" hint-placeholder-count="2">
+                  <div class="card" onClick="{{ x.open }}" style="flex-direction: row; align-items: center; gap: 20px; padding: 16px 18px; cursor: pointer;" style-hover="box-shadow: var(--shadow-md)">
+                    <span class="tag tag-outline" style="flex: none;">{{ x.type }}</span>
+                    <div style="flex: 1; min-width: 0;">
+                      <div style="font-family: var(--font-heading); font-weight: 800; font-size: 16px;">{{ x.title }}</div>
+                      <div class="text-muted" style="font-size: 12px; margin-top: 3px;">{{ x.smellShort }}</div>
+                    </div>
+                    <div style="flex: none; text-align: right;">
+                      <div style="{{ x.statusStyle }}">{{ x.statusText }}</div>
+                      <div class="text-muted" style="font-size: 11px; margin-top: 2px;">{{ x.runsMeta }}</div>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none;"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+          </div>
+          <aside style="position: sticky; top: 84px; display: flex; flex-direction: column; gap: 16px;">
+            <sc-if value="{{ mod.showPoster }}" hint-placeholder-val="{{ false }}">
+              <div style="background: var(--color-accent); color: var(--color-bg); padding: 28px 24px;">
+                <h6 style="margin: 0 0 14px; color: var(--color-bg); opacity: 0.75;">Exit Gate</h6>
+                <div style="font-family: var(--font-heading); font-weight: 800; font-size: 32px; line-height: 1.05; letter-spacing: -0.01em;">Passed.</div>
+                <div style="margin-top: 16px; font-size: 13px;">Checkpoint · {{ mod.gateDate }}</div>
+                <sc-if value="{{ mod.hasNextNote }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size: 13px; margin-top: 4px;">{{ mod.nextNote }}</div>
+                </sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ mod.showPanel }}" hint-placeholder-val="{{ true }}">
+              <div style="border: 2px solid var(--color-divider); padding: 20px;">
+                <h6 style="margin: 0 0 14px;">Exit Gate</h6>
+                <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--color-divider);">
+                  <sc-if value="{{ mod.suitesOk }}" hint-placeholder-val="{{ false }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px;"><path d="M20 6 9 17l-5-5"></path></svg>
+                  </sc-if>
+                  <sc-if value="{{ mod.suitesNotOk }}" hint-placeholder-val="{{ true }}">
+                    <span style="width: 14px; height: 14px; border: 1.5px solid var(--color-neutral-400); display: inline-block; flex: none; margin-top: 3px;"></span>
+                  </sc-if>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600;">All Exercise Test Suites green</div>
+                    <div class="text-muted" style="font-size: 12px;">{{ mod.suitesLabel }}</div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--color-divider);">
+                  <sc-if value="{{ mod.checklistOk }}" hint-placeholder-val="{{ false }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px;"><path d="M20 6 9 17l-5-5"></path></svg>
+                  </sc-if>
+                  <sc-if value="{{ mod.checklistNotOk }}" hint-placeholder-val="{{ true }}">
+                    <span style="width: 14px; height: 14px; border: 1.5px solid var(--color-neutral-400); display: inline-block; flex: none; margin-top: 3px;"></span>
+                  </sc-if>
+                  <div>
+                    <div style="font-size: 13px; font-weight: 600;">Behavioral Checklist submitted</div>
+                    <div class="text-muted" style="font-size: 12px;">{{ mod.checklistLabel }}</div>
+                  </div>
+                </div>
+                <p class="text-muted" style="font-size: 12px; margin: 14px 0 0;">Checkpoint-based — advance when the gate is passed, whether that takes 2 days or 2 months.</p>
+              </div>
+            </sc-if>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isExercise }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Exercise" style="max-width: 1200px; margin: 0 auto; padding: 28px 40px 80px;">
+        <button class="btn btn-ghost" onClick="{{ goBackToModule }}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+          Module {{ ex.modOrd }}
+        </button>
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-top: 20px; padding-bottom: 8px;">
+          <div>
+            <h6 style="color: var(--color-accent); margin: 0 0 10px;">Exercise {{ ex.id }} · Module {{ ex.modOrd }}</h6>
+            <h1 style="font-size: 40px; margin: 0 0 14px; max-width: 24ch;">{{ ex.title }}</h1>
+            <div style="display: flex; gap: 8px;">
+              <span class="tag tag-outline">{{ ex.typeTag }}</span>
+              <span class="tag tag-neutral">Test Suite · {{ ex.total }} tests</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 400px; gap: 56px; margin-top: 36px; align-items: start;">
+          <div>
+            <section>
+              <h6 style="margin: 0 0 6px;">Exercise Spec</h6>
+              <div style="display: grid; grid-template-columns: 130px 1fr;">
+                <div style="padding: 10px 0; border-top: 1px solid var(--color-divider); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-neutral-600);">Concept</div>
+                <div style="padding: 10px 0; border-top: 1px solid var(--color-divider); font-size: 14px;">{{ ex.concept }}</div>
+                <div style="padding: 10px 0; border-top: 1px solid var(--color-divider); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-neutral-600);">Smell</div>
+                <div style="padding: 10px 0; border-top: 1px solid var(--color-divider); font-size: 14px;">{{ ex.smell }}</div>
+                <div style="padding: 10px 0; border-top: 1px solid var(--color-divider); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-neutral-600);">Size budget</div>
+                <div style="padding: 10px 0; border-top: 1px solid var(--color-divider); font-size: 14px;">{{ ex.budget }}</div>
+                <div style="padding: 10px 0; border-top: 1px solid var(--color-divider); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-neutral-600);">Workbench</div>
+                <div style="padding: 10px 0; border-top: 1px solid var(--color-divider); font-family: ui-monospace, Consolas, monospace; font-size: 13px;">{{ ex.wb }}</div>
+              </div>
+            </section>
+            <div class="hr" style="margin: 28px 0;"></div>
+            <section>
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <h6 style="margin: 0;">Target Interface</h6>
+                <span class="tag tag-accent">Immutable</span>
+              </div>
+              <p class="text-muted" style="font-size: 12px; max-width: 60ch; margin-bottom: 12px;">Tests are written against this and only this. Wanting to change it is a signal to record and discuss — not an allowed move.</p>
+              <pre style="margin: 0; background: var(--color-surface); border: 2px solid var(--color-divider); padding: 16px 18px; font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 12.5px; line-height: 1.6; overflow-x: auto;">{{ ex.iface }}</pre>
+            </section>
+            <div class="hr" style="margin: 28px 0;"></div>
+            <section>
+              <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px;">
+                <h6 style="margin: 0;">Behavioral Checklist</h6>
+                <span class="text-muted" style="font-size: 11px;">Module {{ ex.modOrd }} gate · behaviorally answerable only — never opinion</span>
+              </div>
+              <sc-if value="{{ cl.submitted }}" hint-placeholder-val="{{ false }}">
+                <div style="border: 2px solid var(--color-divider); padding: 18px 20px;">
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                    <span style="font-family: var(--font-heading); font-weight: 800; font-size: 14px;">Submitted · {{ cl.at }}</span>
+                  </div>
+                  <sc-for list="{{ cl.rows }}" as="r" hint-placeholder-count="3">
+                    <div style="display: grid; grid-template-columns: 1fr 110px; gap: 16px; padding: 10px 0; border-top: 1px solid var(--color-divider);">
+                      <div class="text-muted" style="font-size: 13px;">{{ r.q }}</div>
+                      <div style="font-size: 13px; font-weight: 600;">{{ r.ans }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ cl.notSubmitted }}" hint-placeholder-val="{{ true }}">
+                <div>
+                  <sc-for list="{{ cl.items }}" as="it" hint-placeholder-count="3">
+                    <div style="padding: 14px 0; border-top: 1px solid var(--color-divider);">
+                      <div style="font-size: 14px; margin-bottom: 10px; max-width: 62ch;">{{ it.q }}</div>
+                      <div style="display: flex; gap: 24px;">
+                        <label class="radio"><input type="radio" name="{{ it.inputName }}" checked="{{ it.aChecked }}" onChange="{{ it.pickA }}"><span class="dot"></span><span>{{ it.a }}</span></label>
+                        <label class="radio"><input type="radio" name="{{ it.inputName }}" checked="{{ it.bChecked }}" onChange="{{ it.pickB }}"><span class="dot"></span><span>{{ it.b }}</span></label>
+                      </div>
+                    </div>
+                  </sc-for>
+                  <button class="btn btn-primary" disabled="{{ cl.cantSubmit }}" onClick="{{ cl.submit }}" style="margin-top: 20px;">Submit Behavioral Checklist</button>
+                  <div class="text-muted" style="font-size: 11px; margin-top: 8px;">Answer all three checks to submit. Opinion checks are banned — the smell you can't see is what you're learning to see.</div>
+                </div>
+              </sc-if>
+            </section>
+          </div>
+          <aside style="position: sticky; top: 84px; display: flex; flex-direction: column; gap: 16px;">
+            <div style="border: 2px solid var(--color-divider);">
+              <div style="padding: 14px 20px; border-bottom: 2px solid var(--color-divider); display: flex; justify-content: space-between; align-items: center;">
+                <h6 style="margin: 0;">Verification</h6>
+                <sc-if value="{{ ex.hasRuns }}" hint-placeholder-val="{{ false }}">
+                  <span class="{{ ex.latestTagClass }}">{{ ex.latestTagText }}</span>
+                </sc-if>
+              </div>
+              <div style="background: var(--color-neutral-900); color: var(--color-neutral-100); padding: 14px 16px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; line-height: 1.8; overflow-x: auto;">
+                <div><span style="color: var(--color-neutral-500);">$ </span>cd {{ ex.wb }}</div>
+                <div><span style="color: var(--color-neutral-500);">$ </span>devgym verify</div>
+                <sc-if value="{{ ex.verifying }}" hint-placeholder-val="{{ false }}">
+                  <div style="animation: dg-pulse 1s infinite;">dotnet test — running…</div>
+                </sc-if>
+              </div>
+              <div style="padding: 20px;">
+                <sc-if value="{{ ex.hasRuns }}" hint-placeholder-val="{{ false }}">
+                  <div>
+                    <span style="font-family: var(--font-heading); font-weight: 800; font-size: 42px; letter-spacing: -0.02em;">{{ ex.latestP }}</span>
+                    <span class="text-muted" style="font-size: 15px;"> / {{ ex.total }} passed · latest Verification Run</span>
+                  </div>
+                  <sc-for list="{{ ex.failing }}" as="f" hint-placeholder-count="0">
+                    <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--color-accent-700);">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex: none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                      <span>{{ f.name }}</span>
+                    </div>
+                  </sc-for>
+                </sc-if>
+                <sc-if value="{{ ex.noRuns }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-family: var(--font-heading); font-weight: 800; font-size: 16px;">No Verification Runs yet.</div>
+                  <p class="text-muted" style="font-size: 12px; margin: 6px 0 0; max-width: 40ch;">Review the Test Suite before writing code — that review is itself Module 03 practice.</p>
+                </sc-if>
+                <button class="btn btn-primary" onClick="{{ ex.simulate }}" disabled="{{ ex.verifying }}" style="margin-top: 18px;">{{ ex.verifyLabel }}</button>
+                <div class="text-muted" style="font-size: 11px; margin-top: 8px;">Simulates the Verifier CLI posting a Verification Run to the app.</div>
+              </div>
+              <sc-if value="{{ ex.hasRuns }}" hint-placeholder-val="{{ false }}">
+                <table class="table">
+                  <thead>
+                    <tr><th style="padding-left: 20px;">Run</th><th>At</th><th>Result</th></tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{ ex.runsDesc }}" as="r" hint-placeholder-count="2">
+                      <tr>
+                        <td style="padding-left: 20px;">{{ r.n }}</td>
+                        <td class="text-muted">{{ r.at }}</td>
+                        <td><span style="{{ r.rstyle }}">{{ r.result }}</span></td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </sc-if>
+            </div>
+            <sc-if value="{{ ex.showGateBanner }}" hint-placeholder-val="{{ false }}">
+              <div style="background: var(--color-accent); color: var(--color-bg); padding: 18px 20px;">
+                <div style="font-family: var(--font-heading); font-weight: 800; font-size: 16px;">Exit Gate passed — Checkpoint recorded.</div>
+                <sc-if value="{{ ex.hasGateNote }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size: 13px; margin-top: 6px;">{{ ex.gateNote }}</div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;seededProgress&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Demo data&quot;},
+  &quot;verifyOutcome&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;scripted&quot;, &quot;options&quot;: [&quot;scripted&quot;, &quot;always green&quot;, &quot;always failing&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Demo data&quot;},
+  &quot;posterGate&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Treatment&quot;}
+}">
+class Component extends DCLogic {
+  state = { screen: { name: 'cur' }, runs: {}, scriptIdx: {}, checklist: {}, draft: {}, verifying: null };
+
+  CHECKS = [
+    { k: 'facts', q: 'Count what a caller must know to use this module — is it more than 3?', a: '3 or fewer', b: 'More than 3' },
+    { k: 'and', q: "State each class's responsibility in one sentence — did any need the word 'and'?", a: 'No', b: 'Yes' },
+    { k: 'rebuild', q: 'Delete the implementation — could it be rebuilt from the Target Interface and tests alone?', a: 'Yes', b: 'No' }
+  ];
+
+  MODS = [
+    {
+      id: 1, ord: '01', title: 'Deep Modules & Information Hiding',
+      desc: 'Interface is cost, functionality is benefit — good design maximizes complexity hidden per unit of interface. The generative root.',
+      concept: [
+        'A module is deep when a small interface hides a large amount of functionality. The interface is what every caller must learn — its cost; the functionality is what they get back — its benefit. Design quality is the ratio between the two.',
+        'Most of SOLID is downstream of this one idea. O, L and I are not standalone Modules here; they surface as Behavioral Checklist items once the depth habit exists.'
+      ],
+      examples: [
+        {
+          cap: 'Six caller-facing facts collapse into one call.',
+          before: '// caller pays for transport, auth, parsing\nvar client = new HttpClient();\nclient.BaseAddress = new Uri(cfg["Api:Base"]);\nclient.DefaultRequestHeaders.Add(\n    "X-Key", cfg["Api:Key"]);\nvar raw = await client.GetStringAsync(\n    "/v1/rates?c=" + code);\nvar rate = JsonDocument.Parse(raw)\n    .RootElement.GetProperty("rate")\n    .GetDecimal();',
+          after: '// one fact: ask the module\nvar rate = await rates.GetRateAsync(code, ct);\n\npublic interface IRateSource\n{\n    Task<decimal> GetRateAsync(\n        string code, CancellationToken ct);\n}'
+        },
+        {
+          cap: 'A leaked call sequence hidden behind one verb.',
+          before: 'var r = new ReportReader();\nr.Open(path);\nr.LoadBlocks();\nr.ParseHeader();\nvar report = r.Compose();\nr.Close();',
+          after: 'var report = ReportReader.Read(path);\n\n// open, load, parse, compose, close —\n// the module\'s business, not the caller\'s'
+        }
+      ],
+      exercises: [
+        {
+          id: '1a', type: 'Refactor', title: 'Collapse the config-leaking wrapper',
+          smell: 'Shallow module — the wrapper re-exposes every configuration knob it claims to hide.',
+          concept: 'Deep Modules & Information Hiding', budget: '≤ 300 LOC generated', wb: '~/devgym/workbench/01a-exporter', total: 12,
+          iface: 'public interface IExporter\n{\n    Task<ExportResult> ExportAsync(\n        ExportRequest request, CancellationToken ct);\n}\n\npublic sealed record ExportRequest(\n    ReportId Id, ExportFormat Format);\n\npublic sealed record ExportResult(\n    string Path, long Bytes);',
+          seedRuns: [
+            { at: '10 Jun 2026, 09:12', p: 7, f: 5, failing: [] },
+            { at: '11 Jun 2026, 19:55', p: 12, f: 0, failing: [] }
+          ],
+          script: [{ p: 12, f: 0, failing: [] }]
+        },
+        {
+          id: '1b', type: 'Construct', title: 'Implement TempStore behind ITempStore',
+          smell: 'None planted — construct-type: implement behind the given Target Interface.',
+          concept: 'Deep Modules & Information Hiding', budget: '≤ 300 LOC generated', wb: '~/devgym/workbench/01b-tempstore', total: 9,
+          iface: 'public interface ITempStore\n{\n    Handle Put(ReadOnlySpan<byte> data, TimeSpan ttl);\n    bool TryGet(Handle handle, out byte[] data);\n    void Evict(Handle handle);\n}',
+          seedRuns: [{ at: '12 Jun 2026, 08:40', p: 9, f: 0, failing: [] }],
+          script: [{ p: 9, f: 0, failing: [] }]
+        }
+      ],
+      seedChecklist: { at: '12 Jun 2026, 10:31', answers: { facts: '3 or fewer', and: 'No', rebuild: 'Yes' } },
+      seedCheckpoint: '12 Jun 2026'
+    },
+    {
+      id: 2, ord: '02', title: 'Dependency Direction',
+      desc: 'Coupling, cohesion and the Dependency Inversion Principle — point dependencies at stability, not detail.',
+      concept: [
+        'Dependencies should point toward stability. When high-level policy imports a low-level detail, every change to the detail ripples upward. Invert the reference: the policy declares an abstraction it owns, and the detail implements it at the edge.',
+        "Coupling and cohesion set the cost of change; the Dependency Inversion Principle sets its direction. SOLID's S and D get their real treatment in this Module."
+      ],
+      examples: [
+        {
+          cap: 'Policy stops owning the detail it depends on.',
+          before: 'public sealed class ReportService\n{\n    public async Task<Report> BuildAsync(ReportQuery q)\n    {\n        // policy owns the volatile detail\n        using var con = new SqlConnection(_cs);\n        var rows = await con\n            .QueryAsync<ReportRow>(SQL, q);\n        return Compose(rows);\n    }\n}',
+          after: 'public sealed class ReportService(\n    IReportSource source)\n{\n    public async Task<Report> BuildAsync(\n        ReportQuery q, CancellationToken ct)\n        => Compose(\n            await source.ReadRowsAsync(q, ct));\n}\n\n// SqlReportSource lives at the edge'
+        },
+        {
+          cap: 'The edge implements; the core only declares.',
+          before: 'public class OrderFlow\n{\n    public void Place(Order o)\n    {\n        Save(o);\n        // core reaches down into detail\n        new SmtpMailer().SendReceipt(o);\n    }\n}',
+          after: 'public class OrderFlow(IReceiptSink receipts)\n{\n    public void Place(Order o)\n    {\n        Save(o);\n        receipts.Deliver(o);\n    }\n}\n\n// SmtpReceiptSink registered at the root'
+        }
+      ],
+      exercises: [
+        {
+          id: '2a', type: 'Refactor', title: 'Un-wire ReportService from SqlClient',
+          smell: 'High-level policy constructs its own low-level detail — ReportService news up SqlConnection and embeds SQL.',
+          concept: 'Dependency Direction', budget: '≤ 300 LOC generated', wb: '~/devgym/workbench/02a-report-source', total: 11,
+          iface: 'public interface IReportSource\n{\n    Task<IReadOnlyList<ReportRow>> ReadRowsAsync(\n        ReportQuery query, CancellationToken ct);\n}\n\npublic sealed record ReportQuery(\n    DateOnly From, DateOnly To, string Region);\n\npublic sealed record ReportRow(\n    string Sku, int Units, decimal Net);',
+          seedRuns: [
+            { at: '9 Aug 2026, 18:42', p: 5, f: 6, failing: [] },
+            { at: '10 Aug 2026, 21:07', p: 9, f: 2, failing: ['ReportService_has_no_SqlClient_reference', 'BuildAsync_honors_cancellation'] }
+          ],
+          script: [{ p: 11, f: 0, failing: [] }]
+        },
+        {
+          id: '2b', type: 'Construct', title: 'Route notifications behind INotificationSink',
+          smell: 'None planted — construct-type: implement behind the given Target Interface.',
+          concept: 'Dependency Direction', budget: '≤ 300 LOC generated', wb: '~/devgym/workbench/02b-notification-router', total: 8,
+          iface: 'public interface INotificationSink\n{\n    Task DeliverAsync(\n        Notification n, CancellationToken ct);\n}\n\npublic interface INotificationRouter\n{\n    void Register(string topic, INotificationSink sink);\n    Task PublishAsync(\n        string topic, Notification n, CancellationToken ct);\n}',
+          seedRuns: [],
+          script: [
+            { p: 6, f: 2, failing: ['PublishAsync_fans_out_to_every_registered_sink', 'Register_rejects_duplicate_registration'] },
+            { p: 8, f: 0, failing: [] }
+          ]
+        }
+      ]
+    },
+    { id: 3, ord: '03', title: 'Testing at Boundaries + the TDD Loop', desc: 'Test the Target Interface, never the internals; small steps as the speed limit. Your permanent verification skill.', concept: [], examples: [], exercises: [], pending: true },
+    { id: 4, ord: '04', title: 'Naming & Ubiquitous Language', desc: 'The cheapest, highest-leverage habit — and it directly improves every AI collaboration.', concept: [], examples: [], exercises: [], pending: true },
+    { id: 5, ord: '05', title: 'Error Design', desc: 'Define errors out of existence; API design for backend .NET work.', concept: [], examples: [], exercises: [], pending: true }
+  ];
+
+  now() { const d = new Date(); return 'Today, ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  effRuns(x, seeded) { return ((seeded && x.seedRuns) || []).concat(this.state.runs[x.id] || []); }
+  latest(rs) { return rs.length ? rs[rs.length - 1] : null; }
+  green(x, seeded) { const l = this.latest(this.effRuns(x, seeded)); return !!l && l.f === 0; }
+  clOf(m, seeded) { return this.state.checklist[m.id] || ((seeded && m.seedChecklist) || null); }
+  isPassed(m, seeded) { return m.exercises.length > 0 && m.exercises.every(x => this.green(x, seeded)) && !!this.clOf(m, seeded); }
+
+  simVerify(x) {
+    if (this.state.verifying) return;
+    this.setState({ verifying: x.id });
+    setTimeout(() => {
+      this.setState(s => {
+        const mode = this.props.verifyOutcome ?? 'scripted';
+        const idx = s.scriptIdx[x.id] ?? 0;
+        let step;
+        if (mode === 'always green') step = { p: x.total, f: 0, failing: [] };
+        else if (mode === 'always failing') step = x.script.find(t => t.f > 0) || { p: x.total - 1, f: 1, failing: ['forced_failing_run'] };
+        else step = x.script[Math.min(idx, x.script.length - 1)];
+        const run = { at: this.now(), p: step.p, f: step.f, failing: step.failing || [] };
+        return {
+          verifying: null,
+          scriptIdx: { ...s.scriptIdx, [x.id]: idx + 1 },
+          runs: { ...s.runs, [x.id]: [...(s.runs[x.id] || []), run] }
+        };
+      });
+    }, 900);
+  }
+  pick(mid, k, label) {
+    this.setState(s => {
+      const d = s.draft[mid] || { answers: {} };
+      return { draft: { ...s.draft, [mid]: { ...d, answers: { ...d.answers, [k]: label } } } };
+    });
+  }
+  submitCl(mid) {
+    const d = this.state.draft[mid] || { answers: {} };
+    this.setState(s => ({ checklist: { ...s.checklist, [mid]: { answers: d.answers, at: this.now() } } }));
+  }
+
+  statusFor(m, locked, passed, seeded) {
+    if (passed) return { text: 'Exit Gate passed', tag: 'tag tag-accent' };
+    if (locked) return { text: 'Locked', tag: 'tag tag-neutral' };
+    const started = m.exercises.some(x => this.effRuns(x, seeded).length > 0) || !!this.clOf(m, seeded) || !!this.state.draft[m.id];
+    return started ? { text: 'In progress', tag: 'tag tag-outline' } : { text: 'Ready to start', tag: 'tag tag-neutral' };
+  }
+
+  exStatus(x, seeded) {
+    const runs = this.effRuns(x, seeded);
+    const l = this.latest(runs);
+    const base = { fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '14px' };
+    if (!l) return { text: 'No runs yet', style: { ...base, color: 'var(--color-neutral-500)' }, meta: 'Fresh — review the Test Suite' };
+    if (l.f === 0) return { text: 'Green · ' + l.p + ' / ' + x.total, style: { ...base, color: 'var(--color-text)' }, meta: runs.length + ' Verification Run' + (runs.length === 1 ? '' : 's') };
+    return { text: 'Failing · ' + l.p + ' / ' + x.total, style: { ...base, color: 'var(--color-accent-700)' }, meta: runs.length + ' Verification Run' + (runs.length === 1 ? '' : 's') };
+  }
+
+  renderVals() {
+    const seeded = this.props.seededProgress ?? true;
+    const posterOn = this.props.posterGate ?? true;
+    const mods = this.MODS;
+    const passedArr = mods.map(m => this.isPassed(m, seeded));
+    const unlockedArr = mods.map((m, i) => i === 0 || passedArr[i - 1]);
+    const scr = this.state.screen;
+
+    const modules = mods.map((m, i) => {
+      const locked = !unlockedArr[i], passed = passedArr[i];
+      const st = this.statusFor(m, locked, passed, seeded);
+      return {
+        ord: m.ord, title: m.title, desc: m.desc,
+        locked, unlockedFlag: !locked, passed,
+        tagClass: st.tag, statusText: st.text,
+        checkpointDate: passed ? ((seeded && m.seedCheckpoint && !this.state.checklist[m.id]) ? m.seedCheckpoint : 'Today') : '',
+        rowStyle: {
+          borderTop: '2px solid var(--color-divider)', padding: '24px 8px', display: 'grid',
+          gridTemplateColumns: '104px 1fr 230px 36px', gap: '24px', alignItems: 'center',
+          cursor: locked ? 'not-allowed' : 'pointer', opacity: locked ? 0.5 : 1
+        },
+        open: () => { if (!locked) this.setState({ screen: { name: 'mod', mid: m.id } }); }
+      };
+    });
+
+    let mod = null, ex = null, cl = null;
+    const buildGate = (m, i) => {
+      const passed = passedArr[i];
+      const greens = m.exercises.filter(x => this.green(x, seeded)).length;
+      const sub = this.clOf(m, seeded);
+      const next = mods[i + 1];
+      const livePassed = passed && !!this.state.checklist[m.id];
+      return {
+        passed, suitesOk: m.exercises.length > 0 && greens === m.exercises.length, checklistOk: !!sub,
+        suitesLabel: m.exercises.length ? greens + ' of ' + m.exercises.length + ' Exercise suites green' : 'No Exercises generated yet',
+        checklistLabel: sub ? 'Submitted · ' + (sub.at || '') : 'Not yet submitted',
+        gateDate: (seeded && m.seedCheckpoint && !livePassed) ? m.seedCheckpoint : 'Today',
+        nextNote: passed && next ? 'Module ' + next.ord + ' — ' + next.title + ' unlocked.' : ''
+      };
+    };
+
+    if (scr.name === 'mod' || scr.name === 'ex') {
+      const i = mods.findIndex(m => m.id === scr.mid);
+      const m = mods[i];
+      const st = this.statusFor(m, !unlockedArr[i], passedArr[i], seeded);
+      const g = buildGate(m, i);
+      mod = {
+        ord: m.ord, title: m.title, tagClass: st.tag, statusText: st.text,
+        pending: !!m.pending, conceptNote: m.pending ? '' : 'LLM first draft · human-edited once · frozen',
+        conceptParas: m.concept.map(t => ({ text: t })),
+        examples: m.examples,
+        noExercises: m.exercises.length === 0,
+        exercises: m.exercises.map(x => {
+          const s = this.exStatus(x, seeded);
+          return {
+            type: x.type, title: x.title, smellShort: x.smell,
+            statusText: s.text, statusStyle: s.style, runsMeta: s.meta,
+            open: () => this.setState({ screen: { name: 'ex', mid: m.id, exId: x.id } })
+          };
+        }),
+        showPoster: g.passed && posterOn, showPanel: !(g.passed && posterOn),
+        suitesOk: g.suitesOk, suitesNotOk: !g.suitesOk,
+        checklistOk: g.checklistOk, checklistNotOk: !g.checklistOk,
+        suitesLabel: g.suitesLabel, checklistLabel: g.checklistLabel,
+        gateDate: g.gateDate, nextNote: g.nextNote, hasNextNote: !!g.nextNote
+      };
+    }
+
+    if (scr.name === 'ex') {
+      const i = mods.findIndex(m => m.id === scr.mid);
+      const m = mods[i];
+      const x = m.exercises.find(e => e.id === scr.exId);
+      const runs = this.effRuns(x, seeded);
+      const l = this.latest(runs);
+      const g = buildGate(m, i);
+      const verifying = this.state.verifying === x.id;
+      ex = {
+        id: x.id, modOrd: m.ord, title: x.title, typeTag: x.type + '-type',
+        concept: x.concept, smell: x.smell, budget: x.budget, wb: x.wb, iface: x.iface, total: x.total,
+        hasRuns: runs.length > 0, noRuns: runs.length === 0,
+        latestP: l ? l.p : 0,
+        failing: l ? l.failing.map(n => ({ name: n })) : [],
+        latestTagClass: l && l.f === 0 ? 'tag tag-neutral' : 'tag tag-outline',
+        latestTagText: l ? (l.f === 0 ? 'Green' : 'Failing') : '',
+        verifying, verifyLabel: verifying ? 'Running…' : 'Simulate verify run',
+        simulate: () => this.simVerify(x),
+        runsDesc: runs.map((r, n) => ({
+          n: '#' + (n + 1), at: r.at,
+          result: r.p + ' / ' + x.total + (r.f === 0 ? ' · green' : ' · failing'),
+          rstyle: { fontWeight: 600, color: r.f === 0 ? 'var(--color-text)' : 'var(--color-accent-700)' }
+        })).reverse(),
+        showGateBanner: g.passed, gateNote: g.nextNote, hasGateNote: !!g.nextNote
+      };
+      const sub = this.clOf(m, seeded);
+      const draft = this.state.draft[m.id] || { answers: {} };
+      cl = sub ? {
+        submitted: true, notSubmitted: false, at: sub.at || '',
+        rows: this.CHECKS.map(c => ({ q: c.q, ans: (sub.answers || {})[c.k] || '—' })),
+        items: [], cantSubmit: true, submit: () => {}
+      } : {
+        submitted: false, notSubmitted: true, at: '', rows: [],
+        items: this.CHECKS.map(c => ({
+          q: c.q, a: c.a, b: c.b, inputName: 'chk-' + m.id + '-' + c.k,
+          aChecked: draft.answers[c.k] === c.a, bChecked: draft.answers[c.k] === c.b,
+          pickA: () => this.pick(m.id, c.k, c.a), pickB: () => this.pick(m.id, c.k, c.b)
+        })),
+        cantSubmit: !this.CHECKS.every(c => draft.answers[c.k]), submit: () => this.submitCl(m.id)
+      };
+    }
+
+    return {
+      isCurriculum: scr.name === 'cur', isModule: scr.name === 'mod', isExercise: scr.name === 'ex',
+      checkpointCount: passedArr.filter(Boolean).length,
+      goCurriculum: () => this.setState({ screen: { name: 'cur' } }),
+      goBackToModule: () => this.setState({ screen: { name: 'mod', mid: scr.mid } }),
+      modules, mod, ex, cl
+    };
+  }
+}
+</script>
+</body>
+</html>
