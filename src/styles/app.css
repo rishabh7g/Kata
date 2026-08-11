@@ -1,0 +1,58 @@
+/* App layer — the frame the screens sit in.
+ *
+ * design/styles.css is the design system and the single source of styling
+ * truth; this file only adds the app-layer layout design/tokens.json § layout
+ * carries (container, gutter, nav chrome). Never hard-code a hex or px the
+ * tokens already carry — reference the CSS variables styles.css defines.
+ */
+
+:root {
+  /* Mirrors design/tokens.json § layout. */
+  --layout-container-max: 1200px;
+  --layout-gutter: 40px;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* tokens.json layout.nav: sticky top 0, border-bottom 2px divider, bg ground.
+   The rule and the flex row come from .nav in design/styles.css. */
+.app-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-bg);
+}
+
+/* .nav-brand already carries the heading font, weight 800 and margin-right:auto;
+   the size is re-stated here because `.nav a` in styles.css is more specific
+   than `.nav-brand` and would drop the lockup to 14px.
+   design/README.md § Brand: 18px mark + "Kata" in Archivo 800 / 18px. */
+.app-nav .app-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+}
+
+/* design/README.md § Brand: CHECKPOINTS n / 5 — 12px uppercase, 55% ink
+   (the 55% comes from .text-muted in design/styles.css). */
+.app-nav-checkpoints {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-main {
+  flex: 1;
+}
+
+/* design/README.md § Screens: max-width 1200px, 40px gutters, flush left. */
+.app-container {
+  max-width: var(--layout-container-max);
+  margin: 0 auto;
+  padding: 56px var(--layout-gutter) 80px;
+}
