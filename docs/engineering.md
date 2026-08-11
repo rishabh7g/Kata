@@ -1,4 +1,4 @@
-# DevGym — Engineering
+# Kata — Engineering
 
 Stack matches your day job so the practice transfers: **ASP.NET Core (minimal API) + SQLite + React (Vite, TypeScript)**. Runs entirely on localhost. Terms per `ubiquitous-language.md`.
 
@@ -45,7 +45,7 @@ Depth check applied to our own design: 4 interfaces, 9 methods total, hiding LLM
 
 - **API layer** — thin minimal-API endpoints mapping 1:1 onto the four interfaces. No logic.
 - **React frontend** — three screens only: Curriculum (module list + lock state), Module (concept page, examples, exercise cards, gate status), Exercise (spec, target interface, checklist form, verification history). No editor.
-- **Verifier CLI** — `devgym verify` run inside a Workbench folder: executes `dotnet test --logger trx`, parses results, POSTs a Verification Run to `localhost` API. ~100 lines; the only moving part outside the web app.
+- **Verifier CLI** — `kata verify` run inside a Workbench folder: executes `dotnet test --logger trx`, parses results, POSTs a Verification Run to `localhost` API. ~100 lines; the only moving part outside the web app.
 - **Generator implementation** — calls Anthropic API. Output contract is strict JSON: `{ files: [{path, content}], testFiles: [...], smellNotes }`. Tests are generated against the Target Interface *from the Exercise Spec*, never from the generated flawed code (prevents tests that bless the smell).
 
 ## Data model (SQLite)
@@ -61,7 +61,7 @@ Depth check applied to our own design: 4 interfaces, 9 methods total, hiding LLM
 ## Key flows
 
 1. **Generate Exercise**: pick Module → app builds Exercise Spec → `IGenerator.GenerateExerciseAsync` → stored → `IWorkbench.Materialize` → path shown to learner.
-2. **Work loop**: learner edits in IDE → `devgym verify` → Verification Run recorded → frontend polls gate status.
+2. **Work loop**: learner edits in IDE → `kata verify` → Verification Run recorded → frontend polls gate status.
 3. **Pass gate**: all suites green + checklist submitted → `IProgress` writes Checkpoint → next Module unlocks.
 
 ## Build order (Pareto: thinnest end-to-end slice first)

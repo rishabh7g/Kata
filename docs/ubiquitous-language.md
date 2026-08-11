@@ -1,4 +1,4 @@
-# Ubiquitous Language — DevGym
+# Ubiquitous Language — Kata
 
 Keep this file open during all planning and prompting sessions. Every PRD, prompt, commit message, and interface name uses these terms exactly. If a concept isn't here, name it here first, then use it.
 
@@ -21,7 +21,7 @@ Keep this file open during all planning and prompting sessions. Every PRD, promp
 ## System terms
 
 - **Generator** — the component that calls the LLM to produce Concept Pages and Exercises from Exercise Specs.
-- **Verifier CLI** — local command-line companion (`devgym verify`) that runs `dotnet test` in an Exercise folder and posts a Verification Run to the app.
+- **Verifier CLI** — local command-line companion (`kata verify`) that runs `dotnet test` in an Exercise folder and posts a Verification Run to the app.
 - **Workbench** — the local folder where an Exercise's codebase is materialized for the learner to edit in their own IDE.
 
 ## Banned / disambiguated terms

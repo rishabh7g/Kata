@@ -3,7 +3,7 @@
 A personal app for learning software design fundamentals through generated C#
 exercises. Three screens only — Curriculum → Module → Exercise — with no
 in-browser editor: a React (Vite, TypeScript) frontend against an ASP.NET Core
-minimal API, plus a small `devgym verify` CLI that runs `dotnet test` in the
+minimal API, plus a small `kata verify` CLI that runs `dotnet test` in the
 learner's own IDE workspace and posts a Verification Run back to the app.
 
 Progression is checkpoint-based. A Module's Exit Gate opens only when all of its
@@ -19,7 +19,7 @@ no timelines, streaks, schedules, scores, or grades anywhere in the system.
 | [`docs/engineering.md`](docs/engineering.md) | Architecture, the four Target Interfaces, data model, build order |
 | [`docs/ubiquitous-language.md`](docs/ubiquitous-language.md) | Vocabulary contract — every UI label uses these terms exactly |
 | [`design/README.md`](design/README.md) | Frontend design handoff spec — read before building any screen |
-| [`design/DevGym.dc.html`](design/DevGym.dc.html) | Interactive prototype — open in a browser as-is |
+| [`design/DevGym.dc.html`](design/DevGym.dc.html) | Interactive prototype (historical filename, visual reference only) — open in a browser as-is |
 | [`design/screens/`](design/screens/) | Captured states 01–06 (Curriculum, Module, Exercise) |
 | [`design/issue-guide.md`](design/issue-guide.md) | How to write issues against this design |
 | [`design/tokens.json`](design/tokens.json) + [`design/styles.css`](design/styles.css) | Design tokens and the shipping stylesheet |
@@ -30,19 +30,15 @@ Design package complete. Implementation not started.
 
 ## Naming
 
-**Open decision — settle before implementation starts.** This repo is named
-**Kata**, but the entire design package uses **DevGym**: all three docs, the
-prototype (`design/DevGym.dc.html`), the brand mark
-(`design/assets/devgym-mark.svg`), and the CLI command (`devgym verify`).
+**Resolved: Kata.** `design/brand/` held three explorations — DevGym, Praxis,
+Kata — and Kata is the adopted name. The rename landed in a single pass across
+the docs, `design/README.md`, the nav lockup, the CLI command (`kata verify`),
+and the brand mark (`design/assets/kata-mark.svg`).
 
-`design/README.md` argues for keeping DevGym — it is "already the name across
-the docs and the CLI; renaming would break the ubiquitous language."
-`design/brand/` holds three explorations (DevGym · Praxis · Kata) if the
-question is still open.
-
-Nothing has been renamed. Pick one name first, then rename in a single
-deliberate pass — the ubiquitous language is a contract, so a half-applied
-rename is worse than either option.
+`design/DevGym.dc.html`, `design/brand/Brand DevGym.dc.html` /
+`Brand Praxis.dc.html`, `design/assets/devgym-mark.svg`, and
+`design/screens/*.png` keep their old filenames — historical visual reference
+only, not re-captured or renamed.
 
 ## How work happens
 

@@ -1,7 +1,7 @@
-# Handoff: DevGym — Curriculum, Module & Exercise screens
+# Handoff: Kata — Curriculum, Module & Exercise screens
 
 ## Overview
-DevGym is a personal app for learning software design fundamentals through generated C# exercises. This package hands off the full frontend design: three screens (Curriculum → Module → Exercise), all progression states, brand, and tokens. Product intent lives in `docs/design.md`, architecture and Target Interfaces in `docs/engineering.md`, and the vocabulary contract in `docs/ubiquitous-language.md` — every label in the UI uses those terms exactly.
+Kata is a personal app for learning software design fundamentals through generated C# exercises. This package hands off the full frontend design: three screens (Curriculum → Module → Exercise), all progression states, brand, and tokens. Product intent lives in `docs/design.md`, architecture and Target Interfaces in `docs/engineering.md`, and the vocabulary contract in `docs/ubiquitous-language.md` — every label in the UI uses those terms exactly.
 
 ## About the design files
 `DevGym.dc.html` is a **design reference created in HTML** — a working prototype showing intended look and behavior, not production code. The task is to **recreate it in the target stack from `docs/engineering.md`: React (Vite, TypeScript)** against the ASP.NET Core minimal API, using `styles.css` from this folder as the real stylesheet. (The prototype is self-contained — `_ds/` and `support.js` travel with this folder — so it opens in a browser as-is; `screens/` captures are the quick visual index.)
@@ -10,9 +10,10 @@ DevGym is a personal app for learning software design fundamentals through gener
 **High-fidelity.** Colors, type, spacing, rules, and states are final. Recreate pixel-close; `styles.css` + `tokens.json` carry every value — never hard-code a hex or px the tokens already carry.
 
 ## Brand
-- **Name: DevGym** — already the name across the docs and the CLI (`devgym verify`); renaming would break the ubiquitous language.
-- **Mark:** `assets/devgym-mark.svg` — a barbell built from two deep modules (ink) joined by the thinnest possible interface (accent). Ink + accent only; never recolor, never round.
-- **Nav lockup:** 18px mark + "DevGym" in Archivo 800 / 18px, flush left. Right side: `CHECKPOINTS n / 5` in 12px uppercase, 55% ink.
+- **Name: Kata** — the owner's decision, chosen from the three brand explorations in `design/brand/` (DevGym · Praxis · Kata). `brand/Brand Kata.dc.html` is the adopted brand card.
+- **Mark:** `assets/kata-mark.svg` — three steps climbing (ink) to an accent square: the TDD speed limit, the accent square is the gate passed. Ink + accent only; never recolor, never round.
+- **Nav lockup:** 18px mark + "Kata" in Archivo 800 / 18px, flush left. Right side: `CHECKPOINTS n / 5` in 12px uppercase, 55% ink.
+- **Historical reference:** `DevGym.dc.html`, `brand/Brand DevGym.dc.html` / `Brand Praxis.dc.html`, `assets/devgym-mark.svg`, and `screens/*.png` keep the old name — not re-captured or edited, kept only as visual reference to prior states.
 
 ## Screens
 Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everything flush left. Zero corner radius anywhere.
@@ -39,7 +40,7 @@ Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everyth
 - **Exercise Spec:** definition grid `130px 1fr`, 1px top rule per row — Concept / Smell / Size budget / Workbench (mono 13px).
 - **Target Interface:** h6 + `Immutable` accent tag, warning note (12px muted), then the C# block: surface fill, 2px divider border, 16/18 padding, 12.5px/1.6 mono. Content is read-only — the learner may never edit it.
 - **Behavioral Checklist:** module-level, three checks, radio pairs (`.radio`), primary submit disabled until all three answered. No free-text field. Submitted → 2px-bordered read-only panel: check + `Submitted · time` (14px/800), then question/answer rows (1px rules, answers 600 weight).
-- **Verification aside:** sticky, 2px-bordered. Header row (h6 + `Green`/`Failing` tag) over a terminal block (neutral-900 bg, neutral-100 text, 12px/1.8 mono, `$` prompts in neutral-500) showing `cd <workbench>` + `devgym verify`, and a pulsing `dotnet test — running…` line while a run is pending. Result area: latest run as `{passed}` 42px/800 + `/ n passed · latest Verification Run`; failing test names listed in 12px mono accent-700 with x icons. Fresh state: "No Verification Runs yet." + review-the-Test-Suite note. Below: `.table` history — Run / At / Result (`9 / 11 · failing` accent-700, `· green` ink), newest first.
+- **Verification aside:** sticky, 2px-bordered. Header row (h6 + `Green`/`Failing` tag) over a terminal block (neutral-900 bg, neutral-100 text, 12px/1.8 mono, `$` prompts in neutral-500) showing `cd <workbench>` + `kata verify`, and a pulsing `dotnet test — running…` line while a run is pending. Result area: latest run as `{passed}` 42px/800 + `/ n passed · latest Verification Run`; failing test names listed in 12px mono accent-700 with x icons. Fresh state: "No Verification Runs yet." + review-the-Test-Suite note. Below: `.table` history — Run / At / Result (`9 / 11 · failing` accent-700, `· green` ink), newest first.
 - **Gate banner:** when the gate passes, an accent block under the aside: "Exit Gate passed — Checkpoint recorded." + next Module line.
 
 ## Interactions & behavior
@@ -57,7 +58,7 @@ Screen-local state maps 1:1 onto the four Target Interfaces (`docs/engineering.m
 `styles.css` (ship it) and `tokens.json` (mirror + app-layer values: layout grids, type scale, code sizes, semantics). Key semantics: red = emphasis and attention — primary action, failing text (accent-700), passed-gate poster; passing = ink + check; locked = 50% opacity. Never a green/red traffic pair.
 
 ## Assets
-- `assets/devgym-mark.svg` — brand mark (also the favicon source).
+- `assets/kata-mark.svg` — brand mark (also the app-icon/favicon source). `assets/devgym-mark.svg` stays in place as a historical artifact, no longer used.
 - Icons: [Lucide](https://lucide.dev), 2px stroke, currentColor — used: arrow-right, arrow-left, lock, check, x.
 - No photography in the app. If any is ever added it prints grayscale.
 
@@ -66,9 +67,10 @@ Screen-local state maps 1:1 onto the four Target Interfaces (`docs/engineering.m
 - `issue-guide.md` — how to write GitHub issues against this design
 - `styles.css` — the design-system stylesheet (tokens + component classes)
 - `tokens.json` — machine-readable tokens
-- `assets/devgym-mark.svg`
-- `screens/01…06-state.png` — captured states: 01 Curriculum · 02 Module 01 passed (poster) · 03 Module 02 in progress · 04 Exercise 2a failing · 05 Exercise 2b fresh · 06 Exercise 1a checklist submitted
-- `DevGym.dc.html` — the interactive prototype (open in a browser as-is)
-- `brand/` — brand explorations (DevGym · Praxis · Kata cards)
+- `assets/kata-mark.svg` — the Kata brand mark (current)
+- `assets/devgym-mark.svg` — historical artifact, kept for reference, no longer used
+- `screens/01…06-state.png` — captured states: 01 Curriculum · 02 Module 01 passed (poster) · 03 Module 02 in progress · 04 Exercise 2a failing · 05 Exercise 2b fresh · 06 Exercise 1a checklist submitted (historical filenames, kept as visual reference, not re-captured)
+- `DevGym.dc.html` — the interactive prototype (open in a browser as-is; historical filename, kept as visual reference, not re-captured or edited)
+- `brand/` — brand explorations: `Brand Kata.dc.html` is the adopted card; `Brand DevGym.dc.html` and `Brand Praxis.dc.html` stay in place as historical explorations
 - The three docs — design.md, engineering.md, ubiquitous-language.md — now live in the repo-root `docs/`; the duplicate `uploads/` copies were byte-identical and have been removed
 - `_ds/` + `support.js` — design-system bundle and prototype runtime (keep next to the prototype)
