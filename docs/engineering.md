@@ -26,7 +26,7 @@ the Exit Gate logic. A screen needs to know none of that.
 | Tokens | `design/tokens.json` is honoured through the CSS variables `styles.css` defines; never hard-code a hex or px the tokens already carry |
 | Fonts | **Self-hosted** Archivo 400/600/800 as committed `woff2` + `@font-face`, replacing the stylesheet's Google Fonts import (an offline PWA may not depend on a third-party origin) |
 | Persistence | **IndexedDB in the browser only** (§ 4). No accounts, no server, no sync |
-| Offline | Web app manifest + a service worker precaching the app shell **and** the content JSON; cache-first, versioned so a new deploy activates on the next online load |
+| Offline | Web app manifest + a hand-rolled service worker (`src/pwa/`). The **app shell** — document, JS, CSS, fonts, icons, manifest — is **precached** cache-first from a build-generated list, in a cache named for a hash of those files, so a new deploy activates on the next online load. The **content JSON** is **not** precached (`cache.addAll` is atomic, and a Module that has not been authored yet would fail the whole install): it is fetched network-first and cached as it is read, so it is offline-ready after one online visit |
 | Tests | **Vitest** for all app tests; `fake-indexeddb` (or an equivalent browser test environment) for `IProgress` |
 | Hosting | **GitHub Pages**, deployed by a GitHub Actions workflow on push to `main` |
 | Base path | Vite `base: '/Kata/'`; every runtime URL is built from `import.meta.env.BASE_URL`, never hard-coded |

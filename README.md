@@ -45,8 +45,9 @@ Every push to `main` runs the same steps in
 ## Status
 
 Design package complete. The app shell is live on GitHub Pages: nav lockup,
-Checkpoint count, and the design stylesheet with self-hosted Archivo. Screens
-next.
+Checkpoint count, and the design stylesheet with self-hosted Archivo. It is an
+installable PWA — the shell is precached, so it loads and renders offline.
+Screens next.
 
 ## Naming
 

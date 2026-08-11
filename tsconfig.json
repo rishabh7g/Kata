@@ -8,6 +8,9 @@
     "useDefineForClassFields": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    /* vite.config.ts imports a plugin from src/ by its .ts path, which the
+       native config loader needs spelled out. Safe under noEmit. */
+    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "skipLibCheck": true,

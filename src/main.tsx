@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { App } from './App';
+import { registerServiceWorker } from './pwa/register';
 
 // design/styles.css is the app stylesheet — the single source of styling truth
 // (docs/engineering.md § 1). app.css only adds the app-layer layout on top.
@@ -22,3 +23,9 @@ createRoot(container).render(
     </HashRouter>
   </StrictMode>,
 );
+
+// Only a production build emits sw.js (src/pwa/service-worker-plugin.ts), and a
+// worker left over from a dev session would only serve stale files.
+if (import.meta.env.PROD) {
+  registerServiceWorker();
+}
