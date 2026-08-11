@@ -1,5 +1,19 @@
 /* Modernist — design-system tokens and component classes. This file is the source of truth for the system's look; retune it here and see readme.md. */
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap');
+
+/* Archivo, self-hosted. Kata is an offline PWA and may not depend on a
+   third-party origin, so the Google Fonts import this file used to carry is
+   replaced by the woff2 committed in fonts/ (docs/engineering.md § 1 Stack,
+   fonts/README.md). One variable file covers the 400 / 600 / 800 the design
+   uses; latin subset, matching what Google Fonts served. */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url('./fonts/archivo-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 :root {
   --color-bg: #f3f2f2;

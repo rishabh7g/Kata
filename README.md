@@ -26,9 +26,27 @@ streaks, schedules, scores, or grades anywhere in the system.
 | [`design/issue-guide.md`](design/issue-guide.md) | How to write issues against this design |
 | [`design/tokens.json`](design/tokens.json) + [`design/styles.css`](design/styles.css) | Design tokens and the shipping stylesheet |
 
+## Run it
+
+The app is a Vite + React + TypeScript static build, served from
+<https://rishabh7g.github.io/Kata/>. Node 24.
+
+```sh
+npm ci        # install
+npm run dev   # local dev server
+npm test      # Vitest
+npm run build # type-check (strict) + production build into dist/
+```
+
+Every push to `main` runs the same steps in
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) and publishes
+`dist/` to GitHub Pages — that Actions run *is* the deploy.
+
 ## Status
 
-Design package complete. Implementation not started.
+Design package complete. The app shell is live on GitHub Pages: nav lockup,
+Checkpoint count, and the design stylesheet with self-hosted Archivo. Screens
+next.
 
 ## Naming
 
