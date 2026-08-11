@@ -1,4 +1,4 @@
-# DevGym — Design
+# Kata — Design
 
 Personal app for learning software design fundamentals through generated code exercises. Terms per `ubiquitous-language.md`.
 
