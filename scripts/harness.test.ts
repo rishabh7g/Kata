@@ -98,7 +98,7 @@ describe('content schema + Module index (#7)', () => {
     }
   });
 
-  it('lists all five Modules, in Curriculum order, titles verbatim, m01–m04 authored', () => {
+  it('lists all five Modules, in Curriculum order, titles verbatim, all five authored', () => {
     const index = JSON.parse(
       readFileSync(join(REPO, 'public/content/index.json'), 'utf8'),
     ) as {
@@ -117,9 +117,9 @@ describe('content schema + Module index (#7)', () => {
     expect(index.modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5]);
     expect(index.modules.map((m) => m.id)).toEqual(['m01', 'm02', 'm03', 'm04', 'm05']);
     // A Module is pending until its content pack is authored: #8 shipped m01,
-    // #24 shipped m02, #25 shipped m03, #26 shipped m04; m05 stays pending
-    // until #27.
-    expect(index.modules.map((m) => m.pending)).toEqual([false, false, false, false, true]);
+    // #24 shipped m02, #25 shipped m03, #26 shipped m04, #27 shipped m05 —
+    // the Curriculum is complete, no pending Module remains.
+    expect(index.modules.map((m) => m.pending)).toEqual([false, false, false, false, false]);
   });
 });
 
@@ -147,7 +147,7 @@ describe('smoke.sh', () => {
     const result = run('scripts/smoke.sh', [], { KATA_URL: 'http://127.0.0.1:9/' });
 
     expect(result.status).toBe(10); // 10 = app shell, per scripts/README.md
-    expect(result.lines[0]).toMatch(/^SMOKE FAIL 0\/12 \| step shell \(exit 10\)/);
+    expect(result.lines[0]).toMatch(/^SMOKE FAIL 0\/13 \| step shell \(exit 10\)/);
     expect(result.lines.length).toBeLessThanOrEqual(25);
     expect(result.stdout).toContain('log: ');
   }, 30_000);
@@ -164,6 +164,7 @@ describe('smoke.sh', () => {
       '19 m02 exercise folders',
       '20 m03 exercise folders',
       '21 m04 exercise folders',
+      '22 m05 exercise folders',
     ]) {
       expect(help.stdout).toContain(code);
     }

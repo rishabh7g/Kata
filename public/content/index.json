@@ -34,7 +34,7 @@
       "ordinal": 5,
       "title": "Error Design",
       "description": "Define errors out of existence — API design for backend .NET work.",
-      "pending": true
+      "pending": false
     }
   ]
 }
