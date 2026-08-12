@@ -545,9 +545,95 @@ a.curriculum-row:hover {
   font-size: 0.95em;
 }
 
-/* The empty reserved column (sticky once #16 fills it — same offset as the
-   Module aside, tokens.json layout.asideStickyTop). */
+/* The right column: sticky at the shared aside offset (tokens.json
+   layout.asideStickyTop); the flex gap is for the gate banner under the
+   checklist panel (#19). */
 .exercise-aside {
   position: sticky;
   top: var(--layout-aside-sticky-top);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Behavioral Checklist (#16) — design/README.md § Screens › 3 ──────────
+   The whole Exit Gate: three radio pairs (`.radio` from design/styles.css),
+   one primary submit, and the read-only submitted panel. */
+
+/* h6 + the muted gate meta on one baseline (prototype § Exercise). */
+.exercise-checklist-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* tokens.json typeScale.app.caption: 11. */
+.exercise-checklist-meta {
+  font-size: 11px;
+}
+
+/* One check: minor 1px rule on top (tokens.json layout.rules.minor). */
+.exercise-checklist-item {
+  padding: 14px 0;
+  border-top: 1px solid var(--color-divider);
+}
+
+.exercise-checklist-prompt {
+  font-size: 14px;
+  margin-bottom: 10px;
+  max-width: 62ch;
+}
+
+/* The radio pair; wraps rather than clipping the longer m01 labels. */
+.exercise-checklist-options {
+  display: flex;
+  gap: 10px 24px;
+  flex-wrap: wrap;
+}
+
+/* The one primary action in the view (tokens.json semantics.primaryAction);
+   the disabled 0.45 opacity comes with .btn from styles.css. */
+.exercise-checklist-submit {
+  margin-top: 20px;
+}
+
+.exercise-checklist-note {
+  font-size: 11px;
+  margin: 8px 0 0;
+}
+
+/* Submitted, read-only: 2px rule border (tokens.json layout.rules.major). */
+.exercise-checklist-panel {
+  border: 2px solid var(--color-divider);
+  padding: 18px 20px;
+}
+
+/* Check + `Submitted · time` — 14px/800 (design/README.md § Screens › 3). */
+.exercise-checklist-submitted-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* Question/answer rows: 1px rules, answers at 600 weight. */
+.exercise-checklist-row {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-divider);
+}
+
+.exercise-checklist-row-question {
+  font-size: 13px;
+}
+
+.exercise-checklist-row-answer {
+  font-size: 13px;
+  font-weight: 600;
 }

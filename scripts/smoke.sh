@@ -159,6 +159,9 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The Exercise route (#15) is hash-routed too: the same 200 document, with
   # the Spec grid container shipping in this bundle.
   has "$WORK/app.js" 'exercise-spec-grid' 'the Exercise Spec grid (#15)'
+  # The Behavioral Checklist (#16): the form and its one primary action.
+  has "$WORK/app.js" 'exercise-checklist-item' 'the Behavioral Checklist form (#16)'
+  has "$WORK/app.js" 'Submit Behavioral Checklist' 'the checklist submit action (#16)'
 fi
 end
 

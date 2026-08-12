@@ -1,8 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { IDBFactory } from 'fake-indexeddb';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { CurriculumProvider } from '../app/CurriculumContext';
+import { ProgressProvider } from '../app/ProgressContext';
 import type {
   ContentSource,
   ExerciseBrief,
@@ -10,10 +12,15 @@ import type {
   ModuleIndex,
 } from '../curriculum';
 import { createCurriculum } from '../curriculum';
+import type { IProgress } from '../progress';
+import { createProgress } from '../progress';
 import { ExerciseScreen } from './ExerciseScreen';
 
 // As in ModuleScreen.test.tsx: the fixture is the real createCurriculum over
-// an in-memory ContentSource — the same seam main.tsx wires, minus HTTP.
+// an in-memory ContentSource — the same seam main.tsx wires, minus HTTP. The
+// checklist tests add the real createProgress over fake-indexeddb (#14's
+// prescribed test environment): a fresh IDBFactory per test is the "clear
+// site data" reset, and re-opening the same factory models a reload.
 const index: ModuleIndex = {
   schemaVersion: 1,
   modules: [
@@ -69,29 +76,51 @@ const source: ContentSource = {
   loadModuleContent: async (id) => (id === 'm01' ? content : null),
 };
 
-function renderAt(path: string) {
+beforeEach(() => {
+  // A brand-new browser profile per test; within one test, a new
+  // createProgress against this SAME factory models a reload.
+  globalThis.indexedDB = new IDBFactory();
+});
+
+async function renderAt(path: string, progress?: IProgress) {
   const curriculum = createCurriculum(source, {
     listCheckpoints: async () => [],
   });
-  return render(
+  const activeProgress = progress ?? (await createProgress());
+  const utils = render(
     <CurriculumProvider curriculum={curriculum}>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route path="/" element={<p>curriculum probe</p>} />
-          <Route path="/modules/:id" element={<p>module probe</p>} />
-          <Route
-            path="/modules/:id/exercises/:exerciseId"
-            element={<ExerciseScreen />}
-          />
-        </Routes>
-      </MemoryRouter>
+      <ProgressProvider progress={activeProgress}>
+        <MemoryRouter initialEntries={[path]}>
+          <Routes>
+            <Route path="/" element={<p>curriculum probe</p>} />
+            <Route path="/modules/:id" element={<p>module probe</p>} />
+            <Route
+              path="/modules/:id/exercises/:exerciseId"
+              element={<ExerciseScreen />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ProgressProvider>
     </CurriculumProvider>,
   );
+  return { ...utils, progress: activeProgress };
+}
+
+/** Clicks the given option of the nth checklist question (0-based). */
+function pickAnswer(container: HTMLElement, question: number, value: string) {
+  const item = container.querySelectorAll('.exercise-checklist-item')[question];
+  const radio = item?.querySelector(`input[value="${value}"]`);
+  expect(radio).toBeInTheDocument();
+  fireEvent.click(radio as HTMLInputElement);
+}
+
+function submitButton() {
+  return screen.getByRole('button', { name: 'Submit Behavioral Checklist' });
 }
 
 describe('Exercise screen', () => {
   it('renders the refactor brief: kicker, 40px title, Refactor-type tag, back button (#15)', async () => {
-    renderAt('/modules/m01/exercises/m01-e1');
+    await renderAt('/modules/m01/exercises/m01-e1');
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Deepen a shallow document store' }),
@@ -109,7 +138,7 @@ describe('Exercise screen', () => {
   });
 
   it('renders the construct brief with its Construct-type tag', async () => {
-    renderAt('/modules/m01/exercises/m01-e2');
+    await renderAt('/modules/m01/exercises/m01-e2');
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Build a recent-values cache behind a two-method surface' }),
@@ -119,7 +148,7 @@ describe('Exercise screen', () => {
   });
 
   it('shows the Spec grid with exactly Concept / Smell / Size budget rows — no Workbench (#3)', async () => {
-    const { container } = renderAt('/modules/m01/exercises/m01-e1');
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Exercise Spec');
 
     const grid = container.querySelector('.exercise-spec-grid');
@@ -141,7 +170,7 @@ describe('Exercise screen', () => {
   });
 
   it('renders the Target Interface block: h6, Immutable accent tag, note, C# code', async () => {
-    const { container } = renderAt('/modules/m01/exercises/m01-e1');
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Target Interface');
 
     expect(screen.getByText('Immutable')).toHaveClass('tag-accent');
@@ -155,19 +184,28 @@ describe('Exercise screen', () => {
     );
   });
 
-  it('keeps the Target Interface display-only — nothing editable in the block (#3)', async () => {
-    const { container } = renderAt('/modules/m01/exercises/m01-e1');
+  it('keeps the Target Interface display-only — the only inputs anywhere are the checklist radios (#3)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Target Interface');
+    // The checklist form loads its stored state before rendering; wait for it.
+    await screen.findByRole('button', { name: 'Submit Behavioral Checklist' });
 
     expect(container.querySelector('textarea')).not.toBeInTheDocument();
-    expect(container.querySelector('input')).not.toBeInTheDocument();
     expect(
       container.querySelector('[contenteditable]'),
+    ).not.toBeInTheDocument();
+    // The checklist's radio pairs are the app's whole write surface: every
+    // input is one of them, and none sits inside the Target Interface block.
+    const inputs = [...container.querySelectorAll('input')];
+    expect(inputs.length).toBeGreaterThan(0);
+    expect(inputs.every((input) => input.type === 'radio')).toBe(true);
+    expect(
+      container.querySelector('.exercise-interface-code input'),
     ).not.toBeInTheDocument();
   });
 
   it('renders the disabled note while folderUrl is the null placeholder (#23 pending)', async () => {
-    const { container } = renderAt('/modules/m01/exercises/m01-e1');
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Practice material');
 
     expect(
@@ -180,7 +218,7 @@ describe('Exercise screen', () => {
   });
 
   it('links a real folderUrl out to GitHub in a new tab', async () => {
-    renderAt('/modules/m01/exercises/m01-e2');
+    await renderAt('/modules/m01/exercises/m01-e2');
     await screen.findByText('Practice material');
 
     const link = screen.getByRole('link', {
@@ -197,32 +235,21 @@ describe('Exercise screen', () => {
   });
 
   it('returns to the owning Module via the back button', async () => {
-    renderAt('/modules/m01/exercises/m01-e1');
+    await renderAt('/modules/m01/exercises/m01-e1');
 
     fireEvent.click(await screen.findByRole('link', { name: 'Module 01' }));
 
     expect(await screen.findByText('module probe')).toBeInTheDocument();
   });
 
-  it('reserves the empty aside column — the Behavioral Checklist lands there in #16', async () => {
-    const { container } = renderAt('/modules/m01/exercises/m01-e1');
-    await screen.findByText('Exercise Spec');
-
-    const body = container.querySelector('.exercise-body');
-    expect(body).toBeInTheDocument();
-    const aside = body?.querySelector('aside.exercise-aside');
-    expect(aside).toBeInTheDocument();
-    expect(aside?.textContent).toBe('');
-  });
-
   it('falls back to the owning Module for an unknown Exercise id', async () => {
-    renderAt('/modules/m01/exercises/nope');
+    await renderAt('/modules/m01/exercises/nope');
 
     expect(await screen.findByText('module probe')).toBeInTheDocument();
   });
 
   it('falls back to the Curriculum for an unknown Module id', async () => {
-    renderAt('/modules/nope/exercises/m01-e1');
+    await renderAt('/modules/nope/exercises/m01-e1');
 
     expect(await screen.findByText('curriculum probe')).toBeInTheDocument();
   });
@@ -232,11 +259,14 @@ describe('Exercise screen', () => {
     const curriculum = createCurriculum(source, {
       listCheckpoints: async () => [],
     });
+    const progress = await createProgress();
     render(
       <CurriculumProvider curriculum={curriculum}>
-        <MemoryRouter initialEntries={['/modules/m01/exercises/m01-e1']}>
-          <App />
-        </MemoryRouter>
+        <ProgressProvider progress={progress}>
+          <MemoryRouter initialEntries={['/modules/m01/exercises/m01-e1']}>
+            <App />
+          </MemoryRouter>
+        </ProgressProvider>
       </CurriculumProvider>,
     );
 
@@ -246,7 +276,7 @@ describe('Exercise screen', () => {
   });
 
   it('renders nothing verification-shaped: no terminal, runs, status, or Workbench (#3)', async () => {
-    const { container } = renderAt('/modules/m01/exercises/m01-e1');
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Exercise Spec');
 
     const text = container.textContent ?? '';
@@ -257,10 +287,145 @@ describe('Exercise screen', () => {
   });
 
   it('uses no banned terms (docs/ubiquitous-language.md § Banned)', async () => {
-    const { container } = renderAt('/modules/m01/exercises/m01-e1');
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Exercise Spec');
+    await screen.findByText('Behavioral Checklist');
 
     const text = container.textContent ?? '';
     expect(text).not.toMatch(/lesson|course|level|quiz|flashcard|grade|score/i);
+  });
+});
+
+describe('Behavioral Checklist (#16)', () => {
+  beforeEach(() => {
+    // Fake only Date (fake-indexeddb needs real timers) so tests can pin
+    // `now` and prove the submitted time survives a reload unchanged.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-08-12T09:41:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('renders the three questions as radio pairs in the aside — no free-text field', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    const aside = container.querySelector('aside.exercise-aside');
+    const items = [...(aside?.querySelectorAll('.exercise-checklist-item') ?? [])];
+    expect(items.map((item) => item.querySelector('.exercise-checklist-prompt')?.textContent)).toEqual(['p1', 'p2', 'p3']);
+    // Each check is exactly one radio pair (design/README.md § Screens › 3).
+    for (const item of items) {
+      expect(item.querySelectorAll('input[type="radio"]')).toHaveLength(2);
+      expect(item.querySelectorAll('label.radio')).toHaveLength(2);
+    }
+    // No free-text field anywhere in the panel.
+    expect(aside?.querySelector('textarea')).toBeNull();
+    expect(aside?.querySelector('input[type="text"]')).toBeNull();
+  });
+
+  it('keeps submit disabled at 0, 1, and 2 answered pairs; enables it at 3', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    expect(submitButton()).toBeDisabled();
+    pickAnswer(container, 0, 'a');
+    expect(submitButton()).toBeDisabled();
+    pickAnswer(container, 1, 'b');
+    expect(submitButton()).toBeDisabled();
+    pickAnswer(container, 2, 'a');
+    expect(submitButton()).toBeEnabled();
+  });
+
+  it('flips to the read-only submitted state without a reload, showing exactly the chosen answers', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    pickAnswer(container, 0, 'a');
+    pickAnswer(container, 1, 'b');
+    pickAnswer(container, 2, 'a');
+    fireEvent.click(submitButton());
+
+    // Same render: the panel, not the form. 12 Aug 2026 09:41 UTC, local-formatted.
+    expect(await screen.findByText(/Submitted ·/)).toBeInTheDocument();
+    const panel = container.querySelector('.exercise-checklist-panel');
+    expect(panel).toBeInTheDocument();
+    const rows = [...(panel?.querySelectorAll('.exercise-checklist-row') ?? [])];
+    expect(
+      rows.map((row) => [
+        row.querySelector('.exercise-checklist-row-question')?.textContent,
+        row.querySelector('.exercise-checklist-row-answer')?.textContent,
+      ]),
+    ).toEqual([
+      ['p1', 'A'],
+      ['p2', 'B'],
+      ['p3', 'A'],
+    ]);
+    // Read-only: the form is gone.
+    expect(container.querySelector('input[type="radio"]')).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: 'Submit Behavioral Checklist' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('still shows the submitted panel with the original time after a reload', async () => {
+    const first = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+    pickAnswer(first.container, 0, 'a');
+    pickAnswer(first.container, 1, 'a');
+    pickAnswer(first.container, 2, 'a');
+    fireEvent.click(submitButton());
+    const line = await screen.findByText(/Submitted ·/);
+    const originalLine = line.textContent;
+    first.unmount();
+
+    // The reload: a later clock, a fresh IProgress over the same database.
+    vi.setSystemTime(new Date('2026-08-13T18:00:00.000Z'));
+    const second = await renderAt('/modules/m01/exercises/m01-e1');
+
+    const reloaded = await screen.findByText(/Submitted ·/);
+    expect(reloaded.textContent).toBe(originalLine);
+    expect(second.container.querySelector('input[type="radio"]')).toBeNull();
+  });
+
+  it('keeps a one-pair draft selected across a reload, with submit still disabled', async () => {
+    const first = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+    pickAnswer(first.container, 1, 'b');
+    // The autosave is fire-and-forget; wait for it to land before "reloading".
+    await waitFor(async () => {
+      expect(await first.progress.getChecklistDraft('m01')).not.toBeNull();
+    });
+    first.unmount();
+
+    const second = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    const items = second.container.querySelectorAll('.exercise-checklist-item');
+    const restored = items[1]?.querySelector('input[value="b"]');
+    expect(restored).toBeChecked();
+    // The other pairs are untouched and the draft never enables submit.
+    expect(items[0]?.querySelector('input:checked')).toBeNull();
+    expect(items[2]?.querySelector('input:checked')).toBeNull();
+    expect(submitButton()).toBeDisabled();
+  });
+
+  it("shows the same submitted state on the Module's other Exercise screen — per Module, not per Exercise", async () => {
+    const first = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+    pickAnswer(first.container, 0, 'a');
+    pickAnswer(first.container, 1, 'a');
+    pickAnswer(first.container, 2, 'b');
+    fireEvent.click(submitButton());
+    await screen.findByText(/Submitted ·/);
+    first.unmount();
+
+    const second = await renderAt('/modules/m01/exercises/m01-e2');
+
+    expect(await screen.findByText(/Submitted ·/)).toBeInTheDocument();
+    const rows = second.container.querySelectorAll('.exercise-checklist-row');
+    expect(rows).toHaveLength(3);
+    expect(second.container.querySelector('input[type="radio"]')).toBeNull();
   });
 });
