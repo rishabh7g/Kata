@@ -1,4 +1,4 @@
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
 import { useGateStatus } from '../app/useGateStatus';
@@ -33,6 +33,7 @@ export function ExerciseScreen() {
   // Live gate state from IProgress (#14); `refresh` re-reads it when the
   // checklist submits on this screen, so the banner needs no reload (#19).
   const { gate, refresh } = useGateStatus(useProgress(), id ?? '');
+  const navigate = useNavigate();
 
   // Still loading: render nothing rather than a made-up placeholder — the
   // gate state loads with the content so the aside never flashes stale.
@@ -117,7 +118,15 @@ export function ExerciseScreen() {
             moduleId={module.id}
             moduleOrdinal={module.ordinal}
             questions={module.checklistQuestions}
-            onSubmitted={refresh}
+            onSubmitted={() => {
+              refresh();
+              // Same route, new location key: the always-mounted nav re-reads
+              // its Checkpoint count in this render (useModuleSummaries keys
+              // off location.key, #18) — screens/06-state.png shows the count
+              // already moved while still on this screen (#30). The #29
+              // import confirm uses the same trick.
+              navigate('.', { replace: true });
+            }}
           />
           {gate.passed && gate.checkpointAt !== null && (
             <div className="exercise-gate-banner">

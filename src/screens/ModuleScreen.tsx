@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { Markdown } from '../app/Markdown';
 import { useCurriculum } from '../app/CurriculumContext';
@@ -11,7 +12,7 @@ import type {
   ModuleDetail,
   ModuleSummary,
 } from '../curriculum';
-import type { GateStatus } from '../progress';
+import type { GateStatus, IProgress } from '../progress';
 
 /**
  * Module — the reading surface: header, Concept Page prose, Model Examples,
@@ -33,12 +34,17 @@ import type { GateStatus } from '../progress';
 export function ModuleScreen() {
   const { id } = useParams();
   const curriculum = useCurriculum();
+  const progress = useProgress();
   const module = useModuleDetail(curriculum, id ?? '');
   // The poster's next-Module line names the following Module by title (#17).
   const modules = useModuleSummaries(curriculum);
   // Live gate state from IProgress (#14): the poster and the header tag key
   // off this, not off ICurriculum's stubbed CheckpointReader (replaced in #18).
-  const { gate } = useGateStatus(useProgress(), id ?? '');
+  const { gate } = useGateStatus(progress, id ?? '');
+  // A saved checklist draft flips the header tag to the outline `In progress`
+  // (#30) — the same rule the Curriculum rows apply (#18) and the prototype's
+  // statusFor encodes (started → In progress, else Ready to start).
+  const hasDraft = useHasChecklistDraft(progress, id ?? '');
 
   // Still loading: render nothing rather than a made-up placeholder — the
   // gate state loads with the content so the aside never flashes unmet.
@@ -66,25 +72,15 @@ export function ModuleScreen() {
           </p>
           <h1 className="module-title">{module.title}</h1>
         </div>
-        <ModuleStatusTag module={module} gatePassed={gate.passed} />
+        <ModuleStatusTag
+          module={module}
+          gatePassed={gate.passed}
+          inProgress={hasDraft}
+        />
       </header>
       <div className="module-body">
         <div>
-          <section>
-            <h6 className="module-section-label">Concept Page</h6>
-            {module.pending ? (
-              // The prototype's pending copy, verbatim (DevGym.dc.html
-              // § Module, pending section).
-              <p className="text-muted module-pending-copy">
-                Concept Page pending — drafted by the Generator once this
-                Module unlocks; one human edit, then frozen.
-              </p>
-            ) : (
-              <div className="module-concept">
-                <Markdown source={stripLeadingTitle(module.conceptPageMarkdown)} />
-              </div>
-            )}
-          </section>
+          <ConceptSection module={module} />
           <div className="hr module-rule" />
           <section>
             <h6 className="module-section-label">Model Examples</h6>
@@ -130,6 +126,49 @@ export function ModuleScreen() {
         />
       </div>
     </>
+  );
+}
+
+/**
+ * The Concept Page section. The label row carries the pack's
+ * draft/edited/frozen note beside the h6 on one baseline — the prototype's
+ * layout (DevGym.dc.html § Module) and screens/02–03 — rather than as the
+ * first prose paragraph (#30). The note itself still travels in the markdown
+ * (an emphasis-only first line); it is lifted out here, and a pack without
+ * one simply renders no note.
+ */
+function ConceptSection({ module }: { module: ModuleDetail }) {
+  if (module.pending) {
+    return (
+      <section>
+        <h6 className="module-section-label">Concept Page</h6>
+        {/* The prototype's pending copy, verbatim (DevGym.dc.html § Module,
+            pending section). */}
+        <p className="text-muted module-pending-copy">
+          Concept Page pending — drafted by the Generator once this Module
+          unlocks; one human edit, then frozen.
+        </p>
+      </section>
+    );
+  }
+
+  const { note, body } = splitConceptNote(
+    stripLeadingTitle(module.conceptPageMarkdown),
+  );
+  return (
+    <section>
+      <div className="module-concept-heading">
+        <h6 className="module-section-label module-section-label-inline">
+          Concept Page
+        </h6>
+        {note !== null && (
+          <span className="text-muted module-concept-note">{note}</span>
+        )}
+      </div>
+      <div className="module-concept">
+        <Markdown source={body} />
+      </div>
+    </section>
   );
 }
 
@@ -231,32 +270,69 @@ export function ExitGateAside({
  * or the closing line when nothing follows (Module 5).
  */
 export function nextModuleLine(nextModule: ModuleSummary | null): string {
+  // "… unlocked." with no "is" — the prototype's exact line (DevGym.dc.html
+  // § Module nextNote) and screens/02-state.png (#30).
   return nextModule !== null
-    ? `Module ${String(nextModule.ordinal).padStart(2, '0')} — ${nextModule.title} is unlocked.`
+    ? `Module ${String(nextModule.ordinal).padStart(2, '0')} — ${nextModule.title} unlocked.`
     : 'All five Modules passed — the Curriculum is complete.';
 }
 
 /**
- * The header's right-aligned tag, mirroring the Curriculum row tags: the
- * `In progress` outline flip needs IProgress draft state and lands with #18.
- * Live gate state flips it too (#17) — ICurriculum's `checkpointAt` reads
- * through the stubbed CheckpointReader until #18 wires the real one.
+ * The header's right-aligned tag, mirroring the Curriculum row tags exactly
+ * (screens/03-state.png, prototype statusFor): passed → accent `Exit Gate
+ * passed`; a saved checklist draft → outline `In progress` (#30); otherwise
+ * the neutral `Ready to start`.
  */
 function ModuleStatusTag({
   module,
   gatePassed,
+  inProgress,
 }: {
   module: ModuleDetail;
   gatePassed: boolean;
+  inProgress: boolean;
 }) {
   if (gatePassed || module.checkpointAt !== null) {
     return (
       <span className="tag tag-accent module-header-tag">Exit Gate passed</span>
     );
   }
+  if (inProgress) {
+    return (
+      <span className="tag tag-outline module-header-tag">In progress</span>
+    );
+  }
   return (
     <span className="tag tag-neutral module-header-tag">Ready to start</span>
   );
+}
+
+/**
+ * Whether the Module has a saved Behavioral Checklist draft — the same read
+ * the Curriculum rows make for their `In progress` tag (#18). `false` while
+ * loading: the tag falls back to `Ready to start` rather than flashing.
+ */
+function useHasChecklistDraft(progress: IProgress, moduleId: string): boolean {
+  const [hasDraft, setHasDraft] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHasDraft(false);
+    progress
+      .getChecklistDraft(moduleId)
+      .then((draft) => {
+        if (!cancelled) setHasDraft(draft !== null);
+      })
+      .catch((error: unknown) => {
+        // No draft state, no tag flip — the header shows `Ready to start`.
+        console.error(`Failed to read the checklist draft for ${moduleId}`, error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [progress, moduleId]);
+
+  return hasDraft;
 }
 
 /**
@@ -267,6 +343,23 @@ function ModuleStatusTag({
  */
 function stripLeadingTitle(markdown: string): string {
   return markdown.replace(/^\s*#[^\S\n]+[^\n]*\n?/, '');
+}
+
+/**
+ * Lifts the packs' `*LLM first draft · human-edited once · frozen*` line out
+ * of the prose so the label row can carry it (#30). Only an emphasis-only
+ * first paragraph counts — anything else stays in the body untouched.
+ */
+export function splitConceptNote(markdown: string): {
+  note: string | null;
+  body: string;
+} {
+  const match = /^\s*\*([^*\n]+)\*[^\S\n]*(?:\n|$)/.exec(markdown);
+  if (match === null) return { note: null, body: markdown };
+  return {
+    note: (match[1] ?? '').trim(),
+    body: markdown.slice(match[0].length),
+  };
 }
 
 /** '2026-06-12T…Z' → '12 Jun 2026' — as on the Curriculum rows (#10). */

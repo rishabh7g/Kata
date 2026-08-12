@@ -200,12 +200,19 @@ describe('Module screen', () => {
     ]);
   });
 
-  it('shows the draft/edited/frozen note from the markdown', async () => {
-    await renderAt('/modules/m01');
+  it('lifts the draft/edited/frozen note into the Concept Page label row (#30)', async () => {
+    const { container } = await renderAt('/modules/m01');
 
+    // Beside the h6 on one baseline (screens/02–03, prototype § Module) —
+    // not as the first prose paragraph.
+    const note = await screen.findByText(
+      'LLM first draft · human-edited once · frozen',
+    );
+    expect(note).toHaveClass('module-concept-note');
+    expect(note.closest('.module-concept-heading')).toBeInTheDocument();
     expect(
-      await screen.findByText('LLM first draft · human-edited once · frozen'),
-    ).toBeInTheDocument();
+      container.querySelector('.module-concept')?.textContent ?? '',
+    ).not.toContain('LLM first draft');
   });
 
   it('renders every Model Example as a BEFORE/AFTER pair with its caption', async () => {
@@ -269,6 +276,18 @@ describe('Module screen', () => {
     expect(await screen.findByText('Exit Gate passed')).toHaveClass(
       'tag-accent',
     );
+    expect(screen.queryByText('Ready to start')).not.toBeInTheDocument();
+  });
+
+  it('flips the header tag to the outline In progress while a draft exists (#30)', async () => {
+    // The same rule as the Curriculum row (#18): a saved checklist draft is
+    // the started state (screens/03-state.png, prototype statusFor).
+    const progress = await createProgress();
+    await progress.saveChecklistDraft('m01', { q1: 'a' });
+
+    await renderAt('/modules/m01', [], progress);
+
+    expect(await screen.findByText('In progress')).toHaveClass('tag-outline');
     expect(screen.queryByText('Ready to start')).not.toBeInTheDocument();
   });
 
@@ -462,7 +481,7 @@ describe('Module screen', () => {
     );
     // The next Module is named by ordinal and title.
     expect(
-      screen.getByText('Module 02 — Dependency Direction is unlocked.'),
+      screen.getByText('Module 02 — Dependency Direction unlocked.'),
     ).toBeInTheDocument();
 
     // The header tag flips with the live gate, not the stubbed Checkpoint
@@ -493,7 +512,7 @@ describe('Module screen', () => {
       screen.getByText('All five Modules passed — the Curriculum is complete.'),
     ).toBeInTheDocument();
     // Nothing follows Module 5: no next-Module line.
-    expect(container.textContent ?? '').not.toMatch(/is unlocked\./);
+    expect(container.textContent ?? '').not.toMatch(/unlocked\./);
   });
 
   it('renders the Checkpoint note; no schedule talk, no Test-Suites row (#3)', async () => {

@@ -158,6 +158,32 @@ a.curriculum-row:hover {
   justify-self: end;
 }
 
+/* Narrow viewports (#30): the header's fixed 340px intro column and the rows'
+   fixed 230px status column force page-level horizontal scroll at phone
+   widths — stack the intro under the title and drop the status under the
+   text cell instead. The design system never scrolls a page sideways. */
+@media (max-width: 720px) {
+  .curriculum-header {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .curriculum-row {
+    grid-template-columns: 56px 1fr 36px;
+    gap: 10px 16px;
+  }
+
+  .curriculum-row-status {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .curriculum-row-icon {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
 .curriculum-closing-rule {
   border-top: 2px solid var(--color-divider);
 }
@@ -226,6 +252,9 @@ a.curriculum-row:hover {
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
+  /* Wraps only when the tag no longer fits beside the title (phone widths,
+     #30) — the page never scrolls sideways for a status tag. */
+  flex-wrap: wrap;
   padding-bottom: 8px;
   margin-bottom: 40px;
 }
@@ -261,6 +290,13 @@ a.curriculum-row:hover {
   align-items: start;
 }
 
+/* Both columns can shrink below their content's intrinsic width: without
+   this, a long code line inside a nested `pre` sets the column's min-content
+   and widens the page instead of scrolling inside its block (#30). */
+.module-body > * {
+  min-width: 0;
+}
+
 /* Narrow viewports: the aside column would squeeze the main column below the
    examples' 300px cell minimum and force page-level horizontal scroll —
    collapse to one column instead (the examples then stack via auto-fit). */
@@ -274,6 +310,25 @@ a.curriculum-row:hover {
    prototype sets is added here. */
 .module-section-label {
   margin: 0 0 14px;
+}
+
+/* The Concept Page label row (#30): h6 + the pack's draft/edited/frozen note
+   on one baseline, as the prototype lays it out (DevGym.dc.html § Module:
+   flex baseline, gap 12, note muted at 11px) and screens/02–03 show. */
+.module-concept-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.module-section-label-inline {
+  margin: 0;
+}
+
+/* tokens.json typeScale.app.caption: 11. */
+.module-concept-note {
+  font-size: 11px;
 }
 
 /* Section separators: the 2px .hr from styles.css at the prototype's 32px. */
@@ -536,6 +591,12 @@ a.curriculum-row:hover {
   grid-template-columns: 1fr 400px;
   gap: 56px;
   align-items: start;
+}
+
+/* As on the Module body: a long Target Interface line must scroll inside its
+   `pre`, never set the column's min-content and widen the page (#30). */
+.exercise-body > * {
+  min-width: 0;
 }
 
 /* Narrow viewports: collapse to one column, as the Module body does. */
