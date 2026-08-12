@@ -3,6 +3,8 @@ dist/
 build/
 coverage/
 *.log
+# scripts/README.md: transcripts from the check scripts
+.checks/
 .env
 .env.*
 !.env.example

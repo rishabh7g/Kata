@@ -13,6 +13,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    // scripts/ carries the check-script tests (scripts/README.md).
+    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts'],
   },
 });
