@@ -5,7 +5,7 @@ detail to a file. Read the log only when a line says FAIL.**
 
 | Script | What it checks | Success line |
 |---|---|---|
-| `scripts/smoke.sh` | the **deployed** site (`$KATA_URL`, default <https://rishabh7g.github.io/Kata/>) | `SMOKE 8/8 ok \| <url>` |
+| `scripts/smoke.sh` | the **deployed** site (`$KATA_URL`, default <https://rishabh7g.github.io/Kata/>) | `SMOKE 9/9 ok \| <url>` |
 | `scripts/test-scoped.sh <file…>` | Vitest over just the files a change touched | `TEST ok \| 2 passed (2) \| 12 passed (12) \| <files>` |
 | `scripts/validate-content.mjs [<schema> <file\|dir>]` | content JSON against its JSON Schema | `CONTENT ok (1 file)` |
 | `scripts/build-exercises.sh` | every committed `exercises/**/` folder compiles (`dotnet build`, build only) | `EXERCISES ok \| 2/2 Test Suites compile` |
@@ -30,7 +30,7 @@ scripts/build-exercises.sh                          # exercise folders; also run
 
 | Script | Codes |
 |---|---|
-| `smoke.sh` | 0 ok · 2 usage/precondition · 10 shell · 11 app bundle · 12 stylesheet · 13 font · 14 manifest · 15 service worker · 16 icons · 17 content |
+| `smoke.sh` | 0 ok · 2 usage/precondition · 10 shell · 11 app bundle · 12 stylesheet · 13 font · 14 manifest · 15 service worker · 16 icons · 17 content · 18 exercise folders |
 | `test-scoped.sh` | 0 ok · 2 usage/precondition (including no args without `FULL=1`) · otherwise Vitest's own status |
 | `validate-content.mjs` | 0 ok or SKIP · 2 usage · 3 invalid content · 4 missing schema/content path |
 | `build-exercises.sh` | 0 ok (including the explicit zero-folders pass) · 2 usage/precondition (dotnet missing) · 3 one or more folders failed to build |

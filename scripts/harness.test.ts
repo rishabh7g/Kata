@@ -146,7 +146,7 @@ describe('smoke.sh', () => {
     const result = run('scripts/smoke.sh', [], { KATA_URL: 'http://127.0.0.1:9/' });
 
     expect(result.status).toBe(10); // 10 = app shell, per scripts/README.md
-    expect(result.lines[0]).toMatch(/^SMOKE FAIL 0\/8 \| step shell \(exit 10\)/);
+    expect(result.lines[0]).toMatch(/^SMOKE FAIL 0\/9 \| step shell \(exit 10\)/);
     expect(result.lines.length).toBeLessThanOrEqual(25);
     expect(result.stdout).toContain('log: ');
   }, 30_000);
@@ -155,7 +155,7 @@ describe('smoke.sh', () => {
     const help = run('scripts/smoke.sh', ['--help']);
 
     expect(help.status).toBe(0);
-    for (const code of ['10 shell', '14 manifest', '17 content']) {
+    for (const code of ['10 shell', '14 manifest', '17 content', '18 exercise folders']) {
       expect(help.stdout).toContain(code);
     }
   });

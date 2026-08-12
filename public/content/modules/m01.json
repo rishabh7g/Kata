@@ -28,7 +28,7 @@
       "smell": "Shallow module: the folder layout, file naming scheme, encoding, and save-before-load ordering all leak into every caller as parameters and rituals.",
       "targetInterfaceCode": "public interface IDocumentStore\n{\n    void Save(string documentName, string contents);\n    string Load(string documentName);\n    bool Exists(string documentName);\n}",
       "sizeBudgetLoc": 250,
-      "folderUrl": null
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m01/m01-e1"
     },
     {
       "id": "m01-e2",
@@ -38,7 +38,7 @@
       "smell": "The stub tempts a shallow build: exposing capacity, eviction order, and expiry bookkeeping to callers. All three are design decisions the cache must own and hide.",
       "targetInterfaceCode": "public interface IRecentValues<T>\n{\n    void Put(string key, T value);\n    bool TryGet(string key, out T? value);\n}",
       "sizeBudgetLoc": 200,
-      "folderUrl": null
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m01/m01-e2"
     }
   ],
   "checklistQuestions": [
