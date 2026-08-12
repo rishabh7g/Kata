@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "id": "m05",
+  "conceptPageMarkdown": "# Error Design\n\n*LLM first draft · human-edited once · frozen*\n\n## Errors are part of the surface\n\nEvery exception a method can throw is part of what a caller must know.\nThe happy path is written once; the error paths are re-written in every\ncaller, forever — and they are the least-tested code in most systems.\nCount it in any codebase: pick a method, list what it throws, and count\nthe `catch` blocks that exist across the code because of it. That\nnumber is the cost of the method's error design. This Module teaches\nthe move that drives it toward zero: **define errors out of\nexistence** — not by swallowing failures, but by shrinking the set of\nconditions that count as failures at all.\n\n## The four moves, in order of preference\n\n1. **Define the error out of existence.** Redefine the operation so the\n   edge case is normal behavior. Deleting a file that does not exist can\n   mean \"ensure the file is gone\" — success either way. Reading past the\n   end of a range can return the overlapping portion — possibly empty,\n   never a throw. Ask of each `throw`: what would this method's contract\n   be if this case were simply allowed?\n2. **Mask the error inside the module.** Handle the condition where the\n   knowledge to handle it lives — retry the transient fault inside the\n   client class, not in every caller. The error still happens; it stops\n   being the caller's problem. This is the error-design form of a deep\n   module: complexity absorbed behind the Target Interface, not pushed\n   through it.\n3. **Aggregate the handling.** When errors must propagate, catch them in\n   one place — one handler at the outermost edge that maps failures to\n   responses — instead of scattering `try`/`catch` through every\n   controller and service. Ten handlers doing the same thing are nine\n   too many.\n4. **Crash.** For conditions that indicate a bug — a violated invariant,\n   corrupted state — the correct handling is often none. Fail loudly at\n   the fault instead of limping on to fail obscurely somewhere else.\n\n## What this looks like in backend .NET\n\n- **Exceptions are for the exceptional.** When a caller is expected to\n  branch on an outcome — \"not found\", \"already taken\", \"out of stock\" —\n  that outcome belongs in the return type (a bool, a Try-method, a\n  result object), where the compiler makes the caller confront it. A\n  `catch` used as an if-statement is control flow in a costume.\n- **The thrown set is a design decision.** A method that lets\n  `SqlException`, `HttpRequestException`, and `JsonException` escape has\n  a contract that names three infrastructure technologies; callers now\n  depend on your implementation choices. Mask those errors, or translate\n  them into one type that speaks the caller's language.\n- **Special values are errors in disguise.** Returning `null` where the\n  caller will immediately dereference, or `-1` where the caller will\n  index, moves the crash away from its cause without removing it.\n  Defining the error out of existence means the returned value is\n  usable as-is: an empty collection you can iterate, a no-op you can\n  ignore.\n- **Not every failure can be designed away.** The database will go\n  down. Expected outcomes go in the return type; genuine failures\n  propagate to one aggregated handler; impossible states crash. What\n  must not survive is the middle mush: routine conditions thrown as\n  exceptions and caught piecemeal at every call site.\n\n## Three checks that need no taste\n\n1. **The escape count.** For each public method, count the distinct\n   exception types it can let escape. Every type above zero is a\n   catalog entry every caller inherits.\n2. **The happy-path catch.** Find every `catch` the code relies on to\n   produce a normal outcome. Each one is an expected result miscast as\n   an exception — the costume check above, run mechanically.\n3. **The unless test.** Write each method's contract in one sentence,\n   error cases included. A sentence that needs \"unless\" or \"except\"\n   more than once is pointing at a restatement that would define the\n   error out of existence — and the restatement usually is the\n   redesign.\n\n## How this runs in your Exercises\n\n- In the refactor-type Exercise the Target Interface already defines\n  every expected condition as an ordinary result — but the code behind\n  it raises and catches its own exceptions for those same conditions,\n  in every method. The Test Suite starts green; your job is to remove\n  the exception traffic without changing a single answer.\n- In the construct-type Exercise the temptation is the standard-library\n  habit: throw on empty, throw on missing. The Target Interface's\n  contract has already defined those cases out of existence — implement\n  it so that no input the Test Suite can produce ever reaches a\n  `throw`.\n- Either way, finish with the three checks above. The Behavioral\n  Checklist asks you the same countable questions, and they are the\n  same questions to ask of every API you and an AI design together from\n  now on.",
+  "modelExamples": [
+    {
+      "before": "// \"Remove an item from the cart\" — defined so that an absent item\n// is an error. Every caller now owns that error.\npublic class ShoppingCart\n{\n    private readonly List<string> _items = new();\n\n    public void Add(string sku) => _items.Add(sku);\n\n    public void RemoveItem(string sku)\n    {\n        if (!_items.Remove(sku))\n        {\n            throw new InvalidOperationException(\n                $\"Item {sku} is not in the cart.\");\n        }\n    }\n}\n\n// One caller, doing what every caller must now do:\npublic class RejectedItemSweeper\n{\n    public void Sweep(ShoppingCart cart, IEnumerable<string> rejected)\n    {\n        foreach (var sku in rejected)\n        {\n            try\n            {\n                cart.RemoveItem(sku);\n            }\n            catch (InvalidOperationException)\n            {\n                // Already absent — which is exactly what we wanted.\n            }\n        }\n    }\n}\n\n// A catch block whose comment says \"this is what we wanted\" is a\n// contract confessing it was defined wrong.",
+      "after": "// The same operation, redefined: \"ensure the item is absent.\"\n// Removing what is not there is success, not an error — the error\n// case no longer exists, so no caller can mishandle it.\npublic class ShoppingCart\n{\n    private readonly List<string> _items = new();\n\n    public void Add(string sku) => _items.Add(sku);\n\n    // Ensures no copy of the sku remains in the cart. Already\n    // absent: nothing to do, and that is a successful outcome.\n    public void Remove(string sku)\n    {\n        _items.RemoveAll(item => item == sku);\n    }\n}\n\n// The same caller, with nothing left to handle:\npublic class RejectedItemSweeper\n{\n    public void Sweep(ShoppingCart cart, IEnumerable<string> rejected)\n    {\n        foreach (var sku in rejected)\n        {\n            cart.Remove(sku);\n        }\n    }\n}\n\n// The catch block did not move somewhere better — it ceased to\n// exist, in this caller and in every other, because the condition\n// it handled is no longer an error anywhere.",
+      "caption": "Defining the error out of existence: \"delete an existing item\" became \"ensure the item is absent\", so an absent item stopped being an error — it is the goal, already met. The before side confesses as much: its catch block's own comment says the \"error\" was exactly what the caller wanted. Redefine the contract and the handling code disappears from every caller at once."
+    },
+    {
+      "before": "// \"Out of stock\" is an everyday outcome for a shop — and here it is\n// an exception, so the everyday branch lives in a catch block.\npublic class StockRoom\n{\n    private readonly Dictionary<string, int> _onHand = new();\n\n    public void Receive(string sku, int count) =>\n        _onHand[sku] = OnHand(sku) + count;\n\n    public int OnHand(string sku) =>\n        _onHand.TryGetValue(sku, out var count) ? count : 0;\n\n    public void Reserve(string sku)\n    {\n        if (OnHand(sku) == 0)\n        {\n            throw new OutOfStockException(sku);\n        }\n        _onHand[sku] -= 1;\n    }\n}\n\n// Every caller branches on the everyday outcome — via catch:\npublic class OrderLine\n{\n    public string Add(StockRoom stock, string sku)\n    {\n        try\n        {\n            stock.Reserve(sku);\n            return \"Reserved.\";\n        }\n        catch (OutOfStockException)\n        {\n            return \"Back-ordered.\";\n        }\n    }\n}",
+      "after": "// The outcome the caller must branch on now lives in the return\n// value, where the compiler makes the branch visible and cheap.\npublic class StockRoom\n{\n    private readonly Dictionary<string, int> _onHand = new();\n\n    public void Receive(string sku, int count) =>\n        _onHand[sku] = OnHand(sku) + count;\n\n    public int OnHand(string sku) =>\n        _onHand.TryGetValue(sku, out var count) ? count : 0;\n\n    // True and one unit reserved, or false when none is on hand —\n    // an ordinary answer to an ordinary question.\n    public bool TryReserve(string sku)\n    {\n        if (OnHand(sku) == 0) return false;\n        _onHand[sku] -= 1;\n        return true;\n    }\n}\n\n// The everyday branch is an if, not a catch:\npublic class OrderLine\n{\n    public string Add(StockRoom stock, string sku)\n    {\n        return stock.TryReserve(sku) ? \"Reserved.\" : \"Back-ordered.\";\n    }\n}\n\n// Exception machinery is still there for what is exceptional.\n// Being out of stock is not exceptional; it is Tuesday.",
+      "caption": "An expected outcome moved out of the exception channel and into the return type. \"Out of stock\" is a branch every caller takes on an ordinary day, so throwing it forced each of them to write the everyday path in a catch block — control flow in a costume. As TryReserve's bool, the compiler puts the branch where the caller can see it; count the catch blocks a caller needs: one before, zero after."
+    },
+    {
+      "before": "// The report store lets the transient fault escape — so the retry\n// loop is copied into every caller that has learned the hard way.\npublic class ReportStore\n{\n    private readonly INetworkDrive _drive;\n\n    public ReportStore(INetworkDrive drive) => _drive = drive;\n\n    // Throws DriveBusyException whenever the drive hiccups.\n    public string Load(string reportName) => _drive.Read(reportName);\n}\n\n// Caller one — with its private copy of the retry policy:\npublic class MonthlyDigest\n{\n    public string Summary(ReportStore store)\n    {\n        for (var attempt = 1; ; attempt++)\n        {\n            try\n            {\n                return store.Load(\"monthly-summary\");\n            }\n            catch (DriveBusyException) when (attempt < 3)\n            {\n                // Transient — wait a beat and go around again.\n            }\n        }\n    }\n}\n\n// Caller two retries twice, caller three not at all, caller four\n// forgot entirely and crashes on busy days: one fault, four\n// policies, none of them owned by the class that knows the drive.",
+      "after": "// The store knows the fault is transient and what retrying costs —\n// so the store handles it. The fault still happens; it is just no\n// longer anyone else's problem.\npublic class ReportStore\n{\n    private const int Attempts = 3;\n    private readonly INetworkDrive _drive;\n\n    public ReportStore(INetworkDrive drive) => _drive = drive;\n\n    public string Load(string reportName)\n    {\n        for (var attempt = 1; ; attempt++)\n        {\n            try\n            {\n                return _drive.Read(reportName);\n            }\n            catch (DriveBusyException) when (attempt < Attempts)\n            {\n                // Transient — wait a beat and go around again.\n            }\n        }\n    }\n}\n\n// Every caller, from now on:\npublic class MonthlyDigest\n{\n    public string Summary(ReportStore store)\n    {\n        return store.Load(\"monthly-summary\");\n    }\n}\n\n// One retry policy, owned by the one class that understands the\n// drive — the fault masked where the knowledge to handle it lives.",
+      "caption": "Masking inside the module: the transient fault is handled by the one class that knows it is transient, instead of escaping to callers who each invent a retry policy — or forget to. The fault still occurs; what changed is who must know about it. Before: every caller carries error knowledge and a private copy of the loop. After: zero — the error-design form of a deep module."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "m05-e1",
+      "type": "refactor",
+      "title": "Take the exceptions out of a seat map's everyday flow",
+      "concept": "Error Design",
+      "smell": "Exceptions used for expected control flow: the cinema seat map answers correctly and the boundary Test Suite starts green, but behind the Target Interface every expected outcome — unknown seat, seat already reserved, customer at the reservation limit — is raised as a custom exception by private helpers and caught again by the public methods, which translate each one back into false. The happy path runs on catch blocks, the same try/catch handling is duplicated in every method, and the internal exception catalog exists only to be swallowed. Refactor behind the Target Interface until the expected cases are ordinary conditionals and throw/catch disappear from src/, Test Suite green after every step.",
+      "targetInterfaceCode": "public interface ISeatMap\n{\n    // Puts the seat on sale; call once per seat.\n    void AddSeat(string seatId);\n\n    // Reserves the seat for the customer. False — and nothing is\n    // recorded — when the seat is unknown, already reserved, or the\n    // customer already holds 4 reservations.\n    bool Reserve(string seatId, string customerId);\n\n    // Frees the seat. False when the seat is unknown or not\n    // reserved.\n    bool Release(string seatId);\n\n    // Seats on sale and not reserved right now.\n    int FreeSeatCount();\n}",
+      "sizeBudgetLoc": 250,
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m05/m05-e1"
+    },
+    {
+      "id": "m05-e2",
+      "type": "construct",
+      "title": "Build a play queue with no errors left to handle",
+      "concept": "Error Design",
+      "smell": "The construct temptation is the standard library's own habit of throwing on the expected: Queue.Dequeue throws on empty, a Dictionary indexer throws on missing, and an implementer following those instincts turns every edge into an exception plus a catch block in some caller. This Target Interface has already defined those cases out of existence — playing from an empty queue returns silence, dropping a track that was never queued is a successful no-op, queuing a waiting track again moves it instead of failing. Implement it so that no input the Test Suite can produce ever reaches a throw: callers need zero catch blocks and know zero exception types.",
+      "targetInterfaceCode": "public interface IPlayQueue\n{\n    // Adds the track to the end of the queue. Queuing a track that\n    // is already waiting moves it to the end instead of duplicating\n    // it — asking twice is a preference, not a fault.\n    void Queue(string track);\n\n    // Removes and returns the next track, or \"\" (silence) when the\n    // queue is empty. An empty queue is a normal state, not an\n    // error.\n    string PlayNext();\n\n    // Ensures the track is not in the queue. Dropping a track that\n    // was never queued is a successful no-op.\n    void Drop(string track);\n\n    // Tracks waiting right now.\n    int Length();\n}",
+      "sizeBudgetLoc": 200,
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m05/m05-e2"
+    }
+  ],
+  "checklistQuestions": [
+    {
+      "id": "q1",
+      "prompt": "Grep your finished src/ for throw and catch. Outside the Target Interface file, is the hit count zero?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — no throw or catch survived"
+        },
+        {
+          "value": "no",
+          "label": "No — at least one remains"
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "prompt": "For each Target Interface member, count what a caller must do besides read the return value: exception types to catch, checks to make before calling, error state to inspect afterward. Is the total zero?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — the return value is the whole contract"
+        },
+        {
+          "value": "no",
+          "label": "No — at least one extra obligation remains"
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "prompt": "Call every member in its former error case — play from an empty queue, drop what was never queued, release an unknown seat — and count the calls that threw. Is the count zero?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — every edge came back as an ordinary answer"
+        },
+        {
+          "value": "no",
+          "label": "No — at least one call threw"
+        }
+      ]
+    }
+  ]
+}

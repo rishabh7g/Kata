@@ -17,7 +17,7 @@
 #             12 stylesheet · 13 font · 14 manifest · 15 service worker ·
 #             16 icons · 17 content · 18 exercise folders ·
 #             19 m02 exercise folders · 20 m03 exercise folders ·
-#             21 m04 exercise folders
+#             21 m04 exercise folders · 22 m05 exercise folders
 #
 set -uo pipefail
 
@@ -284,6 +284,13 @@ else
       else
         bad "m04 is pending in the deployed index — Module 4 content (#26) is missing"
       fi
+      # Module 5 shipped in #27 — the Curriculum is complete: the loop below
+      # must also fetch and validate content/modules/m05.json.
+      if [[ " $MODULES " == *" m05 "* ]]; then
+        note "m05 is non-pending — Module 5 content (#27) is live"
+      else
+        bad "m05 is pending in the deployed index — Module 5 content (#27) is missing"
+      fi
       for id in $MODULES; do
         get "${URL}content/modules/${id}.json" "$WORK/content/modules/${id}.json"
       done
@@ -397,6 +404,31 @@ else
     for folder_url in $FOLDER_URLS; do
       n=$((n + 1))
       get "$folder_url" "$WORK/m04-exercise-folder-$n.html" || true
+    done
+  fi
+fi
+end
+
+# ─── 13. m05 exercise folders (#27) ────────────────────────────────────────
+# Module 5's two Exercise folders are committed (#27): the deployed m05.json
+# must carry both GitHub folder URLs and each must return 200.
+begin exercise-folders-m05 22
+M05_JSON="$WORK/content/modules/m05.json"
+if [[ ! -f "$M05_JSON" ]]; then
+  bad "the deployed m05.json was not fetched (content step failed?) — cannot read folderUrl"
+else
+  FOLDER_URLS="$(node -e '
+    const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+    console.log(data.exercises.map((e) => e.folderUrl).filter(Boolean).join(" "));
+  ' "$M05_JSON" 2>>"$LOG")"
+  COUNT=$(wc -w <<<"$FOLDER_URLS")
+  if ((COUNT < 2)); then
+    bad "deployed m05.json has $COUNT non-null folderUrl values (expected 2: #27)"
+  else
+    n=0
+    for folder_url in $FOLDER_URLS; do
+      n=$((n + 1))
+      get "$folder_url" "$WORK/m05-exercise-folder-$n.html" || true
     done
   fi
 fi
