@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -156,6 +156,77 @@ describe('smoke.sh', () => {
 
     expect(help.status).toBe(0);
     for (const code of ['10 shell', '14 manifest', '17 content']) {
+      expect(help.stdout).toContain(code);
+    }
+  });
+});
+
+describe('build-exercises.sh (#22)', () => {
+  // A fake `dotnet` first on PATH keeps these hermetic: no SDK, no NuGet, and
+  // the same behavior on this host and in CI.
+  function fakeDotnet(exitCode: number) {
+    const bin = mkdtempSync(join(tmpdir(), 'kata-dotnet-'));
+    writeFileSync(
+      join(bin, 'dotnet'),
+      `#!/usr/bin/env bash\necho "fake dotnet build $*"\nexit ${exitCode}\n`,
+      { mode: 0o755 },
+    );
+    return bin;
+  }
+
+  function exerciseTree(...folders: string[]) {
+    const dir = mkdtempSync(join(tmpdir(), 'kata-exercises-'));
+    for (const folder of folders) {
+      mkdirSync(join(dir, folder, 'src'), { recursive: true });
+      writeFileSync(join(dir, folder, 'src', 'Exercise.csproj'), '<Project />\n');
+    }
+    return dir;
+  }
+
+  const build = (env: Record<string, string>) => run('scripts/build-exercises.sh', [], env);
+
+  it('passes with the explicit zero-folders line while exercises/ is absent', () => {
+    const result = build({ KATA_EXERCISES_DIR: join(tmpdir(), 'kata-no-exercises') });
+
+    expect(result.status).toBe(0);
+    expect(result.lines).toEqual(['EXERCISES ok | 0 Test Suites (none committed yet)']);
+  });
+
+  it('prints one ok line per folder plus the final count', () => {
+    const exercises = exerciseTree('m01/m01-e1', 'm01/m01-e2');
+    const result = build({
+      KATA_EXERCISES_DIR: exercises,
+      PATH: `${fakeDotnet(0)}:${process.env.PATH}`,
+    });
+    rmSync(exercises, { recursive: true, force: true });
+
+    expect(result.status).toBe(0);
+    expect(result.lines).toEqual([
+      'ok exercises/m01/m01-e1',
+      'ok exercises/m01/m01-e2',
+      'EXERCISES ok | 2/2 Test Suites compile',
+    ]);
+  });
+
+  it('exits 3 naming the broken folder, with the log path', () => {
+    const exercises = exerciseTree('m01/m01-e1');
+    const result = build({
+      KATA_EXERCISES_DIR: exercises,
+      PATH: `${fakeDotnet(1)}:${process.env.PATH}`,
+    });
+    rmSync(exercises, { recursive: true, force: true });
+
+    expect(result.status).toBe(3);
+    expect(result.lines[0]).toBe('FAIL exercises/m01/m01-e1');
+    expect(result.stdout).toContain('EXERCISES FAIL 0/1 | broken: m01/m01-e1');
+    expect(result.stdout).toContain('log: ');
+  });
+
+  it('documents every exit code it can return', () => {
+    const help = run('scripts/build-exercises.sh', ['--help']);
+
+    expect(help.status).toBe(0);
+    for (const code of ['0 ok (including zero folders)', '2 usage/precondition', '3 one or more']) {
       expect(help.stdout).toContain(code);
     }
   });
