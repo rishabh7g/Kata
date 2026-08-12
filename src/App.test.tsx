@@ -1,9 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { IDBFactory } from 'fake-indexeddb';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { App } from './App';
 import { CurriculumProvider } from './app/CurriculumContext';
+import { ProgressProvider } from './app/ProgressContext';
 import type { ICurriculum, ModuleSummary } from './curriculum';
+import { createProgress } from './progress';
 
 // A minimal ICurriculum: the shell only counts Checkpoints over Modules, and
 // the index route only lists what getModules() returns. Two Checkpoints so
@@ -21,19 +24,27 @@ const curriculum: ICurriculum = {
   getModule: async () => null,
 };
 
-function renderAt(path: string) {
+beforeEach(() => {
+  // A brand-new browser profile per test (#14's prescribed environment).
+  globalThis.indexedDB = new IDBFactory();
+});
+
+async function renderAt(path: string, activeCurriculum: ICurriculum = curriculum) {
+  const progress = await createProgress();
   return render(
-    <CurriculumProvider curriculum={curriculum}>
-      <MemoryRouter initialEntries={[path]}>
-        <App />
-      </MemoryRouter>
+    <CurriculumProvider curriculum={activeCurriculum}>
+      <ProgressProvider progress={progress}>
+        <MemoryRouter initialEntries={[path]}>
+          <App />
+        </MemoryRouter>
+      </ProgressProvider>
     </CurriculumProvider>,
   );
 }
 
 describe('app shell', () => {
-  it('renders the Kata lockup, linking back to the Curriculum', () => {
-    renderAt('/');
+  it('renders the Kata lockup, linking back to the Curriculum', async () => {
+    await renderAt('/');
 
     expect(screen.getByRole('link', { name: 'Kata' })).toHaveAttribute(
       'href',
@@ -42,13 +53,32 @@ describe('app shell', () => {
   });
 
   it('counts Checkpoints over Modules in the nav — never a percentage', async () => {
-    renderAt('/');
+    await renderAt('/');
+
+    expect(await screen.findByText('Checkpoints 2 / 5')).toBeInTheDocument();
+  });
+
+  it('re-reads the count on navigation: a new Checkpoint moves it (#18)', async () => {
+    // ICurriculum derives from stored Checkpoints at read time, so the stub
+    // is mutable: the state changes underneath, navigation re-reads it.
+    let live: readonly ModuleSummary[] = summaries.map((s) => ({
+      ...s,
+      checkpointAt: null,
+    }));
+    await renderAt('/', {
+      getModules: async () => live,
+      getModule: async () => null,
+    });
+    expect(await screen.findByText('Checkpoints 0 / 5')).toBeInTheDocument();
+
+    live = summaries; // two Checkpoints now recorded
+    fireEvent.click(screen.getByRole('link', { name: 'Kata' }));
 
     expect(await screen.findByText('Checkpoints 2 / 5')).toBeInTheDocument();
   });
 
   it('serves the Curriculum screen at the root route', async () => {
-    renderAt('/');
+    await renderAt('/');
 
     expect(
       await screen.findByRole('heading', {
@@ -57,8 +87,8 @@ describe('app shell', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the shell for an unknown deep link instead of a dead end', () => {
-    renderAt('/nowhere');
+  it('renders the shell for an unknown deep link instead of a dead end', async () => {
+    await renderAt('/nowhere');
 
     expect(screen.getByRole('link', { name: 'Kata' })).toBeInTheDocument();
   });

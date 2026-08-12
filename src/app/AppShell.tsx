@@ -10,8 +10,9 @@ import { useModuleSummaries } from './useModuleSummaries';
  *
  * The count comes from `ICurriculum.getModules()`: Checkpoints recorded over
  * Modules in the index — both counted, never hard-coded, and never a
- * percentage (docs/engineering.md § 2). None exist until IProgress (#14/#18),
- * so it reads 0 / 5 today.
+ * percentage (docs/engineering.md § 2). It is live (#18): ICurriculum reads
+ * IProgress's Checkpoints on every call, and useModuleSummaries re-reads on
+ * every navigation, so passing an Exit Gate moves the count on return.
  */
 export function AppShell() {
   const modules = useModuleSummaries(useCurriculum());

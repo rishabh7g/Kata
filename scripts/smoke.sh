@@ -166,6 +166,9 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # screen — its container class and display line ship in this bundle.
   has "$WORK/app.js" 'module-gate-poster' 'the Exit Gate poster (#17)'
   has "$WORK/app.js" 'Passed.' 'the poster display line (#17)'
+  # The unlock cascade (#18): the draft-state tag ships in the bundle. The
+  # live count and lock chain themselves are exercised by the app tests.
+  has "$WORK/app.js" 'In progress' 'the draft In progress tag (#18)'
 fi
 end
 

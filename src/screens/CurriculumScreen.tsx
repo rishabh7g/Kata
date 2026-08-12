@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCurriculum } from '../app/CurriculumContext';
+import { useProgress } from '../app/ProgressContext';
 import { useModuleSummaries } from '../app/useModuleSummaries';
-import type { ModuleSummary } from '../curriculum';
+import type { ModuleId, ModuleSummary } from '../curriculum';
+import type { IProgress } from '../progress';
 
 /**
  * Curriculum — the fixed, ordered Module list with lock state
@@ -10,11 +13,13 @@ import type { ModuleSummary } from '../curriculum';
  * Renders exactly what `ICurriculum.getModules()` returns: ordering, the lock
  * chain and `checkpointAt` are derived there (#9), never here. The status
  * column is a tag only — no suite-run counts anywhere (verification removed
- * per the read-only decision, #3). The `In progress` outline tag needs
- * IProgress draft state and lands with #18.
+ * per the read-only decision, #3). The one thing read from IProgress directly
+ * is checklist-draft existence, which ModuleSummary deliberately does not
+ * carry: it drives the outline `In progress` tag (#18).
  */
 export function CurriculumScreen() {
   const modules = useModuleSummaries(useCurriculum());
+  const draftModuleIds = useDraftModuleIds(useProgress(), modules);
 
   return (
     <>
@@ -33,7 +38,11 @@ export function CurriculumScreen() {
       {modules !== null && (
         <>
           {modules.map((module) => (
-            <ModuleRow key={module.id} module={module} />
+            <ModuleRow
+              key={module.id}
+              module={module}
+              inProgress={draftModuleIds.has(module.id)}
+            />
           ))}
           {/* The closing 2px rule after the last row (tokens.json layout.rules). */}
           <div className="curriculum-closing-rule" />
@@ -43,7 +52,55 @@ export function CurriculumScreen() {
   );
 }
 
-function ModuleRow({ module }: { module: ModuleSummary }) {
+/**
+ * The unlocked-but-unpassed Modules that have a saved Behavioral Checklist
+ * draft (IProgress autosave, docs/engineering.md § 2) — the rows that show
+ * the outline `In progress` tag. Locked and passed rows never need the read:
+ * locked rows carry no tag, and submitChecklist deletes the Module's draft.
+ */
+function useDraftModuleIds(
+  progress: IProgress,
+  modules: readonly ModuleSummary[] | null,
+): ReadonlySet<ModuleId> {
+  const [draftIds, setDraftIds] = useState<ReadonlySet<ModuleId>>(new Set());
+
+  useEffect(() => {
+    if (modules === null) return;
+    let cancelled = false;
+    const candidates = modules.filter(
+      (module) => module.unlocked && module.checkpointAt === null,
+    );
+    Promise.all(
+      candidates.map(async (module) => ({
+        id: module.id,
+        draft: await progress.getChecklistDraft(module.id),
+      })),
+    )
+      .then((results) => {
+        if (cancelled) return;
+        setDraftIds(
+          new Set(results.filter((r) => r.draft !== null).map((r) => r.id)),
+        );
+      })
+      .catch((error: unknown) => {
+        // No draft state, no tag — the row falls back to `Ready to start`.
+        console.error('Failed to read checklist drafts', error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [progress, modules]);
+
+  return draftIds;
+}
+
+function ModuleRow({
+  module,
+  inProgress,
+}: {
+  module: ModuleSummary;
+  inProgress: boolean;
+}) {
   const cells = (
     <>
       <div className="curriculum-row-ordinal">
@@ -54,7 +111,7 @@ function ModuleRow({ module }: { module: ModuleSummary }) {
         <p className="text-muted curriculum-row-desc">{module.description}</p>
       </div>
       <div className="curriculum-row-status">
-        <StatusTag module={module} />
+        <StatusTag module={module} inProgress={inProgress} />
       </div>
       <div className="curriculum-row-icon">
         {module.unlocked ? <ArrowRightIcon /> : <LockIcon />}
@@ -78,7 +135,13 @@ function ModuleRow({ module }: { module: ModuleSummary }) {
   );
 }
 
-function StatusTag({ module }: { module: ModuleSummary }) {
+function StatusTag({
+  module,
+  inProgress,
+}: {
+  module: ModuleSummary;
+  inProgress: boolean;
+}) {
   // Locked rows carry no tag (design/README.md § Screens › 1 row states).
   if (!module.unlocked) return null;
   if (module.checkpointAt !== null) {
@@ -90,6 +153,9 @@ function StatusTag({ module }: { module: ModuleSummary }) {
         </span>
       </>
     );
+  }
+  if (inProgress) {
+    return <span className="tag tag-outline">In progress</span>;
   }
   return <span className="tag tag-neutral">Ready to start</span>;
 }
