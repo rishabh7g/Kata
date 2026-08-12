@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './app/AppShell';
 import { CurriculumScreen } from './screens/CurriculumScreen';
+import { ExerciseScreen } from './screens/ExerciseScreen';
 import { ModuleScreen } from './screens/ModuleScreen';
 
 /**
@@ -10,9 +11,9 @@ import { ModuleScreen } from './screens/ModuleScreen';
  * link is always served by index.html and never hits a GitHub Pages 404.
  * Unknown paths fall back to the root route rather than a dead end.
  *
- * The screens land here as they are built: Curriculum at the index route
- * (#10), Module (#11); the Exercise screen (#15) follows — until then an
- * Exercise link falls back to the Curriculum.
+ * Three screens only (docs/design.md): Curriculum at the index route (#10),
+ * Module (#11), Exercise (#15) — a brief is only reachable through its
+ * Module, so the Exercise route carries both ids.
  */
 export function App() {
   return (
@@ -20,6 +21,10 @@ export function App() {
       <Route path="/" element={<AppShell />}>
         <Route index element={<CurriculumScreen />} />
         <Route path="modules/:id" element={<ModuleScreen />} />
+        <Route
+          path="modules/:id/exercises/:exerciseId"
+          element={<ExerciseScreen />}
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
