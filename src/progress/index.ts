@@ -13,3 +13,8 @@ export type {
   SubmittedChecklist,
 } from './contract';
 export { createProgress } from './progress';
+export {
+  PROGRESS_FILE_NAME,
+  parseProgressState,
+  serializeProgressState,
+} from './backup';
