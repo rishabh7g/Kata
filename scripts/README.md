@@ -31,11 +31,29 @@ scripts/build-exercises.sh                          # exercise folders; also run
 | Script | Codes |
 |---|---|
 | `smoke.sh` | 0 ok · 2 usage/precondition · 10 shell · 11 app bundle · 12 stylesheet · 13 font · 14 manifest · 15 service worker · 16 icons · 17 content · 18 exercise folders · 19 m02 exercise folders · 20 m03 exercise folders · 21 m04 exercise folders · 22 m05 exercise folders |
-| `test-scoped.sh` | 0 ok · 2 usage/precondition (including no args without `FULL=1`) · otherwise Vitest's own status |
+| `test-scoped.sh` | 0 ok · 2 usage/precondition (including no args without `FULL=1`) · 3 recursion guard (see below) · otherwise Vitest's own status |
 | `validate-content.mjs` | 0 ok or SKIP · 2 usage · 3 invalid content · 4 missing schema/content path |
 | `build-exercises.sh` | 0 ok (including the explicit zero-folders pass) · 2 usage/precondition (dotnet missing) · 3 one or more folders failed to build |
 | `draft-concept.mjs` | 0 ok · 2 usage (bad flag/module id) · 3 draft exists without `--force` · 4 claude CLI missing/failed · 5 non-JSON or empty CLI output |
 | `draft-exercise.mjs` | 0 ok · 2 usage (bad flag/brief) · 3 exercise folder exists (new Exercise id, no `--force`) · 4 claude CLI missing/failed · 5 CLI output breaks the JSON contract |
+
+## The `test-scoped.sh` recursion guard (#64)
+
+The suite tests the check scripts (`scripts/harness.test.ts` spawns them), so a
+full run that hands `FULL=1` to its children re-enters itself: full suite →
+harness test → `FULL=1` child → full suite → … Until #64 that made
+`FULL=1 scripts/test-scoped.sh` a fork bomb. Two locks now hold it:
+
+- **`FULL` stops at the invocation that set it.** The script unsets `FULL`
+  before starting Vitest, so nothing it spawns inherits "run everything".
+- **Children are marked.** The script exports `KATA_TEST_SCOPED_DEPTH` to its
+  Vitest. A nested invocation that would run the full suite refuses with
+  **exit 3** and a `TEST RECURSION GUARD` line, and anything nested more than
+  one level deep refuses the same way — before Vitest starts either time.
+
+A nested *scoped* run (named files, one level down) is still allowed: that is
+what the harness tests themselves do. `npm test` was never affected and stays
+the plain full-suite path.
 
 ## Authoring: `draft-concept.mjs` (#20)
 

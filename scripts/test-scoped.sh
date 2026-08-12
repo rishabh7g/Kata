@@ -13,7 +13,14 @@
 # Vitest output to .checks/test.log; on failure a non-zero exit (Vitest's own
 # status), a ~20-line extract of the failures, and the log path.
 #
-# Exit codes: 0 ok · 2 usage/precondition · otherwise Vitest's exit status.
+# Recursion guard: the suite itself spawns this script (scripts/harness.test.ts),
+# so a run that hands FULL=1 down to its children re-enters the full suite
+# forever — a fork bomb. Two locks (#64): FULL is dropped before Vitest starts,
+# and every child is marked with KATA_TEST_SCOPED_DEPTH so a nested run refuses
+# (exit 3) instead of recursing.
+#
+# Exit codes: 0 ok · 2 usage/precondition · 3 recursion guard · otherwise
+# Vitest's exit status.
 #
 set -uo pipefail
 
@@ -34,6 +41,24 @@ if (($# == 0)) && [[ "${FULL:-}" != "1" ]]; then
   exit 2
 fi
 
+# Recursion guard (#64). Every Vitest this script starts is marked with its
+# nesting depth, so a run started BY the suite can tell it is a child.
+DEPTH="${KATA_TEST_SCOPED_DEPTH:-0}"
+[[ "$DEPTH" =~ ^[0-9]+$ ]] || DEPTH=0
+
+if ((DEPTH > 0)) && (($# == 0)); then
+  echo "TEST RECURSION GUARD: refusing a full-suite run nested inside one (depth ${DEPTH})."
+  echo "  scripts/harness.test.ts spawns this script, so a nested full suite never ends."
+  echo "  Name the test files instead, or run the suite from a shell: npm test"
+  exit 3
+fi
+
+if ((DEPTH >= 2)); then
+  echo "TEST RECURSION GUARD: refusing a run nested ${DEPTH} deep (one level is the limit)."
+  echo "  A test that spawns this script must name its files and must not nest further."
+  exit 3
+fi
+
 [[ -x "$VITEST" ]] || { echo "TEST PRECONDITION FAIL: no node_modules/.bin/vitest — run npm ci"; exit 2; }
 
 for file in "$@"; do
@@ -44,7 +69,12 @@ mkdir -p -- "$CHECKS_DIR"
 SCOPE="$*"
 [[ -n "$SCOPE" ]] || SCOPE="(full suite)"
 
-NO_COLOR=1 "$VITEST" run --reporter=default "$@" >"$LOG" 2>&1
+# FULL is this invocation's intent, never its children's: dropping it here is
+# what stops a spawned run from re-entering the whole suite (#64).
+unset FULL
+
+KATA_TEST_SCOPED_DEPTH=$((DEPTH + 1)) NO_COLOR=1 \
+  "$VITEST" run --reporter=default "$@" >"$LOG" 2>&1
 STATUS=$?
 
 # " Test Files  6 passed (6)" / "      Tests  32 passed (32)"

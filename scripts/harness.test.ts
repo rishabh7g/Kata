@@ -13,6 +13,12 @@ import { afterAll, describe, expect, it } from 'vitest';
  *
  * Nothing here touches the network: the failure path points smoke.sh at a
  * closed local port, which fails the same way an unreachable deploy does.
+ *
+ * Nothing here spawns a full suite either (#64): these tests run INSIDE the
+ * suite, so a child that runs everything would re-enter this file forever.
+ * run() strips FULL from the child environment for that reason, and the
+ * nesting cases below assert the script's own guard with the depth marker set
+ * by hand — one bounded child process, never a real full run.
  */
 
 const REPO = fileURLToPath(new URL('..', import.meta.url));
@@ -23,10 +29,20 @@ afterAll(() => {
 });
 
 function run(command: string, args: string[], env: Record<string, string> = {}) {
+  const childEnv: Record<string, string | undefined> = {
+    ...process.env,
+    KATA_CHECKS_DIR: CHECKS,
+    ...env,
+  };
+  // FULL=1 in the parent must never reach a child (#64): it would turn a
+  // spawned test-scoped.sh into another full suite, and this file into a fork
+  // bomb. Pass FULL explicitly in `env` if a test ever needs it.
+  if (!('FULL' in env)) delete childEnv.FULL;
+
   const result = spawnSync(command, args, {
     cwd: REPO,
     encoding: 'utf8',
-    env: { ...process.env, KATA_CHECKS_DIR: CHECKS, ...env },
+    env: childEnv,
   });
   const stdout = result.stdout ?? '';
   return {
@@ -137,6 +153,60 @@ describe('test-scoped.sh', () => {
 
     expect(result.status).toBe(2);
     expect(result.stdout).toContain('no such test file');
+  });
+});
+
+/**
+ * The fork-bomb guard (#64). This file is part of the full suite and spawns
+ * test-scoped.sh, so `FULL=1 scripts/test-scoped.sh` used to hand FULL=1 to
+ * every child and re-enter the suite until the host fell over. Every case here
+ * is bounded: the depth marker is set by hand and no child ever runs Vitest.
+ */
+describe('test-scoped.sh recursion guard (#64)', () => {
+  it('hands no FULL down to a spawned process, whatever the parent holds', () => {
+    const result = run('bash', ['-c', 'echo "FULL=${FULL:-unset}"']);
+
+    expect(result.status).toBe(0);
+    expect(result.lines[0]).toBe('FULL=unset');
+  });
+
+  it('exits 3 on a full-suite run nested inside a run', () => {
+    const result = run('scripts/test-scoped.sh', [], {
+      FULL: '1',
+      KATA_TEST_SCOPED_DEPTH: '1',
+    });
+
+    expect(result.status).toBe(3);
+    expect(result.stdout).toContain('TEST RECURSION GUARD');
+    expect(result.stdout).toContain('depth 1');
+    // Refused before Vitest: no summary line, no run.
+    expect(result.stdout).not.toContain('TEST ok');
+  });
+
+  it('exits 3 on any run nested more than one level deep', () => {
+    const result = run('scripts/test-scoped.sh', ['scripts/harness.test.ts'], {
+      KATA_TEST_SCOPED_DEPTH: '2',
+    });
+
+    expect(result.status).toBe(3);
+    expect(result.stdout).toContain('nested 2 deep');
+  });
+
+  it('still runs a scoped file one level down (the harness spawns are legal)', () => {
+    const result = run('scripts/test-scoped.sh', ['src/nope.test.ts'], {
+      KATA_TEST_SCOPED_DEPTH: '1',
+    });
+
+    expect(result.status).toBe(2); // precondition, not the guard
+    expect(result.stdout).toContain('no such test file');
+  });
+
+  it('documents the guard and its exit code in --help', () => {
+    const help = run('scripts/test-scoped.sh', ['--help']);
+
+    expect(help.status).toBe(0);
+    expect(help.stdout).toContain('3 recursion guard');
+    expect(help.stdout).toContain('KATA_TEST_SCOPED_DEPTH');
   });
 });
 
