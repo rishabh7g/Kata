@@ -8,6 +8,7 @@ import type { ContentSource, ModuleIndex } from '../curriculum';
 import { createCurriculum } from '../curriculum';
 import type { Checkpoint, ChecklistDraft } from '../progress';
 import { createProgress } from '../progress';
+import { expectWellFormedOutline } from '../test/headings';
 import { CurriculumScreen } from './CurriculumScreen';
 
 // The screen renders whatever ICurriculum returns, so the fixture is the real
@@ -84,7 +85,8 @@ describe('Curriculum screen', () => {
       (row) => row.querySelector('.curriculum-row-ordinal')?.textContent,
     );
     expect(ordinals).toEqual(['01', '02', '03', '04', '05']);
-    const titles = screen.getAllByRole('heading', { level: 3 });
+    // Module titles are h2 — one level under the page h1 (#75).
+    const titles = screen.getAllByRole('heading', { level: 2 });
     expect(titles.map((h) => h.textContent)).toEqual([
       'Deep Modules & Information Hiding',
       'Dependency Direction',
@@ -113,6 +115,23 @@ describe('Curriculum screen', () => {
       expect(row).toHaveAttribute('aria-disabled', 'true');
       expect(row.querySelector('.tag')).toBeNull();
     }
+  });
+
+  it('has one h1 and no skipped heading levels (#75)', async () => {
+    const { container } = await renderScreen();
+    await screen.findByText('01');
+
+    // The page h1, then a Module title one level under it. The rows read at
+    // 22px, which is h3's size in the design system — the level is the
+    // outline's, not the type scale's.
+    expect(expectWellFormedOutline(container)).toEqual([
+      'h1 Learn design by producing code.',
+      'h2 Deep Modules & Information Hiding',
+      'h2 Dependency Direction',
+      'h2 Testing at Boundaries + TDD loop',
+      'h2 Naming & Ubiquitous Language',
+      'h2 Error Design',
+    ]);
   });
 
   it('a locked row says it is locked in text, and stays inert (#74)', async () => {

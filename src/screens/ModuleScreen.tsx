@@ -101,7 +101,7 @@ export function ModuleScreen() {
           <ConceptSection module={module} />
           <div className="hr module-rule" />
           <section>
-            <h6 className="module-section-label">Model Examples</h6>
+            <h2 className="module-section-label">Model Examples</h2>
             {module.modelExamples.length === 0 ? (
               // Pending copy per the prototype; also the quiet fallback for
               // a pack with no examples — never a blank section.
@@ -116,7 +116,7 @@ export function ModuleScreen() {
           </section>
           <div className="hr module-rule" />
           <section>
-            <h6 className="module-section-label">Exercises</h6>
+            <h2 className="module-section-label">Exercises</h2>
             {module.exercises.length === 0 ? (
               // Zero briefs → the prototype's pending line: no cards, so a
               // pending Module exposes no navigable Exercise routes.
@@ -149,7 +149,7 @@ export function ModuleScreen() {
 
 /**
  * The Concept Page section. The label row carries the pack's
- * draft/edited/frozen note beside the h6 on one baseline — the prototype's
+ * draft/edited/frozen note beside the section label on one baseline — the prototype's
  * layout (DevGym.dc.html § Module) and screens/02–03 — rather than as the
  * first prose paragraph (#30). The note itself still travels in the markdown
  * (an emphasis-only first line); it is lifted out here, and a pack without
@@ -159,7 +159,7 @@ function ConceptSection({ module }: { module: ModuleDetail }) {
   if (module.pending) {
     return (
       <section>
-        <h6 className="module-section-label">Concept Page</h6>
+        <h2 className="module-section-label">Concept Page</h2>
         {/* The prototype's pending copy, verbatim (DevGym.dc.html § Module,
             pending section). */}
         <p className="text-muted module-pending-copy">
@@ -176,9 +176,9 @@ function ConceptSection({ module }: { module: ModuleDetail }) {
   return (
     <section>
       <div className="module-concept-heading">
-        <h6 className="module-section-label module-section-label-inline">
+        <h2 className="module-section-label module-section-label-inline">
           Concept Page
-        </h6>
+        </h2>
         {note !== null && (
           <span className="text-muted module-concept-note">{note}</span>
         )}
@@ -225,7 +225,7 @@ export function ExitGateAside({
     return (
       <aside className="module-aside">
         <div className="module-gate-poster">
-          <h6 className="module-gate-poster-label">Exit Gate</h6>
+          <h2 className="module-gate-poster-label">Exit Gate</h2>
           <div className="module-gate-passed">Passed.</div>
           <div className="module-gate-checkpoint">
             Checkpoint · {formatCheckpointDate(gate.checkpointAt)}
@@ -242,7 +242,7 @@ export function ExitGateAside({
     return (
       <aside className="module-aside">
         <div className="module-gate-panel">
-          <h6 className="module-section-label">Exit Gate</h6>
+          <h2 className="module-section-label">Exit Gate</h2>
           <p className="text-muted module-gate-note module-gate-note-pending">
             The Behavioral Checklist arrives with the Concept Page — nothing
             to submit yet.
@@ -256,7 +256,7 @@ export function ExitGateAside({
   return (
     <aside className="module-aside">
       <div className="module-gate-panel">
-        <h6 className="module-section-label">Exit Gate</h6>
+        <h2 className="module-section-label">Exit Gate</h2>
         <div className="module-gate-condition">
           {checklistSubmitted ? (
             <GateCheckIcon />

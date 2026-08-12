@@ -9,8 +9,12 @@ import type { ReactNode } from 'react';
  * and inline **strong** / *em* / `code`. Anything else renders as plain text
  * rather than growing a markdown engine here.
  *
- * Headings shift down one level (`#` → h2): the page-level h1 is the Module
- * title in the header block (#12), never something inside the prose.
+ * Headings shift down one level (`##` → h3): the page h1 is the Module title
+ * in the header block (#12), and this prose sits under the `Concept Page`
+ * section label, which is an h2 (#75) — so the prose's own top level is h3.
+ * The packs open with the Module's `# title`, which ModuleScreen strips, so
+ * `##` is the top level that actually reaches here; a stray `#` clamps to h3
+ * rather than colliding with the section label above it.
  */
 export function Markdown({ source }: { source: string }) {
   return <>{parseBlocks(source).map(renderBlock)}</>;
@@ -88,8 +92,10 @@ function parseBlocks(source: string): Block[] {
 function renderBlock(block: Block, index: number): ReactNode {
   switch (block.kind) {
     case 'heading': {
-      // `#` → h2 … `####` → h5; the design system sizes these (styles.css).
-      const Tag = `h${Math.min(block.level + 1, 6)}` as 'h2';
+      // `##` → h3 … `####` → h5, floored at h3 so nothing lands on the
+      // section label's own level (#75); the design system sizes these
+      // (styles.css) and the sizes are unchanged by the floor.
+      const Tag = `h${Math.min(Math.max(block.level + 1, 3), 6)}` as 'h3';
       return <Tag key={index}>{renderInline(block.text)}</Tag>;
     }
     case 'list': {

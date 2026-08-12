@@ -15,6 +15,7 @@ import type {
 import { createCurriculum } from '../curriculum';
 import type { GateStatus, IProgress } from '../progress';
 import { createProgress } from '../progress';
+import { expectWellFormedOutline } from '../test/headings';
 import { ExitGateAside, ModuleScreen } from './ModuleScreen';
 
 // As in CurriculumScreen.test.tsx: the fixture is the real createCurriculum
@@ -164,6 +165,23 @@ const nextSummary: ModuleSummary = {
 };
 
 describe('Module screen', () => {
+  it('has one h1 and no skipped heading levels (#75)', async () => {
+    const { container } = await renderAt('/modules/m01');
+    await screen.findByText('Concept Page');
+
+    // Section labels are h2 while still rendering as the design system's 13px
+    // uppercase label, and the Concept Page's own prose sits one level under
+    // the label that introduces it (## → h3).
+    expect(expectWellFormedOutline(container)).toEqual([
+      'h1 Deep Modules & Information Hiding',
+      'h2 Concept Page',
+      'h3 The trade every module makes',
+      'h2 Model Examples',
+      'h2 Exercises',
+      'h2 Exit Gate',
+    ]);
+  });
+
   it('renders the Concept Page markdown as styled prose in the 66ch container', async () => {
     const { container } = await renderAt('/modules/m01');
     await screen.findByText('Concept Page');
@@ -173,7 +191,8 @@ describe('Module screen', () => {
     expect(
       screen.getAllByText('Deep Modules & Information Hiding'),
     ).toHaveLength(1);
-    // Later headings still shift one level down (## → h3).
+    // Later headings still shift one level down (## → h3), which is one
+    // level under the `Concept Page` h2 that introduces them (#75).
     expect(
       screen.getByRole('heading', { level: 3, name: 'The trade every module makes' }),
     ).toBeInTheDocument();
@@ -204,7 +223,7 @@ describe('Module screen', () => {
   it('lifts the draft/edited/frozen note into the Concept Page label row (#30)', async () => {
     const { container } = await renderAt('/modules/m01');
 
-    // Beside the h6 on one baseline (screens/02–03, prototype § Module) —
+    // Beside the section label on one baseline (screens/02–03, § Module) —
     // not as the first prose paragraph.
     const note = await screen.findByText(
       'LLM first draft · human-edited once · frozen',
@@ -473,7 +492,7 @@ describe('Module screen', () => {
 
     // Bg-colored type on the accent field: the poster's own classes carry the
     // colors (app.css .module-gate-poster / -label / -passed), never ink.
-    expect(poster?.querySelector('h6')).toHaveClass('module-gate-poster-label');
+    expect(poster?.querySelector('h2')).toHaveClass('module-gate-poster-label');
     expect(screen.getByText('Passed.')).toHaveClass('module-gate-passed');
 
     // The real Checkpoint date, in the Curriculum row format (12 Aug 2026).

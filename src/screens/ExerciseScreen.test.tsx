@@ -20,6 +20,7 @@ import type {
 import { createCurriculum } from '../curriculum';
 import type { IProgress } from '../progress';
 import { createProgress } from '../progress';
+import { expectWellFormedOutline } from '../test/headings';
 import { ExerciseScreen } from './ExerciseScreen';
 
 // As in ModuleScreen.test.tsx: the fixture is the real createCurriculum over
@@ -185,6 +186,23 @@ function submitButton() {
 }
 
 describe('Exercise screen', () => {
+  it('has one h1 and no skipped heading levels (#75)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    // The checklist panel renders nothing until its saved state loads, so the
+    // outline is only complete once its label is on the page.
+    await screen.findByText('Behavioral Checklist');
+
+    // Four section labels at h2 — including the Behavioral Checklist's, which
+    // lives in the aside and is the same kind of section.
+    expect(expectWellFormedOutline(container)).toEqual([
+      'h1 Deepen a shallow document store',
+      'h2 Exercise Spec',
+      'h2 Target Interface',
+      'h2 Practice material',
+      'h2 Behavioral Checklist',
+    ]);
+  });
+
   it('renders the refactor brief: kicker, 40px title, Refactor-type tag, back button (#15)', async () => {
     await renderAt('/modules/m01/exercises/m01-e1');
 
