@@ -5,6 +5,9 @@ coverage/
 *.log
 # scripts/README.md: transcripts from the check scripts
 .checks/
+# dotnet build/test output inside committed Exercise folders (#23)
+exercises/**/bin/
+exercises/**/obj/
 # docs/engineering.md § 5: LLM first drafts — never shipped, never committed
 drafts/
 .env

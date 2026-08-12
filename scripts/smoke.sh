@@ -15,7 +15,7 @@
 #
 # Exit codes: 0 ok · 2 usage/precondition · 10 shell · 11 app bundle ·
 #             12 stylesheet · 13 font · 14 manifest · 15 service worker ·
-#             16 icons · 17 content
+#             16 icons · 17 content · 18 exercise folders
 #
 set -uo pipefail
 
@@ -276,6 +276,33 @@ else
   fi
   end
 fi
+
+# ─── 9. exercise folders (#23) ─────────────────────────────────────────────
+# Module 1's two Exercise folders are committed (#23), so the deployed
+# m01.json must carry both GitHub folder URLs (no null placeholders left) and
+# each URL must return 200 — the Exercise screen's practice-material link
+# (#15) points there.
+begin exercise-folders 18
+M01_JSON="$WORK/content/modules/m01.json"
+if [[ ! -f "$M01_JSON" ]]; then
+  bad "the deployed m01.json was not fetched (content step failed?) — cannot read folderUrl"
+else
+  FOLDER_URLS="$(node -e '
+    const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+    console.log(data.exercises.map((e) => e.folderUrl).filter(Boolean).join(" "));
+  ' "$M01_JSON" 2>>"$LOG")"
+  COUNT=$(wc -w <<<"$FOLDER_URLS")
+  if ((COUNT < 2)); then
+    bad "deployed m01.json has $COUNT non-null folderUrl values (expected 2: #23)"
+  else
+    n=0
+    for folder_url in $FOLDER_URLS; do
+      n=$((n + 1))
+      get "$folder_url" "$WORK/exercise-folder-$n.html" || true
+    done
+  fi
+fi
+end
 
 # ─── report ────────────────────────────────────────────────────────────────
 if ((${#FAILED_STEPS[@]} == 0)); then
