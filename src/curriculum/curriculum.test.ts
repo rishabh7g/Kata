@@ -191,6 +191,43 @@ describe('getModule', () => {
     expect(detail?.exercises).toEqual([]);
   });
 
+  it('rejects when the content load fails — not the pending shape (#69)', async () => {
+    // A missing file is pending (above); a failed request is a failure. They
+    // must stay apart, or an offline Module renders as "content pending".
+    const curriculum = createCurriculum(
+      memorySource({
+        loadModuleContent: async () => {
+          throw new TypeError('Failed to fetch');
+        },
+      }),
+      checkpoints(),
+    );
+
+    await expect(curriculum.getModule('m01')).rejects.toThrow('Failed to fetch');
+  });
+
+  it('re-reads the index after a failed load rather than replaying it (#69)', async () => {
+    // The index is cached because content is immutable per deploy — but a
+    // rejection is not content. Caching one would make `Try again` useless:
+    // every later call would fail with the offline error, back online or not.
+    let attempts = 0;
+    const curriculum = createCurriculum(
+      memorySource({
+        loadIndex: async () => {
+          attempts += 1;
+          if (attempts === 1) throw new TypeError('Failed to fetch');
+          return index;
+        },
+      }),
+      checkpoints(),
+    );
+
+    await expect(curriculum.getModule('m01')).rejects.toThrow('Failed to fetch');
+
+    expect((await curriculum.getModule('m01'))?.title).toBe('Deep Modules');
+    expect(attempts).toBe(2);
+  });
+
   it('does not gate on lock state: a locked Module still returns its detail', async () => {
     const curriculum = createCurriculum(memorySource(), checkpoints());
 

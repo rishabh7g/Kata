@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
+import { BackArrowIcon } from '../app/BackArrowIcon';
 import { Markdown } from '../app/Markdown';
+import { ModuleUnavailable } from '../app/ModuleUnavailable';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
 import { useGateStatus } from '../app/useGateStatus';
@@ -35,7 +37,11 @@ export function ModuleScreen() {
   const { id } = useParams();
   const curriculum = useCurriculum();
   const progress = useProgress();
-  const module = useModuleDetail(curriculum, id ?? '');
+  const {
+    detail: module,
+    error: loadError,
+    retry,
+  } = useModuleDetail(curriculum, id ?? '');
   // The poster's next-Module line names the following Module by title (#17).
   const modules = useModuleSummaries(curriculum);
   // Live gate state from IProgress (#14): the poster and the header tag key
@@ -46,6 +52,18 @@ export function ModuleScreen() {
   // statusFor encodes (started → In progress, else Ready to start).
   const hasDraft = useHasChecklistDraft(progress, id ?? '');
 
+  // The content would not load (offline, before this Module was ever read).
+  // Checked first: a failure leaves the detail `undefined`, which the loading
+  // guard below would hold forever on a blank screen (#69).
+  if (loadError !== null) {
+    return (
+      <ModuleUnavailable
+        moduleId={id ?? ''}
+        error={loadError}
+        onRetry={retry}
+      />
+    );
+  }
   // Still loading: render nothing rather than a made-up placeholder — the
   // gate state loads with the content so the aside never flashes unmet.
   if (module === undefined || modules === null || gate === undefined) {
@@ -419,25 +437,6 @@ function GateCheckIcon() {
       aria-hidden="true"
     >
       <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
-function BackArrowIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="m12 19-7-7 7-7" />
-      <path d="M19 12H5" />
     </svg>
   );
 }

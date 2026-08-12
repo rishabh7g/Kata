@@ -32,6 +32,15 @@ the Exit Gate logic. A screen needs to know none of that.
 | Base path | Vite `base: '/Kata/'`; every runtime URL is built from `import.meta.env.BASE_URL`, never hard-coded |
 | Secrets | None exist in the app. Nothing it ships is private, so nothing needs hiding |
 
+Not precaching the content JSON has one visible consequence, and it is a state,
+not a bug: a Module that has never been read online cannot be read offline.
+When `ICurriculum.getModule(id)` rejects, the Module and Exercise screens
+render the `ModuleUnavailable` notice (`src/app/ModuleUnavailable.tsx`) — the
+file that failed, why it is not offline-ready, the browser's own error text,
+`Try again`, and the way back to the Curriculum — rather than nothing at all
+(#69). A **404 is not a failure**: a missing content file means the Module is
+pending, and the pending placeholder renders as usual.
+
 Host and CI facts: **Node v24** and the **dotnet 10 SDK** are both available —
 Node for the app and the authoring scripts, dotnet only for compiling the
 committed exercise material in CI (§ 6). The app itself never invokes dotnet.

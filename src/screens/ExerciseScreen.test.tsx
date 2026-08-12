@@ -142,8 +142,13 @@ function ModuleProbe() {
   );
 }
 
-async function renderAt(path: string, progress?: IProgress, jumpTo?: string) {
-  const curriculum = createCurriculum(source, {
+async function renderAt(
+  path: string,
+  progress?: IProgress,
+  jumpTo?: string,
+  contentSource: ContentSource = source,
+) {
+  const curriculum = createCurriculum(contentSource, {
     listCheckpoints: async () => [],
   });
   const activeProgress = progress ?? (await createProgress());
@@ -677,5 +682,96 @@ describe('Behavioral Checklist (#16)', () => {
     const rows = second.container.querySelectorAll('.exercise-checklist-row');
     expect(rows).toHaveLength(3);
     expect(second.container.querySelector('input[type="radio"]')).toBeNull();
+  });
+});
+
+/**
+ * The #69 repro on this screen: the brief lives inside the Module's content
+ * JSON, so a content fetch that fails offline leaves the Exercise screen as
+ * blank as the Module's. `failures` requests reject, the rest succeed.
+ */
+function offlineSource(failures = Number.POSITIVE_INFINITY): ContentSource {
+  let attempts = 0;
+  return {
+    loadIndex: async () => index,
+    loadModuleContent: async (id) => {
+      attempts += 1;
+      if (attempts <= failures) throw new TypeError('Failed to fetch');
+      return contentById[id] ?? null;
+    },
+  };
+}
+
+describe("Module content that will not load (#69)", () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('shows the same unavailable state the Module screen shows', async () => {
+    const { container } = await renderAt(
+      '/modules/m01/exercises/m01-e1',
+      undefined,
+      undefined,
+      offlineSource(),
+    );
+
+    const notice = await screen.findByRole('alert');
+    expect(
+      screen.getByRole('heading', {
+        name: "This Module's content is not available",
+      }),
+    ).toBeInTheDocument();
+    expect(notice).toHaveTextContent('content/modules/m01.json');
+    expect(notice).toHaveTextContent('TypeError: Failed to fetch');
+    // Nothing of the brief renders — there is no brief.
+    expect(container.querySelector('.exercise-header')).not.toBeInTheDocument();
+    expect(container.querySelector('.exercise-aside')).not.toBeInTheDocument();
+  });
+
+  it('goes back to the Curriculum, not to the Module that will not load', async () => {
+    await renderAt(
+      '/modules/m01/exercises/m01-e1',
+      undefined,
+      undefined,
+      offlineSource(),
+    );
+    await screen.findByRole('alert');
+
+    fireEvent.click(screen.getByRole('link', { name: 'Curriculum' }));
+
+    expect(screen.getByText('curriculum probe')).toBeInTheDocument();
+  });
+
+  it('renders the brief on Try again once the fetch succeeds — no reload', async () => {
+    await renderAt(
+      '/modules/m01/exercises/m01-e1',
+      undefined,
+      undefined,
+      offlineSource(1),
+    );
+    await screen.findByRole('alert');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(
+      await screen.findByText('Deepen a shallow document store'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('still falls back to the Module when its content file is merely missing', async () => {
+    // A 404 is the pending shape, not a failure: no briefs, so the unknown-
+    // brief fallback runs — the unavailable surface must stay out of it.
+    await renderAt('/modules/m01/exercises/m01-e1', undefined, undefined, {
+      loadIndex: async () => index,
+      loadModuleContent: async () => null,
+    });
+
+    expect(await screen.findByText('probe id m01')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
