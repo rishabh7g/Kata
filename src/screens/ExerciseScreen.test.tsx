@@ -221,6 +221,41 @@ describe('Exercise screen', () => {
     expect(screen.queryByText(/test suite ·/i)).not.toBeInTheDocument();
   });
 
+  // #77: the tab names the brief, so a bookmark and a screen reader both
+  // learn which Exercise this history entry is.
+  it('names the tab `<exercise id> <title> · Kata`', async () => {
+    // The brief arrives only when this is released, so the loading render is
+    // observable rather than a race.
+    let release = () => {};
+    const arrived = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const slow: ContentSource = {
+      loadIndex: async () => index,
+      loadModuleContent: async (id) => {
+        await arrived;
+        return contentById[id] ?? null;
+      },
+    };
+    document.title = 'Module 01 — Deep Modules & Information Hiding · Kata';
+
+    await renderAt(
+      '/modules/m01/exercises/m01-e1',
+      undefined,
+      undefined,
+      slow,
+    );
+
+    // Nothing of the Module it came from survives into the loading render.
+    expect(document.title).toBe('Kata');
+
+    release();
+    await screen.findByText('Exercise Spec');
+    expect(document.title).toBe(
+      'm01-e1 Deepen a shallow document store · Kata',
+    );
+  });
+
   it('renders the construct brief with its Construct-type tag', async () => {
     await renderAt('/modules/m01/exercises/m01-e2');
 

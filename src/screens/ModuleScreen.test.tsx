@@ -1,6 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useNavigate,
+} from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { CurriculumProvider } from '../app/CurriculumContext';
@@ -105,6 +110,17 @@ beforeEach(() => {
   // A brand-new browser profile per test (#14's prescribed environment).
   globalThis.indexedDB = new IDBFactory();
 });
+
+/** Browser Back and Forward, outside `Routes` so history is what moves. */
+function HistoryControls() {
+  const navigate = useNavigate();
+  return (
+    <>
+      <button onClick={() => void navigate(-1)}>back</button>
+      <button onClick={() => void navigate(1)}>forward</button>
+    </>
+  );
+}
 
 async function renderAt(
   path: string,
@@ -252,6 +268,68 @@ describe('Module screen', () => {
     expect(screen.getByText(/lifecycle became the module/)).toBeInTheDocument();
     // The grid cells own the horizontal overflow (min-width: 0 + overflow-x).
     expect(container.querySelector('.module-example-grid')).toBeInTheDocument();
+  });
+
+  // #77: every history entry used to read the same `Kata`, so a bookmark, a
+  // tab and a screen reader all learned nothing about where they were.
+  it('names the tab `Module 01 — <title> · Kata`, holding plain `Kata` while it loads', async () => {
+    // The content arrives only when this is released, so the loading render
+    // is observable rather than a race.
+    let release = () => {};
+    const arrived = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const slow: ContentSource = {
+      loadIndex: async () => index,
+      loadModuleContent: async (id) => {
+        await arrived;
+        return id === 'm01' ? content : null;
+      },
+    };
+    document.title = 'Module 02 — Dependency Direction · Kata';
+
+    await renderAt('/modules/m01', [], undefined, slow);
+
+    // No flash of the Module the tab named a moment ago.
+    expect(document.title).toBe('Kata');
+
+    release();
+    await screen.findByText('Concept Page');
+    expect(document.title).toBe(
+      'Module 01 — Deep Modules & Information Hiding · Kata',
+    );
+  });
+
+  it('follows browser Back and Forward, not just a fresh load (#77)', async () => {
+    const curriculum = createCurriculum(source, {
+      listCheckpoints: async () => [],
+    });
+    render(
+      <CurriculumProvider curriculum={curriculum}>
+        <ProgressProvider progress={await createProgress()}>
+          {/* Two entries deep, sitting on the Module: the controls traverse
+              history itself, which is what Back and Forward really do. */}
+          <MemoryRouter initialEntries={['/', '/modules/m01']} initialIndex={1}>
+            <HistoryControls />
+            <App />
+          </MemoryRouter>
+        </ProgressProvider>
+      </CurriculumProvider>,
+    );
+    const moduleTitle = 'Module 01 — Deep Modules & Information Hiding · Kata';
+    await screen.findByText('Concept Page');
+    expect(document.title).toBe(moduleTitle);
+
+    fireEvent.click(screen.getByRole('button', { name: 'back' }));
+    await screen.findByRole('heading', {
+      level: 1,
+      name: 'Learn design by producing code.',
+    });
+    expect(document.title).toBe('Kata');
+
+    fireEvent.click(screen.getByRole('button', { name: 'forward' }));
+    await screen.findByText('Concept Page');
+    expect(document.title).toBe(moduleTitle);
   });
 
   it('deep-loads through the app routes identically', async () => {

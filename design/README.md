@@ -39,6 +39,8 @@ Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everyth
 
 **Heading levels are the outline, not the type scale (#75).** Every screen is one `h1` (the screen title), then `h2` for each section label, then `h3` for anything nested inside a section — Curriculum Module titles, Concept Page prose. The design system hangs its 13px uppercase *label* style on the `h6` tag, so section labels used to be marked up `h6` and the outline skipped (`h1 → h6 → h3`); the label type now travels on `.module-section-label` / `.exercise-section-label` instead. Never pick a heading tag for its size — pick the level, then style it.
 
+**The tab names the screen (#77).** `document.title` is `<screen> · Kata`, set by `useDocumentTitle` from the screen's own data: Curriculum plain `Kata`, Module `Module 03 — Testing at Boundaries + TDD loop · Kata`, Exercise `m01-e2 Build a recent-values cache behind a two-method surface · Kata`. While a screen's content is still loading it is plain `Kata` — never the previous screen's name — and the title is how a screen-reader user learns that a hash route changed at all.
+
 ### 1. Curriculum (`screens/01-state.png`)
 - **Purpose:** the fixed, ordered Module list with lock state. Data: `ICurriculum.getModules()`.
 - **Header:** kicker (13px uppercase `--color-accent-text`) + 54px title, with a 340px muted intro column aligned to the baseline (grid `1fr 340px`, gap 48).

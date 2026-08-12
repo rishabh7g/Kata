@@ -5,6 +5,7 @@ import { Markdown } from '../app/Markdown';
 import { ModuleUnavailable } from '../app/ModuleUnavailable';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
+import { useDocumentTitle } from '../app/useDocumentTitle';
 import { useGateStatus } from '../app/useGateStatus';
 import { useModuleDetail } from '../app/useModuleDetail';
 import { useModuleSummaries } from '../app/useModuleSummaries';
@@ -51,6 +52,13 @@ export function ModuleScreen() {
   // (#30) — the same rule the Curriculum rows apply (#18) and the prototype's
   // statusFor encodes (started → In progress, else Ready to start).
   const hasDraft = useHasChecklistDraft(progress, id ?? '');
+  // The tab names the Module once its content is here — while it loads, and
+  // for a Module that will not load at all, the tab stays plain `Kata` (#77).
+  useDocumentTitle(
+    module === undefined || module === null
+      ? null
+      : `Module ${ordinalLabel(module.ordinal)} — ${module.title}`,
+  );
 
   // The content would not load (offline, before this Module was ever read).
   // Checked first: a failure leaves the detail `undefined`, which the loading
@@ -86,7 +94,7 @@ export function ModuleScreen() {
       <header className="module-header">
         <div>
           <p className="module-kicker">
-            Module {String(module.ordinal).padStart(2, '0')}
+            Module {ordinalLabel(module.ordinal)}
           </p>
           <h1 className="module-title">{module.title}</h1>
         </div>
@@ -283,6 +291,14 @@ export function ExitGateAside({
 }
 
 /**
+ * A Module's ordinal as every surface writes it: two digits, zero-padded —
+ * `Module 03`, never `Module 3`.
+ */
+export function ordinalLabel(ordinal: number): string {
+  return String(ordinal).padStart(2, '0');
+}
+
+/**
  * The passed-state next-Module line — one text rule for the poster above and
  * the Exercise gate banner (#19): the following Module by ordinal and title,
  * or the closing line when nothing follows (Module 5).
@@ -291,7 +307,7 @@ export function nextModuleLine(nextModule: ModuleSummary | null): string {
   // "… unlocked." with no "is" — the prototype's exact line (DevGym.dc.html
   // § Module nextNote) and screens/02-state.png (#30).
   return nextModule !== null
-    ? `Module ${String(nextModule.ordinal).padStart(2, '0')} — ${nextModule.title} unlocked.`
+    ? `Module ${ordinalLabel(nextModule.ordinal)} — ${nextModule.title} unlocked.`
     : 'All five Modules passed — the Curriculum is complete.';
 }
 

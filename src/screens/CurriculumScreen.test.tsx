@@ -223,6 +223,15 @@ describe('Curriculum screen', () => {
     }
   });
 
+  // #77: the Curriculum is the app itself, so the tab carries only its name.
+  it('names the tab `Kata`', async () => {
+    document.title = 'stale';
+    await renderScreen();
+    await screen.findByText('01');
+
+    expect(document.title).toBe('Kata');
+  });
+
   it('uses no banned terms and no run counts (docs/ubiquitous-language.md § Banned, #3)', async () => {
     const { container } = await renderScreen();
     await screen.findByText('01');

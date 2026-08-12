@@ -5,12 +5,13 @@ import { LiveAnnouncement } from '../app/LiveAnnouncement';
 import { ModuleUnavailable } from '../app/ModuleUnavailable';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
+import { useDocumentTitle } from '../app/useDocumentTitle';
 import { useGateStatus } from '../app/useGateStatus';
 import { useModuleDetail } from '../app/useModuleDetail';
 import { useModuleSummaries } from '../app/useModuleSummaries';
 import type { ExerciseBrief } from '../curriculum';
 import { BehavioralChecklist } from './BehavioralChecklist';
-import { nextModuleLine } from './ModuleScreen';
+import { nextModuleLine, ordinalLabel } from './ModuleScreen';
 
 /**
  * Exercise — the read surface for one brief: header, Exercise Spec grid,
@@ -49,6 +50,17 @@ export function ExerciseScreen() {
   // a live region announces what arrives in it, and the gate banner that is
   // simply *there* on load is not news (#73).
   const [announcement, setAnnouncement] = useState('');
+  // Looked up before the early returns because the title hook below has to be
+  // called on every render — the guards that use it are unchanged.
+  const exercise =
+    module === undefined || module === null
+      ? undefined
+      : module.exercises.find((brief) => brief.id === exerciseId);
+  // The tab names the brief once it is here; while the Module loads, or when
+  // the id names no brief, it stays plain `Kata` (#77).
+  useDocumentTitle(
+    exercise === undefined ? null : `${exercise.id} ${exercise.title}`,
+  );
 
   // The Module's content would not load: the brief lives inside it, so this
   // screen is as blank as the Module's — same surface, same way out (#69).
@@ -69,14 +81,13 @@ export function ExerciseScreen() {
   // Unknown Module id: back to the Curriculum, never a dead end.
   if (module === null) return <Navigate to="/" replace />;
 
-  const exercise = module.exercises.find((brief) => brief.id === exerciseId);
   // Unknown brief id (or a pending Module with no briefs): back to the
   // owning Module, mirroring the unknown-Module fallback above.
   if (exercise === undefined) {
     return <Navigate to={`/modules/${module.id}`} replace />;
   }
 
-  const ordinal = String(module.ordinal).padStart(2, '0');
+  const ordinal = ordinalLabel(module.ordinal);
   const nextModule =
     modules.find((summary) => summary.ordinal === module.ordinal + 1) ?? null;
 
