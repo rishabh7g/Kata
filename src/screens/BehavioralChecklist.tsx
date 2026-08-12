@@ -166,26 +166,43 @@ function ChecklistForm({
   const complete = completeAnswers(questions, picks) !== null;
   return (
     <div>
-      {questions.map((question) => (
-        <div className="exercise-checklist-item" key={question.id}>
-          <div className="exercise-checklist-prompt">{question.prompt}</div>
-          <div className="exercise-checklist-options">
-            {question.options.map((option) => (
-              <label className="radio" key={option.value}>
-                <input
-                  type="radio"
-                  name={`checklist-${moduleId}-${question.id}`}
-                  value={option.value}
-                  checked={picks[question.id] === option.value}
-                  onChange={() => onPick(question.id, option.value)}
-                />
-                <span className="dot" />
-                <span>{option.label}</span>
-              </label>
-            ))}
+      {questions.map((question) => {
+        // The prompt is the pair's label, not loose text next to it (#72):
+        // `role="radiogroup"` + `aria-labelledby` names the group after the
+        // check, so focusing either option announces the question, "group",
+        // and "1 of 2". Chrome only counts a radio's position within an
+        // explicit group — before this the six radios were flat and
+        // unnamed. A `<fieldset>`/`<legend>` would say the same thing but
+        // would move the 1px item rule the legend cuts through, and the
+        // layout is fixed by design/screens/05-state.png.
+        const promptId = `checklist-${moduleId}-${question.id}-prompt`;
+        return (
+          <div className="exercise-checklist-item" key={question.id}>
+            <div className="exercise-checklist-prompt" id={promptId}>
+              {question.prompt}
+            </div>
+            <div
+              className="exercise-checklist-options"
+              role="radiogroup"
+              aria-labelledby={promptId}
+            >
+              {question.options.map((option) => (
+                <label className="radio" key={option.value}>
+                  <input
+                    type="radio"
+                    name={`checklist-${moduleId}-${question.id}`}
+                    value={option.value}
+                    checked={picks[question.id] === option.value}
+                    onChange={() => onPick(question.id, option.value)}
+                  />
+                  <span className="dot" />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
       <button
         type="button"
         className="btn btn-primary exercise-checklist-submit"
