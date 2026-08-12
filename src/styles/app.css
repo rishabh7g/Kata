@@ -120,14 +120,15 @@
   padding-bottom: 36px;
 }
 
-/* The kicker: h6 type in the design system — 13px uppercase accent. */
+/* The kicker: h6 type in the design system — 13px uppercase accent-text (#71:
+   the brand red reads 3.76:1 on the ground, under AA for a 13px string). */
 .curriculum-kicker {
   font-family: var(--font-heading);
   font-weight: var(--font-heading-weight);
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   margin: 0 0 12px;
 }
 
@@ -273,7 +274,7 @@ a.curriculum-row:hover {
 }
 
 .curriculum-backup-error {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   font-size: 11px;
   margin: 10px 0 0;
   max-width: 62ch;
@@ -303,14 +304,14 @@ a.curriculum-row:hover {
   margin-bottom: 40px;
 }
 
-/* The kicker: h6 type in the design system — 13px uppercase accent. */
+/* The kicker: h6 type in the design system — 13px uppercase accent-text (#71). */
 .module-kicker {
   font-family: var(--font-heading);
   font-weight: var(--font-heading-weight);
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   margin: 0 0 10px;
 }
 
@@ -422,7 +423,7 @@ a.curriculum-row:hover {
   min-width: 0;
 }
 
-/* BEFORE muted / AFTER accent-700 (design/README.md § Screens › 2). The label
+/* BEFORE muted / AFTER accent-text (design/README.md § Screens › 2). The label
    was neutral-600, which reads 3.55:1 on the surface cell — under the AA floor
    (#70); the muted token is the same role one step darker. */
 .module-example-label {
@@ -434,7 +435,7 @@ a.curriculum-row:hover {
 }
 
 .module-example-label-after {
-  color: var(--color-accent-700);
+  color: var(--color-accent-text);
 }
 
 /* tokens.json typeScale.app.codeExamples: 13 / 1.65 mono. Long lines scroll
@@ -570,11 +571,14 @@ a.curriculum-row:hover {
   padding: 28px 24px;
 }
 
-/* The section label inherits ink by default; the poster's runs bg-colored. */
+/* The section label inherits ink by default; the poster's runs bg-colored.
+   Dimming it to 0.75 dropped it to 2.63:1 on the accent field — under even the
+   3:1 the poster's display type answers to (#71). 0.9 keeps it a step under
+   "Passed." and reads 3.27:1. */
 .module-gate-poster-label {
   margin: 0 0 14px;
   color: var(--color-bg);
-  opacity: 0.75;
+  opacity: 0.9;
 }
 
 /* "Passed." — 32px/800 display type (prototype § Module poster). */
@@ -613,14 +617,14 @@ a.curriculum-row:hover {
   margin-bottom: 36px;
 }
 
-/* The kicker: h6 type in the design system — 13px uppercase accent. */
+/* The kicker: h6 type in the design system — 13px uppercase accent-text (#71). */
 .exercise-kicker {
   font-family: var(--font-heading);
   font-weight: var(--font-heading-weight);
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   margin: 0 0 10px;
 }
 
@@ -725,7 +729,7 @@ a.curriculum-row:hover {
   overflow-x: auto;
 }
 
-/* Practice material: the link out (styles.css gives `a` the accent color
+/* Practice material: the link out (styles.css gives `a` the text-safe accent
    and underline), or the quiet disabled note while the brief still carries
    the null placeholder (#23). */
 .exercise-folder-link {
