@@ -10,6 +10,10 @@
   /* Mirrors design/tokens.json § layout. */
   --layout-container-max: 1200px;
   --layout-gutter: 40px;
+
+  /* The prototype's mono stack (design/DevGym.dc.html); tokens.json
+     typeScale.app carries the code sizes, this carries the family once. */
+  --font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
 }
 
 .app-shell {
@@ -155,4 +159,95 @@ a.curriculum-row:hover {
 
 .curriculum-closing-rule {
   border-top: 2px solid var(--color-divider);
+}
+
+/* ── Module screen (#11) — design/README.md § Screens › 2 ─────────────────
+   Main column only: Concept Page prose and the Model Examples grid. The
+   header block and Exercise cards land with #12, the Exit Gate aside with
+   #13 — the empty aside column keeps the body grid honest from day one. */
+
+/* tokens.json layout.moduleGrid: 1fr 350px, gap 56. */
+.module-body {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 56px;
+  align-items: start;
+}
+
+/* Narrow viewports: the aside column would squeeze the main column below the
+   examples' 300px cell minimum and force page-level horizontal scroll —
+   collapse to one column instead (the examples then stack via auto-fit). */
+@media (max-width: 960px) {
+  .module-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Section labels are design-system h6 (13px uppercase); only the margin the
+   prototype sets is added here. */
+.module-section-label {
+  margin: 0 0 14px;
+}
+
+/* Section separators: the 2px .hr from styles.css at the prototype's 32px. */
+.module-rule {
+  margin: var(--space-8) 0;
+}
+
+/* Concept Page prose, capped at 66ch (design/README.md § Screens › 2). The
+   markdown carries its own title and the draft/edited/frozen note. */
+.module-concept {
+  max-width: 66ch;
+}
+
+.module-concept code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-surface);
+  padding: 1px 4px;
+}
+
+/* One before/after pair. The 2px border and the 2px divider between cells
+   come from the divider-colored background showing through the grid gap
+   (tokens.json layout.rules.major, prototype § Module). */
+.module-example {
+  margin: 0 0 28px;
+}
+
+.module-example-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2px;
+  background: var(--color-divider);
+  border: 2px solid var(--color-divider);
+}
+
+/* min-width: 0 lets the pre's overflow-x work instead of widening the page. */
+.module-example-cell {
+  background: var(--color-surface);
+  padding: 16px 18px;
+  min-width: 0;
+}
+
+/* BEFORE neutral-600 / AFTER accent-700 (design/README.md § Screens › 2). */
+.module-example-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-neutral-600);
+  margin-bottom: 8px;
+}
+
+.module-example-label-after {
+  color: var(--color-accent-700);
+}
+
+/* tokens.json typeScale.app.codeExamples: 13 / 1.65 mono. Long lines scroll
+   inside the cell — the page never scrolls horizontally. */
+.module-example-code {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-x: auto;
 }
