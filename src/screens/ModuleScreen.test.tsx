@@ -10,7 +10,7 @@ import type {
   ModuleIndex,
 } from '../curriculum';
 import { createCurriculum } from '../curriculum';
-import { ModuleScreen } from './ModuleScreen';
+import { ExitGateAside, ModuleScreen } from './ModuleScreen';
 
 // As in CurriculumScreen.test.tsx: the fixture is the real createCurriculum
 // over an in-memory ContentSource — the same seam main.tsx wires, minus HTTP.
@@ -284,6 +284,54 @@ describe('Module screen', () => {
     renderAt('/modules/nope');
 
     expect(await screen.findByText('curriculum probe')).toBeInTheDocument();
+  });
+
+  it('shows the Exit Gate aside with exactly one unmet condition row (#13)', async () => {
+    const { container } = renderAt('/modules/m01');
+    await screen.findByText('Exit Gate');
+
+    // The sticky aside sits in the reserved 350px column (sticky offset via
+    // .module-aside — tokens.json layout.asideStickyTop; CSS, not asserted).
+    const aside = container.querySelector('aside.module-aside');
+    expect(aside).toBeInTheDocument();
+    expect(aside?.querySelector('.module-gate-panel')).toBeInTheDocument();
+
+    // Exactly ONE condition row: the checklist. No IProgress (#14) exists,
+    // so it renders unmet — the empty ink-outline square, no check icon.
+    const rows = [...(aside?.querySelectorAll('.module-gate-condition') ?? [])];
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.textContent).toContain('Behavioral Checklist submitted');
+    expect(rows[0]?.textContent).toContain('Not yet submitted');
+    expect(rows[0]?.querySelector('.module-gate-box')).toBeInTheDocument();
+    expect(rows[0]?.querySelector('svg')).not.toBeInTheDocument();
+  });
+
+  it('styles the met condition state, reachable via fixture until #16 wires it', () => {
+    const { container } = render(<ExitGateAside checklistSubmitted={true} />);
+
+    const row = container.querySelector('.module-gate-condition');
+    // The check icon replaces the empty square; the row text flips too.
+    expect(row?.querySelector('svg.module-gate-check')).toBeInTheDocument();
+    expect(row?.querySelector('.module-gate-box')).not.toBeInTheDocument();
+    expect(row?.textContent).toContain('Behavioral Checklist submitted');
+    expect(row?.textContent).toContain('Submitted');
+    expect(row?.textContent).not.toContain('Not yet submitted');
+  });
+
+  it('renders the Checkpoint note; no schedule talk, no Test-Suites row (#3)', async () => {
+    const { container } = renderAt('/modules/m01');
+    await screen.findByText('Exit Gate');
+
+    expect(
+      screen.getByText(/Checkpoint-based — advance when the gate is passed/),
+    ).toBeInTheDocument();
+
+    const text = container.textContent ?? '';
+    // Nothing calendar-shaped anywhere on the screen.
+    expect(text).not.toMatch(/timeline|streak|schedule|deadline|per week/i);
+    // The captures' second row is historical (read-only decision, #3): no
+    // suite status and no run-count text render anywhere.
+    expect(text).not.toMatch(/test suites? green|suites green|runs?\b/i);
   });
 
   it('uses no banned terms (docs/ubiquitous-language.md § Banned)', async () => {

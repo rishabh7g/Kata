@@ -10,6 +10,7 @@
   /* Mirrors design/tokens.json § layout. */
   --layout-container-max: 1200px;
   --layout-gutter: 40px;
+  --layout-aside-sticky-top: 84px;
 
   /* The prototype's mono stack (design/DevGym.dc.html); tokens.json
      typeScale.app carries the code sizes, this carries the family once. */
@@ -340,4 +341,62 @@ a.curriculum-row:hover {
 
 .module-exercise-arrow {
   flex: none;
+}
+
+/* Exit Gate aside: pinned while the main column scrolls
+   (tokens.json layout.asideStickyTop; .module-body's align-items: start
+   keeps the grid from stretching it full-height, which would kill sticky). */
+.module-aside {
+  position: sticky;
+  top: var(--layout-aside-sticky-top);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Not-passed panel: 2px rule border (tokens.json layout.rules.major),
+   prototype § Module Exit Gate. */
+.module-gate-panel {
+  border: 2px solid var(--color-divider);
+  padding: 20px;
+}
+
+/* The single condition row: minor 1px rule on top, marker + text. */
+.module-gate-condition {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-divider);
+}
+
+/* Unmet marker: the 14px empty ink-outline square, no icon. */
+.module-gate-box {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--color-neutral-400);
+  display: inline-block;
+  flex: none;
+  margin-top: 3px;
+}
+
+/* Met marker: the check icon sits on the same optical line as the square. */
+.module-gate-check {
+  flex: none;
+  margin-top: 2px;
+}
+
+.module-gate-condition-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.module-gate-condition-status {
+  font-size: 12px;
+}
+
+/* tokens.json typeScale.app.meta: 12, muted. */
+.module-gate-note {
+  font-size: 12px;
+  margin: 14px 0 0;
 }
