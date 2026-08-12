@@ -98,7 +98,7 @@ describe('content schema + Module index (#7)', () => {
     }
   });
 
-  it('lists all five Modules, in Curriculum order, titles verbatim, all pending', () => {
+  it('lists all five Modules, in Curriculum order, titles verbatim, only m01 authored', () => {
     const index = JSON.parse(
       readFileSync(join(REPO, 'public/content/index.json'), 'utf8'),
     ) as {
@@ -116,8 +116,9 @@ describe('content schema + Module index (#7)', () => {
     ]);
     expect(index.modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5]);
     expect(index.modules.map((m) => m.id)).toEqual(['m01', 'm02', 'm03', 'm04', 'm05']);
-    // Every Module is pending until its content pack is authored (#8 flips m01).
-    expect(index.modules.every((m) => m.pending)).toBe(true);
+    // A Module is pending until its content pack is authored: #8 shipped m01;
+    // m02–m05 stay pending until #24–#27.
+    expect(index.modules.map((m) => m.pending)).toEqual([false, true, true, true, true]);
   });
 });
 

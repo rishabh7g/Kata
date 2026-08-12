@@ -229,6 +229,13 @@ else
         const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
         console.log(data.modules.filter((m) => !m.pending).map((m) => m.id).join(" "));
       ' "$WORK/content/index.json" 2>>"$LOG")"
+      # Module 1 shipped in #8: it must be non-pending, so the loop below
+      # always fetches content/modules/m01.json (200) and validates it.
+      if [[ " $MODULES " == *" m01 "* ]]; then
+        note "m01 is non-pending — Module 1 content (#8) is live"
+      else
+        bad "m01 is pending in the deployed index — Module 1 content (#8) is missing"
+      fi
       for id in $MODULES; do
         get "${URL}content/modules/${id}.json" "$WORK/content/modules/${id}.json"
       done
