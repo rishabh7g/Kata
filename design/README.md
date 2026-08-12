@@ -41,7 +41,7 @@ Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everyth
 - **Purpose:** the fixed, ordered Module list with lock state. Data: `ICurriculum.getModules()`.
 - **Header:** kicker (13px uppercase `--color-accent-text`) + 54px title, with a 340px muted intro column aligned to the baseline (grid `1fr 340px`, gap 48).
 - **Rows:** one per Module. Grid `104px 1fr 230px 36px`, gap 24, padding-block 24, 2px top rule per row + closing 2px rule after the last. Cells: ordinal (30px/800), title (22px h3) over one-line description (13px muted), status column (tag + optional `Checkpoint · date` 11px), trailing icon.
-- **Row states:** unlocked → pointer cursor, hover tint (4% ink), arrow-right icon · locked → 0.5 opacity, `not-allowed` cursor, lock icon, click inert · passed → `Exit Gate passed` accent tag + Checkpoint date · in progress → outline tag · fresh → neutral `Ready to start` tag.
+- **Row states:** unlocked → pointer cursor, hover tint (4% ink), arrow-right icon · locked → 0.5 opacity, `not-allowed` cursor, lock icon, click inert, and the lock state repeated in the status column as `.visually-hidden` text — all three visual cues are invisible to a screen reader, so the row would otherwise read exactly like an unlocked one (#74) · passed → `Exit Gate passed` accent tag + Checkpoint date · in progress → outline tag · fresh → neutral `Ready to start` tag.
 
 ### 2. Module (`screens/02` passed · `screens/03` in progress)
 - **Purpose:** Concept Page, Model Examples, Exercise list, Exit Gate status. Data: `ICurriculum.getModule(id)` + `IProgress.getGateStatus(id)`.
