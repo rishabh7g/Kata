@@ -152,6 +152,10 @@ elif get "$JS_URL" "$WORK/app.js"; then
   has "$WORK/app.js" 'Checkpoints' 'the Checkpoint count label'
   has "$WORK/app.js" 'curriculum-row' 'the Curriculum Module rows (#10)'
   has "$WORK/app.js" 'Ready to start' 'the fresh-Module status tag (#10)'
+  # The Module route is hash-routed, so it is this same 200 document; its
+  # markup shipping in the bundle is what "the route serves the screen" means.
+  has "$WORK/app.js" 'module-concept' 'the Module Concept Page container (#11)'
+  has "$WORK/app.js" 'module-example-grid' 'the Model Examples grid (#11)'
 fi
 end
 
