@@ -3,6 +3,7 @@ import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { startKata } from './bootstrap';
 import type { ModuleIndex } from '../curriculum';
+import { expectWellFormedOutline } from '../test/headings';
 
 // The committed index, trimmed to two Modules — enough for the nav count.
 const index: ModuleIndex = {
@@ -89,6 +90,21 @@ describe('startKata', () => {
     // Still the app: the lockup is there, the Checkpoint count is not.
     expect(screen.getByText('Kata')).toBeInTheDocument();
     expect(screen.queryByText(/^Checkpoints \d/)).not.toBeInTheDocument();
+  });
+
+  it('gives the blocked-database screen an outline to navigate (#94)', async () => {
+    blockIndexedDB(new DOMException('blocked', 'SecurityError'));
+
+    await act(async () => {
+      await startKata(container, '/Kata/');
+    });
+
+    // The notice is the whole screen here — the shell renders the lockup and
+    // nothing else — so its title is the h1. It was an h2 above nothing.
+    expect(expectWellFormedOutline(container)).toEqual([
+      'h1 Kata cannot open its progress database',
+    ]);
+    expect(container.querySelector('h1')).toHaveClass('app-notice-title');
   });
 
   it('still logs the failure for whoever is looking at the console', async () => {

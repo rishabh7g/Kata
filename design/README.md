@@ -40,6 +40,8 @@ Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everyth
 
 **Heading levels are the outline, not the type scale (#75).** Every screen is one `h1` (the screen title), then `h2` for each section label, then `h3` for anything nested inside a section — Curriculum Module titles, Concept Page prose. The design system hangs its 13px uppercase *label* style on the `h6` tag, so section labels used to be marked up `h6` and the outline skipped (`h1 → h6 → h3`); the label type now travels on `.module-section-label` / `.exercise-section-label` instead. Never pick a heading tag for its size — pick the level, then style it.
 
+**Every screen means the failure states too (#94).** A notice (`Notice.tsx`, the 2px-rule panel behind the blocked-progress-database and Module-content-unavailable states) *is* the screen when it is raised, so its title is that screen's `h1`, sized by `.app-notice-title` rather than by its tag. It was an `h2` with no `h1` anywhere on the page. `src/test/headings.ts` is the rule in code — one `h1`, no skipped levels — and every screen that can render, including these, asserts against it.
+
 **The tab names the screen (#77).** `document.title` is `<screen> · Kata`, set by `useDocumentTitle` from the screen's own data: Curriculum plain `Kata`, Module `Module 03 — Testing at Boundaries + TDD loop · Kata`, Exercise `m01-e2 Build a recent-values cache behind a two-method surface · Kata`. While a screen's content is still loading it is plain `Kata` — never the previous screen's name — and the title is how a screen-reader user learns that a hash route changed at all.
 
 ### 1. Curriculum (`screens/01-state.png`)
