@@ -5,6 +5,8 @@ coverage/
 *.log
 # scripts/README.md: transcripts from the check scripts
 .checks/
+# docs/engineering.md § 5: LLM first drafts — never shipped, never committed
+drafts/
 .env
 .env.*
 !.env.example
