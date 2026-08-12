@@ -9,9 +9,9 @@ import type { ExerciseBrief, ModelExample, ModuleDetail } from '../curriculum';
  * and the Exercise cards (design/README.md § Screens › 2,
  * design/screens/02-state.png, 03-state.png).
  *
- * The Exit Gate aside lands with #13 and the pending-Module placeholder copy
- * with #28 — the aside column is already reserved so the body grid
- * (tokens.json layout.moduleGrid: 1fr 350px) is honest from day one.
+ * The pending-Module placeholder copy lands with #28; the aside column holds
+ * the Exit Gate panel (#13) so the body grid (tokens.json layout.moduleGrid:
+ * 1fr 350px) carries both columns.
  *
  * Everything rendered comes from `ICurriculum.getModule(id)` (#9). The cards
  * carry no suite status and no runs meta — the app knows nothing about the
@@ -87,10 +87,56 @@ export function ModuleScreen() {
             )}
           </section>
         </div>
-        {/* The Exit Gate aside (#13) takes this column. */}
-        <aside className="module-aside" />
+        {/* Read-only for now: no IProgress (#14) means no submitted checklist
+            can exist, so the condition is always unmet here. #16/#17 wire the
+            live state and the passed poster. */}
+        <ExitGateAside checklistSubmitted={false} />
       </div>
     </>
+  );
+}
+
+/**
+ * The sticky Exit Gate panel (design/README.md § Screens › 2 › Exit Gate
+ * aside): 2px-bordered, with a SINGLE condition row — "Behavioral Checklist
+ * submitted" — and the checkpoint-based-progression note. The gate is the
+ * checklist alone: the captures' second row ("All Exercise Test Suites
+ * green") is historical per the read-only decision (#3) and is not built.
+ *
+ * Exported so tests can reach the met state (check icon) before #16 wires a
+ * real submission; the screen itself always renders it unmet until then.
+ */
+export function ExitGateAside({
+  checklistSubmitted,
+}: {
+  checklistSubmitted: boolean;
+}) {
+  return (
+    <aside className="module-aside">
+      <div className="module-gate-panel">
+        <h6 className="module-section-label">Exit Gate</h6>
+        <div className="module-gate-condition">
+          {checklistSubmitted ? (
+            <GateCheckIcon />
+          ) : (
+            // The unmet marker: 14px empty ink-outline square, no icon.
+            <span className="module-gate-box" />
+          )}
+          <div>
+            <div className="module-gate-condition-title">
+              Behavioral Checklist submitted
+            </div>
+            <div className="text-muted module-gate-condition-status">
+              {checklistSubmitted ? 'Submitted' : 'Not yet submitted'}
+            </div>
+          </div>
+        </div>
+        <p className="text-muted module-gate-note">
+          Checkpoint-based — advance when the gate is passed, whether that
+          takes 2 days or 2 months.
+        </p>
+      </div>
+    </aside>
   );
 }
 
@@ -150,6 +196,26 @@ function ExerciseCard({
 }
 
 // Icons copied from the design reference (design/DevGym.dc.html § Module).
+
+/** The met-condition check: 16px, 2.5 stroke (prototype § Exit Gate). */
+function GateCheckIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="module-gate-check"
+      aria-hidden="true"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
 
 function BackArrowIcon() {
   return (
