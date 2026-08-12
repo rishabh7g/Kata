@@ -25,6 +25,10 @@ const index: ModuleIndex = {
   ],
 };
 
+// What a locked row says to an assistive technology (#74) — clipped out of
+// sight, so this string is the row's only lock state that is not a pixel.
+const LOCKED_TEXT = "Locked — pass the previous Module's Exit Gate to unlock it.";
+
 const source: ContentSource = {
   loadIndex: async () => index,
   // The Curriculum screen never opens a content file.
@@ -109,6 +113,34 @@ describe('Curriculum screen', () => {
       expect(row).toHaveAttribute('aria-disabled', 'true');
       expect(row.querySelector('.tag')).toBeNull();
     }
+  });
+
+  it('a locked row says it is locked in text, and stays inert (#74)', async () => {
+    const { container } = await renderScreen();
+    await screen.findByText('01');
+
+    // The lock state is text, in the status column, where every other row's
+    // state is read — not opacity, an aria-hidden icon and a cursor (#74).
+    const notes = screen.getAllByText(LOCKED_TEXT);
+    expect(notes).toHaveLength(4);
+    for (const note of notes) {
+      expect(note).toHaveClass('visually-hidden');
+      expect(note.closest('.curriculum-row-status')).not.toBeNull();
+    }
+
+    // …and the row is still inert: a div, no tag, nothing focusable inside it.
+    for (const row of container.querySelectorAll('.curriculum-row-locked')) {
+      expect(row.textContent).toContain('Locked');
+      expect(row.tagName).toBe('DIV');
+      expect(row).not.toHaveAttribute('tabindex');
+      expect(row.querySelector('a, button, [tabindex], [role]')).toBeNull();
+      expect(row.querySelector('.tag')).toBeNull();
+    }
+
+    // Unlocked rows are untouched: their tag is the only state they carry.
+    const unlocked = container.querySelector('a.curriculum-row');
+    expect(unlocked?.textContent).not.toMatch(/Locked/);
+    expect(unlocked?.querySelector('.visually-hidden')).toBeNull();
   });
 
   it('clicking a locked row does nothing', async () => {

@@ -145,8 +145,21 @@ function StatusTag({
   module: ModuleSummary;
   inProgress: boolean;
 }) {
-  // Locked rows carry no tag (design/README.md § Screens › 1 row states).
-  if (!module.unlocked) return null;
+  // Locked rows carry no visible tag (design/README.md § Screens › 1 row
+  // states) — the design says "locked" with 0.5 opacity, the lock icon and the
+  // `not-allowed` cursor, none of which a screen reader can see, so the row
+  // read as plain text identical in shape to an unlocked one (#74). The status
+  // column says it in words instead: clipped out of sight (`.visually-hidden`,
+  // #73), so the capture is untouched, and placed here so it is read where
+  // every other row's state is read. It also answers the question the visual
+  // cues answer — why activating the row does nothing.
+  if (!module.unlocked) {
+    return (
+      <span className="visually-hidden">
+        Locked — pass the previous Module's Exit Gate to unlock it.
+      </span>
+    );
+  }
   if (module.checkpointAt !== null) {
     return (
       <>
