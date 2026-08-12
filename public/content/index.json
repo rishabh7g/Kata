@@ -6,7 +6,7 @@
       "ordinal": 1,
       "title": "Deep Modules & Information Hiding",
       "description": "Hide the most complexity behind the smallest surface — the generative root of good design.",
-      "pending": true
+      "pending": false
     },
     {
       "id": "m02",
