@@ -16,7 +16,8 @@
 # Exit codes: 0 ok · 2 usage/precondition · 10 shell · 11 app bundle ·
 #             12 stylesheet · 13 font · 14 manifest · 15 service worker ·
 #             16 icons · 17 content · 18 exercise folders ·
-#             19 m02 exercise folders · 20 m03 exercise folders
+#             19 m02 exercise folders · 20 m03 exercise folders ·
+#             21 m04 exercise folders
 #
 set -uo pipefail
 
@@ -276,6 +277,13 @@ else
       else
         bad "m03 is pending in the deployed index — Module 3 content (#25) is missing"
       fi
+      # Module 4 shipped in #26: the loop below must also fetch and validate
+      # content/modules/m04.json.
+      if [[ " $MODULES " == *" m04 "* ]]; then
+        note "m04 is non-pending — Module 4 content (#26) is live"
+      else
+        bad "m04 is pending in the deployed index — Module 4 content (#26) is missing"
+      fi
       for id in $MODULES; do
         get "${URL}content/modules/${id}.json" "$WORK/content/modules/${id}.json"
       done
@@ -364,6 +372,31 @@ else
     for folder_url in $FOLDER_URLS; do
       n=$((n + 1))
       get "$folder_url" "$WORK/m03-exercise-folder-$n.html" || true
+    done
+  fi
+fi
+end
+
+# ─── 12. m04 exercise folders (#26) ────────────────────────────────────────
+# Module 4's two Exercise folders are committed (#26): the deployed m04.json
+# must carry both GitHub folder URLs and each must return 200.
+begin exercise-folders-m04 21
+M04_JSON="$WORK/content/modules/m04.json"
+if [[ ! -f "$M04_JSON" ]]; then
+  bad "the deployed m04.json was not fetched (content step failed?) — cannot read folderUrl"
+else
+  FOLDER_URLS="$(node -e '
+    const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+    console.log(data.exercises.map((e) => e.folderUrl).filter(Boolean).join(" "));
+  ' "$M04_JSON" 2>>"$LOG")"
+  COUNT=$(wc -w <<<"$FOLDER_URLS")
+  if ((COUNT < 2)); then
+    bad "deployed m04.json has $COUNT non-null folderUrl values (expected 2: #26)"
+  else
+    n=0
+    for folder_url in $FOLDER_URLS; do
+      n=$((n + 1))
+      get "$folder_url" "$WORK/m04-exercise-folder-$n.html" || true
     done
   fi
 fi
