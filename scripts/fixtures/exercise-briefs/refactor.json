@@ -1,0 +1,10 @@
+{
+  "id": "m01-e1",
+  "type": "refactor",
+  "title": "Deepen a shallow document store",
+  "concept": "Deep Modules & Information Hiding",
+  "smell": "Shallow module: the folder layout, file naming scheme, encoding, and save-before-load ordering all leak into every caller as parameters and rituals.",
+  "targetInterfaceCode": "public interface IDocumentStore\n{\n    void Save(string documentName, string contents);\n    string Load(string documentName);\n    bool Exists(string documentName);\n}",
+  "sizeBudgetLoc": 250,
+  "folderUrl": null
+}
