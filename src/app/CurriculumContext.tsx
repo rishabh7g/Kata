@@ -2,8 +2,9 @@ import { createContext, useContext, type ReactNode } from 'react';
 import type { ICurriculum } from '../curriculum';
 
 /**
- * The seam the screens read curriculum data through. main.tsx provides the
- * real ICurriculum (HTTP content + stored Checkpoints); tests provide one
+ * The seam the screens read curriculum data through. The bootstrap
+ * (src/app/bootstrap.tsx) provides the real ICurriculum (HTTP content +
+ * stored Checkpoints); tests provide one
  * built over an in-memory ContentSource. Screens never construct their own —
  * lock state and ordering are ICurriculum's job (#9), rendering is theirs.
  */
