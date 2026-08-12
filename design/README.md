@@ -20,7 +20,13 @@ Every string the app renders clears **WCAG 2.1 AA (SC 1.4.3)** against the backg
 - **3:1** for large text (≥ 24px, or ≥ 18.66px at weight 700).
 - **Only two exemptions,** both WCAG's own: text inside an *inactive* component (a locked Curriculum row at 0.5 opacity, a disabled button), and purely decorative rules and dividers.
 
-So: **secondary text is `--color-text-muted`** (`neutral-700`, 5.83:1 on bg / 5.38:1 on surface), never ink at an alpha — 55% ink read 3.65:1 and failed on every screen (#70). A new token that carries text has to be measured against `--color-bg` *and* `--color-surface` before it ships.
+So:
+
+- **Secondary text is `--color-text-muted`** (`neutral-700`, 5.83:1 on bg / 5.38:1 on surface), never ink at an alpha — 55% ink read 3.65:1 and failed on every screen (#70).
+- **Accent text is `--color-accent-text`** (`accent-700`, 6.41:1 / 5.91:1). `--color-accent` is a **field** colour — posters, the passed banner, rules, the 2px focus ring — and reads 3.76:1 on bg / 3.47:1 on surface: enough for non-text (SC 1.4.11, 3:1), never enough for a string (#71). Kickers, links, ghost labels, outline tags and the primary action's field all take the ink one.
+- **One recorded exception:** the passed **poster** and **gate banner** keep the brand field, so their ground-coloured type reads 3.27–3.76:1 — the large-text floor, not 4.5:1. Display type only; never put a small string on that field.
+
+A new token that carries text has to be measured against `--color-bg` *and* `--color-surface` before it ships.
 
 ## Brand
 - **Name: Kata** — the owner's decision, chosen from the three brand explorations in `design/brand/` (DevGym · Praxis · Kata). `brand/Brand Kata.dc.html` is the adopted brand card.
@@ -33,7 +39,7 @@ Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everyth
 
 ### 1. Curriculum (`screens/01-state.png`)
 - **Purpose:** the fixed, ordered Module list with lock state. Data: `ICurriculum.getModules()`.
-- **Header:** kicker (13px uppercase accent) + 54px title, with a 340px muted intro column aligned to the baseline (grid `1fr 340px`, gap 48).
+- **Header:** kicker (13px uppercase `--color-accent-text`) + 54px title, with a 340px muted intro column aligned to the baseline (grid `1fr 340px`, gap 48).
 - **Rows:** one per Module. Grid `104px 1fr 230px 36px`, gap 24, padding-block 24, 2px top rule per row + closing 2px rule after the last. Cells: ordinal (30px/800), title (22px h3) over one-line description (13px muted), status column (tag + optional `Checkpoint · date` 11px), trailing icon.
 - **Row states:** unlocked → pointer cursor, hover tint (4% ink), arrow-right icon · locked → 0.5 opacity, `not-allowed` cursor, lock icon, click inert · passed → `Exit Gate passed` accent tag + Checkpoint date · in progress → outline tag · fresh → neutral `Ready to start` tag.
 
@@ -41,7 +47,7 @@ Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everyth
 - **Purpose:** Concept Page, Model Examples, Exercise list, Exit Gate status. Data: `ICurriculum.getModule(id)` + `IProgress.getGateStatus(id)`.
 - **Header:** ghost back button (← Curriculum), kicker `MODULE nn`, 44px title, status tag right-aligned. No rule under the header.
 - **Body grid:** `1fr 350px`, gap 56. Sections in the main column separated by 2px `.hr` rules: Concept Page (paragraphs, 66ch max, with `LLM first draft · human-edited once · frozen` note) → Model Examples → Exercises.
-- **Model Examples:** before/after pair in a 2px-bordered grid, cells split by a 2px divider (`repeat(auto-fit, minmax(300px, 1fr))` — stacks when narrow). Cell: surface fill, 16/18 padding, BEFORE label (10px uppercase, muted) / AFTER label (accent-700), code 13px/1.65 mono, `overflow-x: auto`. Caption 11px below.
+- **Model Examples:** before/after pair in a 2px-bordered grid, cells split by a 2px divider (`repeat(auto-fit, minmax(300px, 1fr))` — stacks when narrow). Cell: surface fill, 16/18 padding, BEFORE label (10px uppercase, muted) / AFTER label (`--color-accent-text`), code 13px/1.65 mono, `overflow-x: auto`. Caption 11px below.
 - **Exercise cards:** `.card` row — type tag (`Refactor`/`Construct`, outline), title 16px/800 + Smell line 12px muted, arrow icon. Hover: `--shadow-md`. Whole card navigates. **No status column** — the app knows nothing about the learner's code; the captures' `Green · 12 / 12` column is historical and is not built.
 - **Exit Gate aside:** sticky (top 84). Not passed → 2px-bordered panel with a **single condition row** (check icon when met, 14px empty ink-outline square when not): "Behavioral Checklist submitted" + status; closing note about checkpoint-based progression. There is no second row: the gate is the checklist alone. Passed → the **poster**: accent field, bg-colored type, "Passed." at 32px/800, `Checkpoint · date`, next-Module-unlocked line. The poster is the one place red runs as a field.
 - **Pending Module (03–05, once unlocked):** placeholder copy for Concept Page / Examples / Exercises (see prototype).
@@ -59,7 +65,7 @@ The screen is exactly six things: **header, Exercise Spec grid (Concept / Smell 
 
 ## Interactions & behavior
 - Navigation: brand → Curriculum; rows/cards/back buttons as above. No other chrome — three screens only, no editor.
-- Hover/pressed/focus/disabled states come from `styles.css` — do not restyle per page. Focus is the 2px accent ring, never the browser default.
+- Hover/pressed/focus/disabled states come from `styles.css` — do not restyle per page. Focus is the 2px brand-accent ring (non-text, 3.76:1), never the browser default.
 - **Checklist flow (the only write in the app):** answering a radio pair autosaves a draft (`IProgress.saveChecklistDraft`); submit stays disabled until all three are answered. Submit (`IProgress.submitChecklist`) stores the submission and writes the Module's one Checkpoint atomically, then the panel flips to the read-only submitted state. Submitting again is a no-op — a Module never gets a second Checkpoint. The prototype's "Simulate verify run" button has no counterpart: **drop it**, along with the pulsing terminal line it drove.
 - Gate pass (Behavioral Checklist submitted — the sole condition, self-assessed) → Checkpoint recorded, next Module unlocks in Curriculum, gate panel becomes the poster, banner appears on the Exercise screen.
 - **Never render:** timelines, streaks, schedules, scores, grades, spaced-repetition prompts, or anything about the state of the learner's code — test results, pass counts, run history, suite-status chips. Progress is Checkpoints only.
@@ -73,7 +79,7 @@ Screen-local state maps 1:1 onto the **two** Target Interfaces (`docs/engineerin
 Unlock = a Checkpoint exists for the previous Module. Gate = Behavioral Checklist submitted — the sole condition, self-assessed. Both are derived on read by the Target Interfaces; compute nothing else client-side, and never persist either.
 
 ## Design tokens
-`styles.css` (ship it) and `tokens.json` (mirror + app-layer values: layout grids, type scale, code sizes, semantics). Key semantics: red = emphasis and attention — primary action and the passed-gate poster; passing = ink + check; locked = 50% opacity. Never a green/red traffic pair. (`semantics.failing` in `tokens.json` has no rendered use now that no screen reports test results.)
+`styles.css` (ship it) and `tokens.json` (mirror + app-layer values: layout grids, type scale, code sizes, semantics). Key semantics: red = emphasis and attention — primary action and the passed-gate poster (field red `--color-accent`; any red *string* uses `--color-accent-text`); passing = ink + check; locked = 50% opacity. Never a green/red traffic pair. (`semantics.failing` in `tokens.json` has no rendered use now that no screen reports test results.)
 
 ## Assets
 - `assets/kata-mark.svg` — brand mark (also the app-icon/favicon source). `assets/devgym-mark.svg` stays in place as a historical artifact, no longer used.

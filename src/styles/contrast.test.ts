@@ -59,6 +59,25 @@ function luminance(hex: string): number {
   );
 }
 
+/** `foreground` at `alpha` composited over `background`, as the browser does. */
+function mix(foreground: string, alpha: number, background: string): string {
+  const channels = (hex: string): number[] => {
+    const int = Number.parseInt(hex.slice(1), 16);
+    return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
+  };
+  const front = channels(foreground);
+  return (
+    '#' +
+    channels(background)
+      .map((back, index) =>
+        Math.round((front[index] ?? 0) * alpha + back * (1 - alpha))
+          .toString(16)
+          .padStart(2, '0'),
+      )
+      .join('')
+  );
+}
+
 /** Rounded to 2dp, the way the issue and the PR quote the numbers. */
 function contrast(foreground: string, background: string): number {
   const first = luminance(foreground);
@@ -87,8 +106,10 @@ function rule(selector: string): string {
 }
 
 describe('the contrast floor', () => {
-  it('is a real WCAG measurement (self-check on the two ends of the ramp)', () => {
-    expect(contrast('#ffffff', '#000000')).toBe(21);
+  it('is a real WCAG measurement (self-check against the known pair)', () => {
+    // Ink on the ground measures 14.86:1 in the browser (CDP over the
+    // rendered DOM); a colour against itself is 1:1 by definition.
+    expect(contrast(token('--color-text'), BG)).toBe(14.86);
     expect(contrast(BG, BG)).toBe(1);
   });
 
@@ -132,8 +153,65 @@ describe('the contrast floor', () => {
     });
   });
 
+  describe('accent text (#71)', () => {
+    it.each(GROUNDS)('clears 4.5:1 on %s', (_name, ground) => {
+      expect(contrast(token('--color-accent-text'), ground)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('is what every accent-coloured string points at', () => {
+      const accentText = /var\(--color-accent-text\)/;
+      // Links, ghost labels, outline tags, kickers, the AFTER label, the
+      // import error — the roles the QA sweep measured at 3.47–3.76 (#71).
+      expect(rule('a')).toMatch(accentText);
+      expect(rule('.btn-ghost')).toMatch(accentText);
+      expect(rule('.tag-outline')).toMatch(accentText);
+      expect(rule('.card-kicker')).toMatch(accentText);
+      for (const kicker of [
+        '.curriculum-kicker',
+        '.module-kicker',
+        '.exercise-kicker',
+      ]) {
+        expect(rule(kicker)).toMatch(accentText);
+      }
+      expect(rule('.curriculum-backup-error')).toMatch(accentText);
+      expect(rule('.module-example-label-after')).toMatch(accentText);
+    });
+
+    it('gives the primary action a field its label can sit on', () => {
+      // The label is --color-bg on the field; the brand red gave 3.76.
+      expect(rule('.btn-primary')).toMatch(/background:\s*var\(--color-accent-text\)/);
+      expect(contrast(BG, token('--color-accent-text'))).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(BG, token('--color-accent-800'))).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(BG, token('--color-accent-900'))).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('leaves the brand accent as a field colour, and only where 3:1 is the bar', () => {
+      // The 2px focus ring is non-text (SC 1.4.11): 3:1, on either ground.
+      expect(rule(':focus-visible')).toMatch(/outline:\s*2px solid var\(--color-accent\)/);
+      for (const [, ground] of GROUNDS) {
+        expect(contrast(token('--color-accent'), ground)).toBeGreaterThanOrEqual(3);
+      }
+      // …and it is under AA for text, which is the whole point of the split.
+      expect(contrast(token('--color-accent'), BG)).toBeLessThan(4.5);
+    });
+
+    it('keeps the poster label readable on the field it dims against', () => {
+      // Ground-coloured type at opacity o over the brand field: 0.75 read
+      // 2.63:1, under even the 3:1 the poster's display type answers to.
+      const opacity = Number(
+        /opacity:\s*([\d.]+)/.exec(rule('.module-gate-poster-label'))?.[1],
+      );
+      const field = token('--color-accent');
+      const dimmed = mix(BG, opacity, field);
+      expect(contrast(dimmed, field)).toBeGreaterThanOrEqual(3);
+      // Still a step under the display line, so the poster keeps its hierarchy.
+      expect(opacity).toBeLessThan(1);
+    });
+  });
+
   it('keeps tokens.json and styles.css saying the same thing', () => {
-    const documented = String(tokens.color.textMuted);
-    expect(documented.startsWith(token('--color-text-muted'))).toBe(true);
+    expect(String(tokens.color.textMuted).startsWith(token('--color-text-muted'))).toBe(true);
+    expect(String(tokens.color.accentText).startsWith(token('--color-accent-text'))).toBe(true);
+    expect(String(tokens.color.accent).startsWith(token('--color-accent'))).toBe(true);
   });
 });
