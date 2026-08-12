@@ -1,6 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { CurriculumProvider } from '../app/CurriculumContext';
@@ -25,7 +31,7 @@ const index: ModuleIndex = {
   schemaVersion: 1,
   modules: [
     { id: 'm01', ordinal: 1, title: 'Deep Modules & Information Hiding', description: 'Hide the most complexity behind the smallest surface.', pending: false },
-    { id: 'm02', ordinal: 2, title: 'Dependency Direction', description: 'Point dependencies at stable abstractions.', pending: true },
+    { id: 'm02', ordinal: 2, title: 'Dependency Direction', description: 'Point dependencies at stable abstractions.', pending: false },
   ],
 };
 
@@ -71,9 +77,40 @@ const content: ModuleContent = {
   ],
 };
 
+// Module 2 is authored too, so a brief in a *different* Module is reachable —
+// the cross-Module navigation #67 broke needs two Modules with real content.
+const m02Brief: ExerciseBrief = {
+  id: 'm02-e1',
+  type: 'refactor',
+  title: 'Point a policy at an abstraction',
+  concept: 'Dependency Direction',
+  smell: 'Policy reaches down into a concrete detail.',
+  targetInterfaceCode: 'public interface IClock { }',
+  sizeBudgetLoc: 180,
+  folderUrl: null,
+};
+
+const m02Content: ModuleContent = {
+  schemaVersion: 1,
+  id: 'm02',
+  conceptPageMarkdown: '# Dependency Direction\n\nProse.',
+  modelExamples: [{ before: 'b1', after: 'a1', caption: 'c1' }],
+  exercises: [m02Brief],
+  checklistQuestions: [
+    { id: 'q1', prompt: 'm02 p1', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
+    { id: 'q2', prompt: 'm02 p2', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
+    { id: 'q3', prompt: 'm02 p3', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
+  ],
+};
+
+const contentById: Record<string, ModuleContent> = {
+  m01: content,
+  m02: m02Content,
+};
+
 const source: ContentSource = {
   loadIndex: async () => index,
-  loadModuleContent: async (id) => (id === 'm01' ? content : null),
+  loadModuleContent: async (id) => contentById[id] ?? null,
 };
 
 beforeEach(() => {
@@ -82,7 +119,30 @@ beforeEach(() => {
   globalThis.indexedDB = new IDBFactory();
 });
 
-async function renderAt(path: string, progress?: IProgress) {
+/**
+ * A control that lives OUTSIDE `Routes`, so clicking it changes only the route
+ * params — the Exercise element stays mounted, exactly what a same-document
+ * hash change does in the browser (#67). `initialEntries` on a fresh render
+ * would remount instead and hide the bug.
+ */
+function JumpTo({ to }: { to: string }) {
+  const navigate = useNavigate();
+  return <button onClick={() => navigate(to)}>jump</button>;
+}
+
+/** The Module route's stand-in — names the Module it landed on, so a fallback
+ * test can tell "back to the owning Module" from "back to the previous one". */
+function ModuleProbe() {
+  const { id } = useParams();
+  return (
+    <>
+      <p>module probe</p>
+      <p>probe id {id}</p>
+    </>
+  );
+}
+
+async function renderAt(path: string, progress?: IProgress, jumpTo?: string) {
   const curriculum = createCurriculum(source, {
     listCheckpoints: async () => [],
   });
@@ -91,9 +151,10 @@ async function renderAt(path: string, progress?: IProgress) {
     <CurriculumProvider curriculum={curriculum}>
       <ProgressProvider progress={activeProgress}>
         <MemoryRouter initialEntries={[path]}>
+          {jumpTo !== undefined && <JumpTo to={jumpTo} />}
           <Routes>
             <Route path="/" element={<p>curriculum probe</p>} />
-            <Route path="/modules/:id" element={<p>module probe</p>} />
+            <Route path="/modules/:id" element={<ModuleProbe />} />
             <Route
               path="/modules/:id/exercises/:exerciseId"
               element={<ExerciseScreen />}
@@ -252,6 +313,95 @@ describe('Exercise screen', () => {
     await renderAt('/modules/nope/exercises/m01-e1');
 
     expect(await screen.findByText('curriculum probe')).toBeInTheDocument();
+  });
+
+  it("lands on another Module's Exercise when only the params change — no redirect to the previous Module (#67)", async () => {
+    await renderAt(
+      '/modules/m01/exercises/m01-e1',
+      undefined,
+      '/modules/m02/exercises/m02-e1',
+    );
+    await screen.findByRole('heading', {
+      level: 1,
+      name: 'Deepen a shallow document store',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'jump' }));
+
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Point a policy at an abstraction',
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Exercise m02-e1 · Module 02')).toBeInTheDocument();
+    // The stale-render window redirected to /modules/m01 instead (#67).
+    expect(screen.queryByText('module probe')).not.toBeInTheDocument();
+  });
+
+  it("shows no other Module's brief while the new detail loads (#67)", async () => {
+    await renderAt(
+      '/modules/m01/exercises/m01-e1',
+      undefined,
+      '/modules/m02/exercises/m02-e1',
+    );
+    await screen.findByRole('heading', {
+      level: 1,
+      name: 'Deepen a shallow document store',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'jump' }));
+
+    // The first render after the params change holds nothing at all: the
+    // previous Module's brief must not sit under the new Module's kicker.
+    expect(
+      screen.queryByRole('heading', {
+        level: 1,
+        name: 'Deepen a shallow document store',
+      }),
+    ).not.toBeInTheDocument();
+    await screen.findByRole('heading', {
+      level: 1,
+      name: 'Point a policy at an abstraction',
+    });
+  });
+
+  it('still moves between two Exercises of the same Module on a params change', async () => {
+    await renderAt(
+      '/modules/m01/exercises/m01-e1',
+      undefined,
+      '/modules/m01/exercises/m01-e2',
+    );
+    await screen.findByRole('heading', {
+      level: 1,
+      name: 'Deepen a shallow document store',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'jump' }));
+
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Build a recent-values cache behind a two-method surface',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('still falls back to the owning Module when a params change names an unknown brief', async () => {
+    await renderAt(
+      '/modules/m01/exercises/m01-e1',
+      undefined,
+      '/modules/m02/exercises/zz',
+    );
+    await screen.findByRole('heading', {
+      level: 1,
+      name: 'Deepen a shallow document store',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'jump' }));
+
+    // The requested Module, not the one that was on screen.
+    expect(await screen.findByText('probe id m02')).toBeInTheDocument();
   });
 
   it('deep-loads through the app routes identically', async () => {
