@@ -730,7 +730,12 @@ describe('Submitting the checklist: focus and announcement (#73)', () => {
         'Exit Gate passed — Checkpoint recorded. Module 02 — Dependency Direction unlocked.',
       );
     });
-    // Exactly what the banner says, and only one region saying it.
+    // Exactly what the banner says, and only one region saying it. The banner
+    // waits for refresh() to re-read the gate, so it lands a tick after the
+    // announcement the waitFor above caught — wait for it too (#87).
+    await waitFor(() => {
+      expect(container.querySelector('.exercise-gate-banner')).not.toBeNull();
+    });
     const banner = container.querySelector('.exercise-gate-banner');
     expect(banner?.textContent).toBe(
       'Exit Gate passed — Checkpoint recorded.Module 02 — Dependency Direction unlocked.',
