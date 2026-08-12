@@ -18,19 +18,19 @@ if (container === null) {
   throw new Error('Root element #root is missing from index.html');
 }
 
-// The one real ICurriculum: committed content over HTTP, plus the Checkpoint
-// seam. IProgress (#14) satisfies CheckpointReader and replaces the stub in
-// #18; until then no Checkpoints exist, so Module 1 is unlocked, 2–5 locked.
-const curriculum = createCurriculum(
-  createHttpContentSource(import.meta.env.BASE_URL),
-  { listCheckpoints: async () => [] },
-);
-
 // The one real IProgress (#14): the `kata` IndexedDB database. Opening it is
 // async, so the render waits for it — the checklist (#16) writes through
 // this seam and nothing else.
 createProgress()
   .then((progress) => {
+    // The one real ICurriculum: committed content over HTTP, with IProgress
+    // as its CheckpointReader (#18). ICurriculum re-reads Checkpoints on
+    // every call, so a Checkpoint the checklist just wrote unlocks the next
+    // Module without a reload.
+    const curriculum = createCurriculum(
+      createHttpContentSource(import.meta.env.BASE_URL),
+      progress,
+    );
     createRoot(container).render(
       <StrictMode>
         {/* Hash routing: GitHub Pages serves static files only, so a reloaded
