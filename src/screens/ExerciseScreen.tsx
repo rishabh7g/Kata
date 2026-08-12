@@ -101,7 +101,7 @@ export function ExerciseScreen() {
       <div className="exercise-body">
         <div>
           <section>
-            <h6 className="exercise-section-label">Exercise Spec</h6>
+            <h2 className="exercise-section-label">Exercise Spec</h2>
             {/* Exactly three rows (tokens.json layout.specGrid: 130px 1fr,
                 1px row rules). The captures' Workbench row is historical —
                 no folder is materialized for the learner (#3). */}
@@ -119,9 +119,9 @@ export function ExerciseScreen() {
           <div className="hr exercise-rule" />
           <section>
             <div className="exercise-interface-heading">
-              <h6 className="exercise-section-label exercise-section-label-inline">
+              <h2 className="exercise-section-label exercise-section-label-inline">
                 Target Interface
-              </h6>
+              </h2>
               <span className="tag tag-accent">Immutable</span>
             </div>
             <p className="text-muted exercise-interface-note">
@@ -189,7 +189,7 @@ export function ExerciseScreen() {
 function PracticeMaterial({ exercise }: { exercise: ExerciseBrief }) {
   return (
     <section>
-      <h6 className="exercise-section-label">Practice material</h6>
+      <h2 className="exercise-section-label">Practice material</h2>
       {exercise.folderUrl === null ? (
         <p className="text-muted exercise-folder-pending">
           This Exercise's folder is not committed yet — the GitHub link

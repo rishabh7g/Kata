@@ -83,7 +83,7 @@ export function BehavioralChecklist({
   return (
     <section aria-label="Behavioral Checklist">
       <div className="exercise-checklist-heading">
-        <h6 className="exercise-section-label-inline">Behavioral Checklist</h6>
+        <h2 className="exercise-section-label-inline">Behavioral Checklist</h2>
         <span className="text-muted exercise-checklist-meta">
           Module {String(moduleOrdinal).padStart(2, '0')} gate · behaviorally
           answerable only — never opinion

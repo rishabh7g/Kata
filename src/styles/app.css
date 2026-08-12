@@ -71,6 +71,26 @@
   border: 0;
 }
 
+/* Section-label type, decoupled from the heading level (#75).
+ *
+ * design/styles.css hangs the label style — 13px, uppercase, +0.08em — on the
+ * `h6` tag, so every section label on every screen was marked up as an h6 to
+ * get it. That made the document outline (h1 → h6 → h3) describe the type
+ * scale instead of the page. The labels are now the h2 they always were in the
+ * outline, and the type comes from the class: same 13px uppercase label, one
+ * source, no renumbered mocks. The visual scale and the outline are two
+ * different things — this is the seam between them.
+ */
+.module-section-label,
+.module-section-label-inline,
+.module-gate-poster-label,
+.exercise-section-label,
+.exercise-section-label-inline {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* design/README.md § Screens: max-width 1200px, 40px gutters, flush left. */
 .app-container {
   max-width: var(--layout-container-max);
@@ -367,13 +387,13 @@ a.curriculum-row:hover {
   }
 }
 
-/* Section labels are design-system h6 (13px uppercase); only the margin the
-   prototype sets is added here. */
+/* Section labels carry the design system's label type from the shared rule
+   above (#75); only the margin the prototype sets is added here. */
 .module-section-label {
   margin: 0 0 14px;
 }
 
-/* The Concept Page label row (#30): h6 + the pack's draft/edited/frozen note
+/* The Concept Page label row (#30): the label + the pack's draft/edited/frozen note
    on one baseline, as the prototype lays it out (DevGym.dc.html § Module:
    flex baseline, gap 12, note muted at 11px) and screens/02–03 show. */
 .module-concept-heading {
@@ -672,8 +692,8 @@ a.curriculum-row:hover {
   }
 }
 
-/* Section labels are design-system h6 (13px uppercase); only the margins the
-   prototype sets are added here. */
+/* Section labels carry the label type from the shared rule above (#75); only
+   the margins the prototype sets are added here. */
 .exercise-section-label {
   margin: 0 0 6px;
 }
@@ -716,7 +736,7 @@ a.curriculum-row:hover {
   font-size: 13px;
 }
 
-/* h6 + the Immutable accent tag on one line. */
+/* The section label + the Immutable accent tag on one line. */
 .exercise-interface-heading {
   display: flex;
   align-items: center;
@@ -783,7 +803,7 @@ a.curriculum-row:hover {
    The whole Exit Gate: three radio pairs (`.radio` from design/styles.css),
    one primary submit, and the read-only submitted panel. */
 
-/* h6 + the muted gate meta on one baseline (prototype § Exercise). */
+/* The section label + the muted gate meta on one baseline (prototype § Exercise). */
 .exercise-checklist-heading {
   display: flex;
   align-items: baseline;

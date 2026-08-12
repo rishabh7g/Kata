@@ -110,7 +110,7 @@ function ModuleRow({
         {String(module.ordinal).padStart(2, '0')}
       </div>
       <div>
-        <h3 className="curriculum-row-title">{module.title}</h3>
+        <h2 className="curriculum-row-title">{module.title}</h2>
         <p className="text-muted curriculum-row-desc">{module.description}</p>
       </div>
       <div className="curriculum-row-status">
