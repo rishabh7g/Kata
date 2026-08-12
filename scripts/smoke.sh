@@ -142,12 +142,16 @@ JS_URL="$(printf '%s\n' "$ASSETS" | sed -n 1p)"
 CSS_URL="$(printf '%s\n' "$ASSETS" | sed -n 2p)"
 
 # ─── 2. app bundle (the nav lockup lives here, not in the HTML) ─────────────
+# The root route is client-rendered, so "the root route serves the Curriculum
+# screen" (#10) means: its markup ships in the bundle the shell loads.
 begin app-bundle 11
 if [[ -z "$JS_URL" ]]; then
   bad "the shell links no /assets/*.js bundle — nothing would render"
 elif get "$JS_URL" "$WORK/app.js"; then
   has "$WORK/app.js" 'app-nav-brand' 'the Kata nav lockup'
   has "$WORK/app.js" 'Checkpoints' 'the Checkpoint count label'
+  has "$WORK/app.js" 'curriculum-row' 'the Curriculum Module rows (#10)'
+  has "$WORK/app.js" 'Ready to start' 'the fresh-Module status tag (#10)'
 fi
 end
 
