@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kata:schemas/module-content.schema.json",
+  "title": "Kata Module content pack",
+  "description": "docs/engineering.md § 3 Content schema — the machine-checkable twin of the ModuleContent TypeScript type (§ 2). One file per non-pending Module at public/content/modules/<id>.json, validated by scripts/validate-content.mjs before every deploy. The ≤ 40-line rule on Model Example C# sides is an authoring rule checked in review, not here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "conceptPageMarkdown",
+    "modelExamples",
+    "exercises",
+    "checklistQuestions"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": {
+      "description": "Matches the file name and an index entry: 'm01' … 'm05'.",
+      "type": "string",
+      "pattern": "^m\\d{2}$"
+    },
+    "conceptPageMarkdown": {
+      "description": "Non-empty markdown, ~1 page of prose.",
+      "type": "string",
+      "minLength": 1
+    },
+    "modelExamples": {
+      "description": "2–3 before/after C# pairs with a caption for what moved or got hidden.",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/modelExample" }
+    },
+    "exercises": {
+      "description": "≥ 2 Exercise briefs: at least one refactor and one construct.",
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/exerciseBrief" },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": { "type": { "const": "refactor" } },
+            "required": ["type"]
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": { "type": { "const": "construct" } },
+            "required": ["type"]
+          }
+        }
+      ]
+    },
+    "checklistQuestions": {
+      "description": "Exactly 3 Behavioral Checklist questions, each a radio pair.",
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/checklistQuestion" }
+    }
+  },
+  "$defs": {
+    "modelExample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before", "after", "caption"],
+      "properties": {
+        "before": { "type": "string", "minLength": 1 },
+        "after": { "type": "string", "minLength": 1 },
+        "caption": { "type": "string", "minLength": 1 }
+      }
+    },
+    "exerciseBrief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "title",
+        "concept",
+        "smell",
+        "targetInterfaceCode",
+        "sizeBudgetLoc",
+        "folderUrl"
+      ],
+      "properties": {
+        "id": {
+          "description": "Unique app-wide, equal to its repo folder name: 'm01-e1'.",
+          "type": "string",
+          "pattern": "^m\\d{2}-e\\d+$"
+        },
+        "type": { "enum": ["refactor", "construct"] },
+        "title": { "type": "string", "minLength": 1 },
+        "concept": { "type": "string", "minLength": 1 },
+        "smell": {
+          "description": "The planted flaw — Exercise Spec row 2.",
+          "type": "string",
+          "minLength": 1
+        },
+        "targetInterfaceCode": {
+          "description": "The C# interface the learner must end up behind; rendered read-only.",
+          "type": "string",
+          "minLength": 1
+        },
+        "sizeBudgetLoc": { "type": "integer", "minimum": 1, "maximum": 300 },
+        "folderUrl": {
+          "description": "GitHub folder URL, or null until the Exercise folder is committed.",
+          "oneOf": [
+            { "type": "string", "pattern": "^https://github\\.com/.+" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "checklistQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prompt", "options"],
+      "properties": {
+        "id": {
+          "description": "Unique within its Module: 'q1' … 'q3'.",
+          "type": "string",
+          "pattern": "^q\\d+$"
+        },
+        "prompt": {
+          "description": "Behaviorally answerable — countable or doable (docs/design.md § Pedagogy).",
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["value", "label"],
+            "properties": {
+              "value": { "type": "string", "minLength": 1 },
+              "label": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

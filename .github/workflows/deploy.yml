@@ -37,8 +37,8 @@ jobs:
         run: npm test
 
       # docs/engineering.md § 3: content is validated before the build, so
-      # invalid content can never deploy. Prints an explicit SKIP line until #7
-      # commits schemas/ and public/content/ — it never silently passes.
+      # invalid content can never deploy. Live since #7 committed schemas/ and
+      # public/content/ — on invalid content this step fails and nothing ships.
       - name: Validate content
         run: node scripts/validate-content.mjs
 

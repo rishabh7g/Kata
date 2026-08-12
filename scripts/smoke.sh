@@ -207,9 +207,10 @@ fi
 end
 
 # ─── 8. content JSON (#7) ──────────────────────────────────────────────────
-# Skips loudly while the schema and content do not exist, and becomes a real
-# check with no edit the moment #7 commits schemas/module-index.schema.json and
-# public/content/index.json (docs/engineering.md § 3).
+# Live since #7 committed schemas/module-index.schema.json and
+# public/content/index.json (docs/engineering.md § 3): the deployed index must
+# fetch 200 and validate, and every non-pending Module's content file must too.
+# The SKIP branch only fires if the schema or index ever goes missing.
 INDEX_SCHEMA="$REPO/schemas/module-index.schema.json"
 CONTENT_SCHEMA="$REPO/schemas/module-content.schema.json"
 if [[ ! -f "$INDEX_SCHEMA" || ! -f "$REPO/public/content/index.json" ]]; then
