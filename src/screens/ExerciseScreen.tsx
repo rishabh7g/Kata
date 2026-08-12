@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { BackArrowIcon } from '../app/BackArrowIcon';
+import { LiveAnnouncement } from '../app/LiveAnnouncement';
 import { ModuleUnavailable } from '../app/ModuleUnavailable';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
@@ -25,6 +27,9 @@ import { nextModuleLine } from './ModuleScreen';
  * Behavioral Checklist panel (#16) with the gate banner under it (#19) —
  * per Module, written only through IProgress.
  */
+/** The gate banner's display line — and the first half of what #73 announces. */
+const GATE_PASSED_LINE = 'Exit Gate passed — Checkpoint recorded.';
+
 export function ExerciseScreen() {
   const { id, exerciseId } = useParams();
   const curriculum = useCurriculum();
@@ -40,6 +45,10 @@ export function ExerciseScreen() {
   // checklist submits on this screen, so the banner needs no reload (#19).
   const { gate, refresh } = useGateStatus(useProgress(), id ?? '');
   const navigate = useNavigate();
+  // Empty on every load, including a load of an already-submitted Module:
+  // a live region announces what arrives in it, and the gate banner that is
+  // simply *there* on load is not news (#73).
+  const [announcement, setAnnouncement] = useState('');
 
   // The Module's content would not load: the brief lives inside it, so this
   // screen is as blank as the Module's — same surface, same way out (#69).
@@ -68,6 +77,8 @@ export function ExerciseScreen() {
   }
 
   const ordinal = String(module.ordinal).padStart(2, '0');
+  const nextModule =
+    modules.find((summary) => summary.ordinal === module.ordinal + 1) ?? null;
 
   return (
     <>
@@ -137,6 +148,12 @@ export function ExerciseScreen() {
             questions={module.checklistQuestions}
             onSubmitted={() => {
               refresh();
+              // What the banner below is about to say, said once, politely:
+              // focus lands on the submitted panel, so the banner appearing
+              // underneath it would otherwise pass in silence (#73).
+              setAnnouncement(
+                `${GATE_PASSED_LINE} ${nextModuleLine(nextModule)}`,
+              );
               // Same route, new location key: the always-mounted nav re-reads
               // its Checkpoint count in this render (useModuleSummaries keys
               // off location.key, #18) — screens/06-state.png shows the count
@@ -148,17 +165,14 @@ export function ExerciseScreen() {
           {gate.passed && gate.checkpointAt !== null && (
             <div className="exercise-gate-banner">
               <div className="exercise-gate-banner-title">
-                Exit Gate passed — Checkpoint recorded.
+                {GATE_PASSED_LINE}
               </div>
               <div className="exercise-gate-banner-next">
-                {nextModuleLine(
-                  modules.find(
-                    (summary) => summary.ordinal === module.ordinal + 1,
-                  ) ?? null,
-                )}
+                {nextModuleLine(nextModule)}
               </div>
             </div>
           )}
+          <LiveAnnouncement message={announcement} />
         </aside>
       </div>
     </>

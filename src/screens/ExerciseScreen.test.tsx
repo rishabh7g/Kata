@@ -685,6 +685,90 @@ describe('Behavioral Checklist (#16)', () => {
   });
 });
 
+describe('Submitting the checklist: focus and announcement (#73)', () => {
+  /** Answers all three checks and presses the submit button. */
+  async function submit(container: HTMLElement) {
+    await screen.findByText('Behavioral Checklist');
+    pickAnswer(container, 0, 'a');
+    pickAnswer(container, 1, 'a');
+    pickAnswer(container, 2, 'a');
+    fireEvent.click(submitButton());
+    await screen.findByText(/Submitted ·/);
+  }
+
+  it('moves focus into the submitted panel — the button that had it is gone', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await submit(container);
+
+    const panel = container.querySelector('.exercise-checklist-panel');
+    await waitFor(() => {
+      expect(document.activeElement).toBe(panel);
+    });
+    // Not <body>: the next Tab carries on from the panel rather than
+    // restarting at the nav at the top of the page.
+    expect(document.activeElement).not.toBe(document.body);
+    // Focusable programmatically, never a Tab stop of its own.
+    expect(panel).toHaveAttribute('tabindex', '-1');
+    // …and it says what it is when focus arrives.
+    expect(panel).toHaveAccessibleName(/^Submitted · /);
+  });
+
+  it('announces the gate banner’s two lines once, politely', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    // The region is mounted and empty before the submit: a region that
+    // appears carrying its text is announced unreliably, or twice.
+    const region = screen.getByRole('status');
+    expect(region).toHaveAttribute('aria-live', 'polite');
+    expect(region.textContent).toBe('');
+
+    await submit(container);
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Exit Gate passed — Checkpoint recorded. Module 02 — Dependency Direction unlocked.',
+      );
+    });
+    // Exactly what the banner says, and only one region saying it.
+    const banner = container.querySelector('.exercise-gate-banner');
+    expect(banner?.textContent).toBe(
+      'Exit Gate passed — Checkpoint recorded.Module 02 — Dependency Direction unlocked.',
+    );
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    // Announced, not shown: the visible layout is unchanged.
+    expect(screen.getByRole('status')).toHaveClass('visually-hidden');
+  });
+
+  it('announces the closing line when no Module follows', async () => {
+    const { container } = await renderAt('/modules/m02/exercises/m02-e1');
+    await submit(container);
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Exit Gate passed — Checkpoint recorded. All five Modules passed — the Curriculum is complete.',
+      );
+    });
+  });
+
+  it('says nothing and takes no focus on a plain load of an already-submitted Module', async () => {
+    const first = await renderAt('/modules/m01/exercises/m01-e1');
+    await submit(first.container);
+    first.unmount();
+
+    // The reload: a fresh IProgress over the same database.
+    const second = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText(/Submitted ·/);
+    // The banner is on screen …
+    expect(
+      second.container.querySelector('.exercise-gate-banner'),
+    ).toBeInTheDocument();
+    // … and the live region is silent: nothing arrived in it.
+    expect(screen.getByRole('status').textContent).toBe('');
+    expect(document.activeElement).toBe(document.body);
+  });
+});
+
 /**
  * The #69 repro on this screen: the brief lives inside the Module's content
  * JSON, so a content fetch that fails offline leaves the Exercise screen as
