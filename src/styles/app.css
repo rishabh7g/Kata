@@ -562,11 +562,19 @@ a.curriculum-row:hover {
   border-top: 1px solid var(--color-divider);
 }
 
-/* Unmet marker: the 14px empty ink-outline square, no icon. */
+/* Unmet marker: the 14px empty ink-outline square, no icon.
+
+   The square is what says "not yet submitted" — a meaningful non-text element,
+   so WCAG SC 1.4.11 asks 3:1 of it. The prototype's neutral-400 read 1.80:1 on
+   the ground (#93). --color-text-muted is the outline: 5.83:1 / 5.38:1, the
+   same tone as the "Not yet submitted" line the square marks, and the ink
+   outline design/README.md § Screens › 2 already describes. Not the accent —
+   red is the passed colour here (poster, passed tag), so it would say the
+   opposite of what this marker means. */
 .module-gate-box {
   width: 14px;
   height: 14px;
-  border: 1.5px solid var(--color-neutral-400);
+  border: 1.5px solid var(--color-text-muted);
   display: inline-block;
   flex: none;
   margin-top: 3px;

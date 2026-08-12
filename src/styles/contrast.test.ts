@@ -105,6 +105,16 @@ function rule(selector: string): string {
   return body;
 }
 
+/** The hex a rule paints one property with, e.g. `.x`, `border` → `#605d5d`. */
+function paint(selector: string, property: string): string {
+  const pattern = new RegExp(`(?:^|[;{\\s])${property}\\s*:[^;]*var\\((--[\\w-]+)\\)`);
+  const name = pattern.exec(rule(selector))?.[1];
+  if (name === undefined) {
+    throw new Error(`${selector} paints no token in ${property}`);
+  }
+  return token(name);
+}
+
 describe('the contrast floor', () => {
   it('is a real WCAG measurement (self-check against the known pair)', () => {
     // Ink on the ground measures 14.86:1 in the browser (CDP over the
@@ -206,6 +216,55 @@ describe('the contrast floor', () => {
       expect(contrast(dimmed, field)).toBeGreaterThanOrEqual(3);
       // Still a step under the display line, so the poster keeps its hierarchy.
       expect(opacity).toBeLessThan(1);
+    });
+  });
+
+  describe('meaningful non-text elements (#93)', () => {
+    /**
+     * SC 1.4.11 asks 3:1 of anything non-text that carries meaning — the icon
+     * that says which state you are in, the ring that says where focus is.
+     * Decorative rules and dividers are exempt, so `--color-divider` is not
+     * here. Text roles are measured above at 4.5:1; this is the other floor.
+     */
+    const MARKERS: readonly [string, string][] = [
+      // The empty square that says "not yet submitted" (Module, Exit Gate).
+      ['.module-gate-box', 'border'],
+      // The 2px keyboard-focus ring (#71).
+      [':focus-visible', 'outline'],
+    ];
+
+    it.each(MARKERS)('%s clears 3:1 on both grounds', (selector, property) => {
+      const colour = paint(selector, property);
+      for (const [, ground] of GROUNDS) {
+        expect(contrast(colour, ground)).toBeGreaterThanOrEqual(3);
+      }
+    });
+
+    it('draws the unmet Exit Gate marker in the outline role, not a ramp step', () => {
+      expect(rule('.module-gate-box')).toMatch(
+        /border:\s*1\.5px solid var\(--color-text-muted\)/,
+      );
+      // The prototype's neutral-400 read 1.80:1 on the ground — the defect.
+      expect(contrast(token('--color-neutral-400'), BG)).toBe(1.8);
+    });
+
+    it('leaves the met marker inheriting ink', () => {
+      // The check icon is `stroke="currentColor"` on ink: 14.86:1, untouched.
+      expect(rule('.module-gate-check')).not.toMatch(/(?<![\w-])color:/);
+      expect(contrast(token('--color-text'), BG)).toBeGreaterThanOrEqual(3);
+    });
+
+    it('keeps the ramp steps under 3:1 out of the app stylesheet entirely', () => {
+      // 1.33 / 1.80 / 2.59 on the ground: these cannot paint anything that
+      // means something, and app.css paints nothing that does not.
+      for (const step of [
+        '--color-neutral-300',
+        '--color-neutral-400',
+        '--color-neutral-500',
+      ]) {
+        expect(contrast(token(step), BG)).toBeLessThan(3);
+        expect(appCss).not.toContain(`var(${step})`);
+      }
     });
   });
 

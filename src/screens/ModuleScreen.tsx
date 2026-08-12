@@ -269,7 +269,9 @@ export function ExitGateAside({
           {checklistSubmitted ? (
             <GateCheckIcon />
           ) : (
-            // The unmet marker: 14px empty ink-outline square, no icon.
+            // The unmet marker: 14px empty square in the muted outline, no
+            // icon. It is what says "not yet submitted", so it answers to the
+            // 3:1 non-text floor (#93), not to decoration.
             <span className="module-gate-box" />
           )}
           <div>

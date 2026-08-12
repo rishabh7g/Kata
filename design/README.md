@@ -18,7 +18,8 @@ Every string the app renders clears **WCAG 2.1 AA (SC 1.4.3)** against the backg
 
 - **4.5:1** for body text — anything under 18.66px/700 or 24px.
 - **3:1** for large text (≥ 24px, or ≥ 18.66px at weight 700).
-- **Only two exemptions,** both WCAG's own: text inside an *inactive* component (a locked Curriculum row at 0.5 opacity, a disabled button), and purely decorative rules and dividers.
+- **3:1 for meaningful non-text (SC 1.4.11)** — not just the focus ring: every icon or marker that *is* the state it reports answers to this. The Exit Gate's empty square is what says "not yet submitted", so it clears 3:1 the same way the ring does; drawn in `neutral-400` it read **1.80:1** (#93).
+- **Only two exemptions,** both WCAG's own: text inside an *inactive* component (a locked Curriculum row at 0.5 opacity, a disabled button), and purely decorative rules and dividers — `--color-divider` draws those, and only those.
 
 So:
 
@@ -26,7 +27,7 @@ So:
 - **Accent text is `--color-accent-text`** (`accent-700`, 6.41:1 / 5.91:1). `--color-accent` is a **field** colour — posters, the passed banner, rules, the 2px focus ring — and reads 3.76:1 on bg / 3.47:1 on surface: enough for non-text (SC 1.4.11, 3:1), never enough for a string (#71). Kickers, links, ghost labels, outline tags and the primary action's field all take the ink one.
 - **One recorded exception:** the passed **poster** and **gate banner** keep the brand field, so their ground-coloured type reads 3.27–3.76:1 — the large-text floor, not 4.5:1. Display type only; never put a small string on that field.
 
-A new token that carries text has to be measured against `--color-bg` *and* `--color-surface` before it ships.
+A new token that carries text — or that draws an icon or marker with a meaning — has to be measured against `--color-bg` *and* `--color-surface` before it ships. `src/styles/contrast.test.ts` holds both floors in CI: 4.5:1 for the text roles, 3:1 for the markers.
 
 ## Brand
 - **Name: Kata** — the owner's decision, chosen from the three brand explorations in `design/brand/` (DevGym · Praxis · Kata). `brand/Brand Kata.dc.html` is the adopted brand card.
@@ -53,7 +54,7 @@ Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everyth
 - **Body grid:** `1fr 350px`, gap 56. Sections in the main column separated by 2px `.hr` rules: Concept Page (paragraphs, 66ch max, with `LLM first draft · human-edited once · frozen` note) → Model Examples → Exercises.
 - **Model Examples:** before/after pair in a 2px-bordered grid, cells split by a 2px divider (`repeat(auto-fit, minmax(300px, 1fr))` — stacks when narrow). Cell: surface fill, 16/18 padding, BEFORE label (10px uppercase, muted) / AFTER label (`--color-accent-text`), code 13px/1.65 mono, `overflow-x: auto`. Caption 11px below.
 - **Exercise cards:** `.card` row — type tag (`Refactor`/`Construct`, outline), title 16px/800 + Smell line 12px muted, arrow icon. Hover: `--shadow-md`. Whole card navigates. **No status column** — the app knows nothing about the learner's code; the captures' `Green · 12 / 12` column is historical and is not built.
-- **Exit Gate aside:** sticky (top 84). Not passed → 2px-bordered panel with a **single condition row** (check icon when met, 14px empty ink-outline square when not): "Behavioral Checklist submitted" + status; closing note about checkpoint-based progression. There is no second row: the gate is the checklist alone. Passed → the **poster**: accent field, bg-colored type, "Passed." at 32px/800, `Checkpoint · date`, next-Module-unlocked line. The poster is the one place red runs as a field.
+- **Exit Gate aside:** sticky (top 84). Not passed → 2px-bordered panel with a **single condition row** (check icon when met, 14px empty square outlined in `--color-text-muted` when not — the marker is the state, so it carries the 3:1 non-text floor, #93): "Behavioral Checklist submitted" + status; closing note about checkpoint-based progression. There is no second row: the gate is the checklist alone. Passed → the **poster**: accent field, bg-colored type, "Passed." at 32px/800, `Checkpoint · date`, next-Module-unlocked line. The poster is the one place red runs as a field.
 - **Pending Module (03–05, once unlocked):** placeholder copy for Concept Page / Examples / Exercises (see prototype).
 
 ### 3. Exercise (`screens/04`, `05` partially historical · `screens/06` checklist submitted)
