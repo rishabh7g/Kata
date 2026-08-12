@@ -186,9 +186,13 @@ textarea.input { min-height: 90px; resize: vertical; }
 .radio input, .seg-opt input {
   position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
 }
+/* Unchecked, the dot IS the control — meaningful non-text, so 3:1 (SC 1.4.11),
+   not the decorative divider role: ink at 40% composites to #9f9d9d and read
+   2.41:1 on the ground (#97). --color-text-muted is the outline role the unmet
+   Exit Gate marker already takes (#93): 5.83:1 on bg, 5.38:1 on surface. */
 .radio .dot {
   width: 16px; height: 16px; flex: none; border-radius: 50%;
-  border: 1.5px solid var(--color-divider);
+  border: 1.5px solid var(--color-text-muted);
 }
 .radio:hover .dot { border-color: var(--color-accent); }
 .radio input:checked + .dot {

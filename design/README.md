@@ -18,7 +18,7 @@ Every string the app renders clears **WCAG 2.1 AA (SC 1.4.3)** against the backg
 
 - **4.5:1** for body text — anything under 18.66px/700 or 24px.
 - **3:1** for large text (≥ 24px, or ≥ 18.66px at weight 700).
-- **3:1 for meaningful non-text (SC 1.4.11)** — not just the focus ring: every icon or marker that *is* the state it reports answers to this. The Exit Gate's empty square is what says "not yet submitted", so it clears 3:1 the same way the ring does; drawn in `neutral-400` it read **1.80:1** (#93).
+- **3:1 for meaningful non-text (SC 1.4.11)** — not just the focus ring: every icon or marker that *is* the state it reports answers to this, and so does every **form control's indicator**. The Exit Gate's empty square is what says "not yet submitted", so it clears 3:1 the same way the ring does; drawn in `neutral-400` it read **1.80:1** (#93). The Behavioral Checklist's radio dot is the control — the `input` behind it is 0×0 — and unanswered, in `--color-divider`, it read **2.41:1** (#97). Both take `--color-text-muted`.
 - **Only two exemptions,** both WCAG's own: text inside an *inactive* component (a locked Curriculum row at 0.5 opacity, a disabled button), and purely decorative rules and dividers — `--color-divider` draws those, and only those.
 
 So:
@@ -27,7 +27,7 @@ So:
 - **Accent text is `--color-accent-text`** (`accent-700`, 6.41:1 / 5.91:1). `--color-accent` is a **field** colour — posters, the passed banner, rules, the 2px focus ring — and reads 3.76:1 on bg / 3.47:1 on surface: enough for non-text (SC 1.4.11, 3:1), never enough for a string (#71). Kickers, links, ghost labels, outline tags and the primary action's field all take the ink one.
 - **One recorded exception:** the passed **poster** and **gate banner** keep the brand field, so their ground-coloured type reads 3.27–3.76:1 — the large-text floor, not 4.5:1. Display type only; never put a small string on that field.
 
-A new token that carries text — or that draws an icon or marker with a meaning — has to be measured against `--color-bg` *and* `--color-surface` before it ships. `src/styles/contrast.test.ts` holds both floors in CI: 4.5:1 for the text roles, 3:1 for the markers.
+A new token that carries text — or that draws an icon or marker with a meaning — has to be measured against `--color-bg` *and* `--color-surface` before it ships. `src/styles/contrast.test.ts` holds both floors in CI: 4.5:1 for the text roles, 3:1 for the markers, and a sweep asserting `--color-divider` paints nothing but rules, panel edges and table lines (#97).
 
 ## Brand
 - **Name: Kata** — the owner's decision, chosen from the three brand explorations in `design/brand/` (DevGym · Praxis · Kata). `brand/Brand Kata.dc.html` is the adopted brand card.
@@ -67,7 +67,7 @@ The screen is exactly six things: **header, Exercise Spec grid (Concept / Smell 
 - **Exercise Spec:** definition grid `130px 1fr`, 1px top rule per row — exactly three rows: Concept / Smell / Size budget (mono 13px). The captures' fourth row is historical.
 - **Target Interface:** section label + `Immutable` accent tag, warning note (12px muted), then the C# block: surface fill, 2px divider border, 16/18 padding, 12.5px/1.6 mono. Content is read-only — the learner may never edit it.
 - **Practice-material link:** last block in the main column, after a 2px `.hr`. Section label + a link out to this Exercise's folder on GitHub (the brief's `folderUrl`, new tab), under it a 12px muted note: clone or copy the folder, review the Test Suite before starting, run `dotnet test` in your own IDE. When `folderUrl` is `null` it renders as a quiet disabled note instead of a dead link. No terminal, no command to copy, no results area — Kata never runs anything.
-- **Behavioral Checklist:** per Module (not per Exercise), three checks, radio pairs (`.radio`), primary submit disabled until all three answered. No free-text field. Submitted → 2px-bordered read-only panel: check + `Submitted · time` (14px/800), then question/answer rows (1px rules, answers 600 weight). This is the whole Exit Gate.
+- **Behavioral Checklist:** per Module (not per Exercise), three checks, radio pairs (`.radio`), primary submit disabled until all three answered. The dot *is* the control (the `input` is 0×0): unanswered it is a 16px circle outlined in `--color-text-muted` — the 3:1 non-text floor, #97 — and answered it is the accent field with a 4px ground ring. No free-text field. Submitted → 2px-bordered read-only panel: check + `Submitted · time` (14px/800), then question/answer rows (1px rules, answers 600 weight). This is the whole Exit Gate.
 - **Gate banner:** when the gate passes, an accent block in the right column under the checklist panel: "Exit Gate passed — Checkpoint recorded." + next Module line.
 
 ## Interactions & behavior

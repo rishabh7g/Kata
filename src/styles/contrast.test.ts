@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -78,6 +78,20 @@ function mix(foreground: string, alpha: number, background: string): string {
   );
 }
 
+/**
+ * A token's value as it lands on `ground`: an alpha token (`--color-divider`
+ * is ink at 40%) composites first, the way the browser paints it, so a rule
+ * that paints one still measures as a real ratio rather than throwing (#97).
+ */
+function over(value: string, ground: string): string {
+  const alpha = /^color-mix\(in srgb,\s*(#[0-9a-f]{6})\s+(\d+)%,\s*transparent\)$/i.exec(
+    value,
+  );
+  const [, colour, percent] = alpha ?? [];
+  if (colour === undefined || percent === undefined) return value;
+  return mix(colour, Number(percent) / 100, ground);
+}
+
 /** Rounded to 2dp, the way the issue and the PR quote the numbers. */
 function contrast(foreground: string, background: string): number {
   const first = luminance(foreground);
@@ -104,6 +118,34 @@ function rule(selector: string): string {
   if (body === undefined) throw new Error(`no rule for ${selector}`);
   return body;
 }
+
+/** Every selector in a stylesheet whose body paints `name`, e.g. `.hr`. */
+function selectorsPainting(css: string, name: string): string[] {
+  // Comments carry example declarations and would be read as selectors.
+  const rules = css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g);
+  const selectors: string[] = [];
+  for (const [, selector, body] of rules) {
+    if (selector !== undefined && body?.includes(`var(${name})`) === true) {
+      selectors.push(selector.trim().replace(/\s+/g, ' '));
+    }
+  }
+  return selectors;
+}
+
+/** Every class name the screens actually render — `className` is always a literal. */
+const renderedClasses: ReadonlySet<string> = (() => {
+  const src = new URL('../', import.meta.url);
+  const names = new Set<string>();
+  for (const entry of readdirSync(src, { encoding: 'utf8', recursive: true })) {
+    if (!entry.endsWith('.tsx')) continue;
+    for (const [, list] of readFileSync(new URL(entry, src), 'utf8').matchAll(
+      /className="([^"]*)"/g,
+    )) {
+      for (const name of list?.split(/\s+/) ?? []) if (name !== '') names.add(name);
+    }
+  }
+  return names;
+})();
 
 /** The hex a rule paints one property with, e.g. `.x`, `border` → `#605d5d`. */
 function paint(selector: string, property: string): string {
@@ -219,7 +261,7 @@ describe('the contrast floor', () => {
     });
   });
 
-  describe('meaningful non-text elements (#93)', () => {
+  describe('meaningful non-text elements (#93, #97)', () => {
     /**
      * SC 1.4.11 asks 3:1 of anything non-text that carries meaning — the icon
      * that says which state you are in, the ring that says where focus is.
@@ -229,6 +271,11 @@ describe('the contrast floor', () => {
     const MARKERS: readonly [string, string][] = [
       // The empty square that says "not yet submitted" (Module, Exit Gate).
       ['.module-gate-box', 'border'],
+      // The Behavioral Checklist radio, unanswered — the dot IS the control,
+      // the input behind it is 0×0 (#97).
+      ['.radio .dot', 'border'],
+      // …and answered: the accent field that says which option is picked.
+      ['.radio input:checked + .dot', 'background'],
       // The 2px keyboard-focus ring (#71).
       [':focus-visible', 'outline'],
     ];
@@ -236,7 +283,7 @@ describe('the contrast floor', () => {
     it.each(MARKERS)('%s clears 3:1 on both grounds', (selector, property) => {
       const colour = paint(selector, property);
       for (const [, ground] of GROUNDS) {
-        expect(contrast(colour, ground)).toBeGreaterThanOrEqual(3);
+        expect(contrast(over(colour, ground), ground)).toBeGreaterThanOrEqual(3);
       }
     });
 
@@ -246,6 +293,88 @@ describe('the contrast floor', () => {
       );
       // The prototype's neutral-400 read 1.80:1 on the ground — the defect.
       expect(contrast(token('--color-neutral-400'), BG)).toBe(1.8);
+    });
+
+    it('draws the unanswered checklist radio in the outline role, not the divider', () => {
+      expect(rule('.radio .dot')).toMatch(
+        /border:\s*1\.5px solid var\(--color-text-muted\)/,
+      );
+      // Ink at 40% composites to #9f9d9d on the ground — 2.41:1, the defect.
+      const divider = over(token('--color-divider'), BG);
+      expect(divider).toBe('#9f9d9d');
+      expect(contrast(divider, BG)).toBe(2.41);
+    });
+
+    it('keeps the answered radio and its focus ring on the brand field', () => {
+      // Both non-text at 3.76:1 — measured by MARKERS above, unchanged by #97.
+      expect(rule('.radio input:checked + .dot')).toMatch(
+        /border-color:\s*var\(--color-accent\);\s*background:\s*var\(--color-accent\)/,
+      );
+      expect(rule('.radio input:checked + .dot')).toMatch(
+        /box-shadow:\s*inset 0 0 0 4px var\(--color-bg\)/,
+      );
+      expect(rule('.radio input:focus-visible + .dot')).toMatch(
+        /outline:\s*2px solid var\(--color-accent\); outline-offset: 2px/,
+      );
+      expect(rule('.radio:hover .dot')).toMatch(/border-color:\s*var\(--color-accent\)/);
+    });
+
+    /**
+     * The sweep, rather than one more line in the table above: `--color-divider`
+     * is ink at 40% (2.41:1), which WCAG allows only for decoration. So every
+     * selector painting it has to be a rule, a panel edge or a table line — a
+     * control drawn in the divider role fails here without anyone remembering
+     * to enumerate it. A blanket "every border clears 3:1" would be wrong; the
+     * dividers are exempt and would fail it.
+     */
+    it('sweeps the divider role: rules, panel edges and table lines only', () => {
+      const DECORATIVE = new Set([
+        // design/styles.css — the system's rules and table lines.
+        '.hr',
+        '.nav',
+        '.table th',
+        '.table td',
+        // The prototype controls no screen renders (asserted below).
+        '.btn-secondary',
+        '.input',
+        '.seg',
+        '.seg-opt + .seg-opt',
+        // src/styles/app.css — 1px/2px rules and panel edges (tokens.json
+        // layout.rules), plus the 2px grid gap between Model Example cells.
+        '.app-notice',
+        '.curriculum-row',
+        '.curriculum-closing-rule',
+        '.curriculum-backup-confirm',
+        '.module-example-grid',
+        '.module-gate-panel',
+        '.module-gate-condition',
+        '.exercise-spec-label',
+        '.exercise-spec-value',
+        '.exercise-interface-code',
+        '.exercise-checklist-item',
+        '.exercise-checklist-panel',
+        '.exercise-checklist-row',
+      ]);
+      const painted = [
+        ...selectorsPainting(designCss, '--color-divider'),
+        ...selectorsPainting(appCss, '--color-divider'),
+      ];
+      expect(painted.length).toBeGreaterThan(0);
+      expect(painted.filter((selector) => !DECORATIVE.has(selector))).toEqual([]);
+      // The dot left the list when #97 moved it to the outline role.
+      expect(painted).not.toContain('.radio .dot');
+    });
+
+    it('renders none of the prototype controls the divider still outlines', () => {
+      // .input / .seg / .seg-opt / .btn-secondary are control boundaries: at
+      // 2.41:1 they would fail SC 1.4.11 the moment a screen used one. No
+      // screen does — the checklist radio was the only one, and it is fixed.
+      for (const control of ['input', 'seg', 'seg-opt', 'btn-secondary']) {
+        expect(renderedClasses.has(control)).toBe(false);
+      }
+      // The control that IS rendered, so the sweep above is not vacuous.
+      expect(renderedClasses.has('radio')).toBe(true);
+      expect(renderedClasses.has('dot')).toBe(true);
     });
 
     it('leaves the met marker inheriting ink', () => {
