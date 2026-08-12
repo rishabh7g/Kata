@@ -56,3 +56,103 @@
   margin: 0 auto;
   padding: 56px var(--layout-gutter) 80px;
 }
+
+/* ── Curriculum screen (#10) — design/README.md § Screens › 1 ─────────────
+   Header: kicker + 54px title with a 340px muted intro column on the shared
+   baseline. Rows: tokens.json layout.curriculumRow — grid 104px 1fr 230px
+   36px, gap 24, padding-block 24 — with a 2px top rule each and a closing
+   rule after the last (layout.rules.major). */
+
+.curriculum-header {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 48px;
+  align-items: end;
+  padding-bottom: 36px;
+}
+
+/* The kicker: h6 type in the design system — 13px uppercase accent. */
+.curriculum-kicker {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0 0 12px;
+}
+
+/* tokens.json typeScale.app.curriculumTitle: 54. */
+.curriculum-title {
+  font-size: 54px;
+  margin: 0;
+  max-width: 15ch;
+}
+
+.curriculum-intro {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.curriculum-row {
+  display: grid;
+  grid-template-columns: 104px 1fr 230px 36px;
+  gap: 24px;
+  align-items: center;
+  padding: 24px 8px;
+  border-top: 2px solid var(--color-divider);
+  /* Rows are links; the row is ink, never accent-underlined. */
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Unlocked rows only: the 4%-ink hover tint. */
+a.curriculum-row:hover {
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+}
+
+/* tokens.json semantics.locked: 0.5 opacity, lock icon, cursor not-allowed. */
+.curriculum-row-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* tokens.json typeScale.app.moduleOrdinal: 30 / 800 / -0.02em. */
+.curriculum-row-ordinal {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+
+/* tokens.json typeScale.app.rowTitle: 22. */
+.curriculum-row-title {
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+
+.curriculum-row-desc {
+  margin: 0;
+  font-size: 13px;
+  max-width: 62ch;
+}
+
+.curriculum-row-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* tokens.json typeScale.app.caption: 11. */
+.curriculum-checkpoint-date {
+  font-size: 11px;
+}
+
+.curriculum-row-icon {
+  justify-self: end;
+}
+
+.curriculum-closing-rule {
+  border-top: 2px solid var(--color-divider);
+}
