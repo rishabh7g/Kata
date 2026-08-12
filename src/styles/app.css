@@ -672,3 +672,24 @@ a.curriculum-row:hover {
   font-size: 13px;
   font-weight: 600;
 }
+
+/* ── Gate banner (#19) — design/README.md § Screens › 3 › Gate banner ─────
+   Under the checklist panel once the gate passes: the accent field with
+   bg-colored type (tokens.json semantics.passed), sized per the prototype
+   (§ Exercise): 18/20 padding, 16px/800 line, 13px next-Module line. */
+.exercise-gate-banner {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  padding: 18px 20px;
+}
+
+.exercise-gate-banner-title {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 16px;
+}
+
+.exercise-gate-banner-next {
+  font-size: 13px;
+  margin-top: 6px;
+}

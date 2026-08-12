@@ -1,8 +1,12 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useCurriculum } from '../app/CurriculumContext';
+import { useProgress } from '../app/ProgressContext';
+import { useGateStatus } from '../app/useGateStatus';
 import { useModuleDetail } from '../app/useModuleDetail';
+import { useModuleSummaries } from '../app/useModuleSummaries';
 import type { ExerciseBrief } from '../curriculum';
 import { BehavioralChecklist } from './BehavioralChecklist';
+import { nextModuleLine } from './ModuleScreen';
 
 /**
  * Exercise — the read surface for one brief: header, Exercise Spec grid,
@@ -16,15 +20,25 @@ import { BehavioralChecklist } from './BehavioralChecklist';
  * on the learner's work, and the Target Interface is strictly display-only.
  *
  * The aside column (tokens.json layout.exerciseGrid: 1fr 400px) carries the
- * Behavioral Checklist panel (#16) — per Module, written only through
- * IProgress; the gate banner joins it in #19.
+ * Behavioral Checklist panel (#16) with the gate banner under it (#19) —
+ * per Module, written only through IProgress.
  */
 export function ExerciseScreen() {
   const { id, exerciseId } = useParams();
-  const module = useModuleDetail(useCurriculum(), id ?? '');
+  const curriculum = useCurriculum();
+  const module = useModuleDetail(curriculum, id ?? '');
+  // The banner's next-Module line names the following Module by title —
+  // the poster's text rule (#17), shared via nextModuleLine.
+  const modules = useModuleSummaries(curriculum);
+  // Live gate state from IProgress (#14); `refresh` re-reads it when the
+  // checklist submits on this screen, so the banner needs no reload (#19).
+  const { gate, refresh } = useGateStatus(useProgress(), id ?? '');
 
-  // Still loading: render nothing rather than a made-up placeholder.
-  if (module === undefined) return null;
+  // Still loading: render nothing rather than a made-up placeholder — the
+  // gate state loads with the content so the aside never flashes stale.
+  if (module === undefined || modules === null || gate === undefined) {
+    return null;
+  }
   // Unknown Module id: back to the Curriculum, never a dead end.
   if (module === null) return <Navigate to="/" replace />;
 
@@ -95,13 +109,30 @@ export function ExerciseScreen() {
           <PracticeMaterial exercise={exercise} />
         </div>
         {/* The 400px column: the Behavioral Checklist panel — the Module's
-            Exit Gate (#16). The gate banner joins it below in #19. */}
+            Exit Gate (#16) — with the gate banner under it once the gate
+            passes (#19). A submit on this screen re-reads the gate so the
+            banner appears in the same render, no reload. */}
         <aside className="exercise-aside">
           <BehavioralChecklist
             moduleId={module.id}
             moduleOrdinal={module.ordinal}
             questions={module.checklistQuestions}
+            onSubmitted={refresh}
           />
+          {gate.passed && gate.checkpointAt !== null && (
+            <div className="exercise-gate-banner">
+              <div className="exercise-gate-banner-title">
+                Exit Gate passed — Checkpoint recorded.
+              </div>
+              <div className="exercise-gate-banner-next">
+                {nextModuleLine(
+                  modules.find(
+                    (summary) => summary.ordinal === module.ordinal + 1,
+                  ) ?? null,
+                )}
+              </div>
+            </div>
+          )}
         </aside>
       </div>
     </>

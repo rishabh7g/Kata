@@ -411,6 +411,73 @@ describe('Behavioral Checklist (#16)', () => {
     expect(submitButton()).toBeDisabled();
   });
 
+  it('shows the gate banner in the same render when submission happens on this screen — no reload (#19)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+    // Negative case first: no banner before submission.
+    expect(
+      container.querySelector('.exercise-gate-banner'),
+    ).not.toBeInTheDocument();
+
+    pickAnswer(container, 0, 'a');
+    pickAnswer(container, 1, 'a');
+    pickAnswer(container, 2, 'b');
+    fireEvent.click(submitButton());
+
+    // Same render: the accent block joins the aside under the panel, with
+    // the poster's next-Module line (#17's text rule).
+    expect(
+      await screen.findByText('Exit Gate passed — Checkpoint recorded.'),
+    ).toBeInTheDocument();
+    const banner = container.querySelector(
+      '.exercise-aside .exercise-gate-banner',
+    );
+    expect(banner).toBeInTheDocument();
+    expect(banner?.textContent).toContain(
+      'Module 02 — Dependency Direction is unlocked.',
+    );
+    // No banned terms in the banner (docs/ubiquitous-language.md § Banned).
+    expect(banner?.textContent).not.toMatch(
+      /lesson|course|level|quiz|flashcard|grade|score/i,
+    );
+  });
+
+  it("shows the banner on the Module's other Exercise screen after the pass — per Module, not per Exercise (#19)", async () => {
+    const first = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+    pickAnswer(first.container, 0, 'a');
+    pickAnswer(first.container, 1, 'a');
+    pickAnswer(first.container, 2, 'a');
+    fireEvent.click(submitButton());
+    await screen.findByText('Exit Gate passed — Checkpoint recorded.');
+    first.unmount();
+
+    // The reload: a fresh IProgress over the same database, the other brief.
+    const second = await renderAt('/modules/m01/exercises/m01-e2');
+
+    expect(
+      await screen.findByText('Exit Gate passed — Checkpoint recorded.'),
+    ).toBeInTheDocument();
+    expect(
+      second.container.querySelector('.exercise-gate-banner')?.textContent,
+    ).toContain('Module 02 — Dependency Direction is unlocked.');
+  });
+
+  it('keeps the banner absent before submission even with a saved draft (#19)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    pickAnswer(container, 0, 'a');
+    pickAnswer(container, 1, 'a');
+
+    expect(
+      container.querySelector('.exercise-gate-banner'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Exit Gate passed — Checkpoint recorded.'),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows the same submitted state on the Module's other Exercise screen — per Module, not per Exercise", async () => {
     const first = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Behavioral Checklist');
