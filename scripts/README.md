@@ -31,6 +31,28 @@ node scripts/validate-content.mjs                   # repo layout; also runs in 
 | `smoke.sh` | 0 ok · 2 usage/precondition · 10 shell · 11 app bundle · 12 stylesheet · 13 font · 14 manifest · 15 service worker · 16 icons · 17 content |
 | `test-scoped.sh` | 0 ok · 2 usage/precondition (including no args without `FULL=1`) · otherwise Vitest's own status |
 | `validate-content.mjs` | 0 ok or SKIP · 2 usage · 3 invalid content · 4 missing schema/content path |
+| `draft-concept.mjs` | 0 ok · 2 usage (bad flag/module id) · 3 draft exists without `--force` · 4 claude CLI missing/failed · 5 non-JSON or empty CLI output |
+
+## Authoring: `draft-concept.mjs` (#20)
+
+Drafts a Concept Page with the local `claude` CLI — step 1 of the workflow in
+`docs/engineering.md` § 5 (draft → human edit → commit). Authoring-time only:
+it never runs in the app or the deploy path, and `drafts/` is gitignored.
+
+```sh
+node scripts/draft-concept.mjs m02             # DRAFT m02 ok → drafts/m02-concept.md
+node scripts/draft-concept.mjs m02 --dry-run   # print the assembled prompt, write nothing
+node scripts/draft-concept.mjs m02 --force     # overwrite an existing draft
+```
+
+- The module id must exist in `public/content/index.json`.
+- The prompt embeds `docs/ubiquitous-language.md` verbatim, the pedagogy rules
+  from `docs/design.md` § Pedagogy, and the renderer's markdown limits
+  (headings, `-`/`1.` lists, strong/em/inline code — nothing else).
+- **Modules 2–5 (#24–#27):** run it for the module, edit the draft by hand,
+  then paste the frozen text into `public/content/modules/mNN.json` as
+  `conceptPageMarkdown` and check it with `node scripts/validate-content.mjs`.
+  `public/content/modules/m01.json` is the canonical example of tone and shape.
 
 ## Content checks are live (#7)
 
