@@ -161,10 +161,49 @@ a.curriculum-row:hover {
   border-top: 2px solid var(--color-divider);
 }
 
-/* ── Module screen (#11) — design/README.md § Screens › 2 ─────────────────
-   Main column only: Concept Page prose and the Model Examples grid. The
-   header block and Exercise cards land with #12, the Exit Gate aside with
-   #13 — the empty aside column keeps the body grid honest from day one. */
+/* ── Module screen (#11, #12) — design/README.md § Screens › 2 ────────────
+   Header block, Concept Page prose, the Model Examples grid, and the
+   Exercise cards. The Exit Gate aside lands with #13 — the empty aside
+   column keeps the body grid honest from day one. */
+
+/* Ghost back button above the header (prototype: header sits 20px below). */
+.module-back {
+  margin-bottom: 20px;
+}
+
+/* Header: title block and status tag on the shared baseline, no rule under
+   it — the first .hr belongs to the sections (prototype § Module). */
+.module-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 8px;
+  margin-bottom: 40px;
+}
+
+/* The kicker: h6 type in the design system — 13px uppercase accent. */
+.module-kicker {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0 0 10px;
+}
+
+/* tokens.json typeScale.app.moduleTitle: 44. */
+.module-title {
+  font-size: 44px;
+  margin: 0;
+  max-width: 22ch;
+}
+
+.module-header-tag {
+  margin-bottom: 8px;
+  flex: none;
+}
 
 /* tokens.json layout.moduleGrid: 1fr 350px, gap 56. */
 .module-body {
@@ -250,4 +289,55 @@ a.curriculum-row:hover {
   font-size: 13px;
   line-height: 1.65;
   overflow-x: auto;
+}
+
+/* Exercise cards: one .card row per brief, whole card is the link
+   (design/README.md § Screens › 2 Exercise cards — no status column). */
+.module-exercises {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Overrides .card's column layout to the prototype's row; ink, never the
+   accent link underline. Hover raises --shadow-md (tokens.json shadow.md). */
+.module-exercise-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 18px;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.module-exercise-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.module-exercise-card .tag {
+  flex: none;
+}
+
+/* min-width: 0 lets the long Smell line wrap inside the card, not widen it. */
+.module-exercise-text {
+  flex: 1;
+  min-width: 0;
+}
+
+/* tokens.json typeScale.app.cardTitle: 16 / 800. */
+.module-exercise-title {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+/* tokens.json typeScale.app.meta: 12, muted. */
+.module-exercise-smell {
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.module-exercise-arrow {
+  flex: none;
 }

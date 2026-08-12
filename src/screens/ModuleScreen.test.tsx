@@ -1,9 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { App } from '../App';
 import { CurriculumProvider } from '../app/CurriculumContext';
-import type { ContentSource, ModuleContent, ModuleIndex } from '../curriculum';
+import type {
+  Checkpoint,
+  ContentSource,
+  ModuleContent,
+  ModuleIndex,
+} from '../curriculum';
 import { createCurriculum } from '../curriculum';
 import { ModuleScreen } from './ModuleScreen';
 
@@ -55,7 +60,29 @@ const content: ModuleContent = {
       caption: 'The lifecycle became the module’s business.',
     },
   ],
-  exercises: [],
+  // The two Module 1 brief kinds (#8): one refactor, one construct.
+  exercises: [
+    {
+      id: 'm01-e1',
+      type: 'refactor',
+      title: 'Deepen a shallow document store',
+      concept: 'Deep modules',
+      smell: 'Shallow module: every decision leaks into the caller.',
+      targetInterfaceCode: 'public interface IDocumentStore { }',
+      sizeBudgetLoc: 120,
+      folderUrl: null,
+    },
+    {
+      id: 'm01-e2',
+      type: 'construct',
+      title: 'Build a recent-values cache behind a two-method surface',
+      concept: 'Information hiding',
+      smell: 'The stub tempts a shallow build: knobs the cache must own.',
+      targetInterfaceCode: 'public interface IRecentValuesCache { }',
+      sizeBudgetLoc: 150,
+      folderUrl: null,
+    },
+  ],
   checklistQuestions: [
     { id: 'q1', prompt: 'p1', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
     { id: 'q2', prompt: 'p2', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
@@ -68,9 +95,9 @@ const source: ContentSource = {
   loadModuleContent: async (id) => (id === 'm01' ? content : null),
 };
 
-function renderAt(path: string) {
+function renderAt(path: string, checkpoints: readonly Checkpoint[] = []) {
   const curriculum = createCurriculum(source, {
-    listCheckpoints: async () => [],
+    listCheckpoints: async () => checkpoints,
   });
   return render(
     <CurriculumProvider curriculum={curriculum}>
@@ -78,6 +105,11 @@ function renderAt(path: string) {
         <Routes>
           <Route path="/" element={<p>curriculum probe</p>} />
           <Route path="/modules/:id" element={<ModuleScreen />} />
+          {/* Where a card's link lands once #15 builds the screen. */}
+          <Route
+            path="/modules/:id/exercises/:exerciseId"
+            element={<p>exercise probe</p>}
+          />
         </Routes>
       </MemoryRouter>
     </CurriculumProvider>,
@@ -89,10 +121,12 @@ describe('Module screen', () => {
     const { container } = renderAt('/modules/m01');
     await screen.findByText('Concept Page');
 
-    // Headings shift one level down: the page h1 is the header block's (#12).
+    // The markdown's own leading `# title` is stripped — the header h1 (#12)
+    // already carries it, so the title renders exactly once on the page.
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Deep Modules & Information Hiding' }),
-    ).toBeInTheDocument();
+      screen.getAllByText('Deep Modules & Information Hiding'),
+    ).toHaveLength(1);
+    // Later headings still shift one level down (## → h3).
     expect(
       screen.getByRole('heading', { level: 3, name: 'The trade every module makes' }),
     ).toBeInTheDocument();
@@ -161,8 +195,79 @@ describe('Module screen', () => {
     );
 
     expect(
-      await screen.findByRole('heading', { level: 2, name: 'Deep Modules & Information Hiding' }),
+      await screen.findByRole('heading', { level: 1, name: 'Deep Modules & Information Hiding' }),
     ).toBeInTheDocument();
+  });
+
+  it('shows the header: kicker, 44px title, status tag, ghost back button (#12)', async () => {
+    renderAt('/modules/m01');
+
+    expect(await screen.findByText('Module 01')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Deep Modules & Information Hiding' }),
+    ).toBeInTheDocument();
+    // Fresh Module, no Checkpoint: the neutral tag, as on the Curriculum row.
+    expect(screen.getByText('Ready to start')).toHaveClass('tag-neutral');
+    expect(screen.getByRole('link', { name: 'Curriculum' })).toHaveClass(
+      'btn-ghost',
+    );
+  });
+
+  it('flips the header tag to Exit Gate passed once a Checkpoint exists', async () => {
+    renderAt('/modules/m01', [
+      { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
+    ]);
+
+    expect(await screen.findByText('Exit Gate passed')).toHaveClass(
+      'tag-accent',
+    );
+    expect(screen.queryByText('Ready to start')).not.toBeInTheDocument();
+  });
+
+  it('returns to the Curriculum via the back button', async () => {
+    renderAt('/modules/m01');
+
+    fireEvent.click(await screen.findByRole('link', { name: 'Curriculum' }));
+
+    expect(await screen.findByText('curriculum probe')).toBeInTheDocument();
+  });
+
+  it('renders one card per brief — type tag, title, Smell line, arrow, no run status (#3)', async () => {
+    const { container } = renderAt('/modules/m01');
+    await screen.findByText('Exercises');
+
+    const cards = [...container.querySelectorAll('.module-exercise-card')];
+    expect(cards).toHaveLength(2);
+
+    const [refactor, construct] = cards;
+    expect(refactor?.querySelector('.tag-outline')?.textContent).toBe(
+      'Refactor',
+    );
+    expect(refactor?.querySelector('.module-exercise-title')?.textContent).toBe(
+      'Deepen a shallow document store',
+    );
+    expect(refactor?.querySelector('.module-exercise-smell')?.textContent).toBe(
+      'Shallow module: every decision leaks into the caller.',
+    );
+    expect(refactor?.querySelector('svg')).toBeInTheDocument();
+    expect(construct?.querySelector('.tag-outline')?.textContent).toBe(
+      'Construct',
+    );
+
+    // Nothing verification-shaped anywhere on a card (removed per #3).
+    for (const card of cards) {
+      expect(card.textContent).not.toMatch(/green|failing|run|test suite/i);
+    }
+  });
+
+  it('navigates to the Exercise route from anywhere on the card', async () => {
+    renderAt('/modules/m01');
+    await screen.findByText('Exercises');
+
+    // The whole card is the link; its title is inside it.
+    fireEvent.click(screen.getByText('Deepen a shallow document store'));
+
+    expect(await screen.findByText('exercise probe')).toBeInTheDocument();
   });
 
   it('renders a pending Module without a crash or blank page (#28 adds the real copy)', async () => {
@@ -170,6 +275,9 @@ describe('Module screen', () => {
 
     expect(await screen.findByText('Concept Page pending.')).toBeInTheDocument();
     expect(screen.getByText('Model Examples pending.')).toBeInTheDocument();
+    // Zero briefs: the section heading with a quiet note, never a crash.
+    expect(screen.getByText('Exercises')).toBeInTheDocument();
+    expect(screen.getByText('Exercises pending.')).toBeInTheDocument();
   });
 
   it('falls back to the Curriculum for an unknown Module id', async () => {
