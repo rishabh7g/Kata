@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useModuleDetail } from '../app/useModuleDetail';
 import type { ExerciseBrief } from '../curriculum';
+import { BehavioralChecklist } from './BehavioralChecklist';
 
 /**
  * Exercise — the read surface for one brief: header, Exercise Spec grid,
@@ -14,9 +15,9 @@ import type { ExerciseBrief } from '../curriculum';
  * ids (docs/engineering.md § 4). Kata never runs code: nothing here reports
  * on the learner's work, and the Target Interface is strictly display-only.
  *
- * The aside column stays empty for now — the Behavioral Checklist panel
- * lands there in #16; the grid (tokens.json layout.exerciseGrid: 1fr 400px)
- * carries both columns from day one so the geometry never shifts.
+ * The aside column (tokens.json layout.exerciseGrid: 1fr 400px) carries the
+ * Behavioral Checklist panel (#16) — per Module, written only through
+ * IProgress; the gate banner joins it in #19.
  */
 export function ExerciseScreen() {
   const { id, exerciseId } = useParams();
@@ -93,9 +94,15 @@ export function ExerciseScreen() {
           <div className="hr exercise-rule" />
           <PracticeMaterial exercise={exercise} />
         </div>
-        {/* Reserved 400px column: the Behavioral Checklist panel and the gate
-            banner land here (#16, #19); empty until then. */}
-        <aside className="exercise-aside" />
+        {/* The 400px column: the Behavioral Checklist panel — the Module's
+            Exit Gate (#16). The gate banner joins it below in #19. */}
+        <aside className="exercise-aside">
+          <BehavioralChecklist
+            moduleId={module.id}
+            moduleOrdinal={module.ordinal}
+            questions={module.checklistQuestions}
+          />
+        </aside>
       </div>
     </>
   );

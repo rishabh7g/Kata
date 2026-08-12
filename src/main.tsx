@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { App } from './App';
 import { CurriculumProvider } from './app/CurriculumContext';
+import { ProgressProvider } from './app/ProgressContext';
 import { createCurriculum, createHttpContentSource } from './curriculum';
+import { createProgress } from './progress';
 import { registerServiceWorker } from './pwa/register';
 
 // design/styles.css is the app stylesheet — the single source of styling truth
@@ -24,17 +26,30 @@ const curriculum = createCurriculum(
   { listCheckpoints: async () => [] },
 );
 
-createRoot(container).render(
-  <StrictMode>
-    {/* Hash routing: GitHub Pages serves static files only, so a reloaded
-        deep link has to resolve to /Kata/index.html. */}
-    <CurriculumProvider curriculum={curriculum}>
-      <HashRouter>
-        <App />
-      </HashRouter>
-    </CurriculumProvider>
-  </StrictMode>,
-);
+// The one real IProgress (#14): the `kata` IndexedDB database. Opening it is
+// async, so the render waits for it — the checklist (#16) writes through
+// this seam and nothing else.
+createProgress()
+  .then((progress) => {
+    createRoot(container).render(
+      <StrictMode>
+        {/* Hash routing: GitHub Pages serves static files only, so a reloaded
+            deep link has to resolve to /Kata/index.html. */}
+        <CurriculumProvider curriculum={curriculum}>
+          <ProgressProvider progress={progress}>
+            <HashRouter>
+              <App />
+            </HashRouter>
+          </ProgressProvider>
+        </CurriculumProvider>
+      </StrictMode>,
+    );
+  })
+  .catch((error: unknown) => {
+    // IndexedDB refusing to open (private-mode edge cases) leaves nothing
+    // sensible to render — surface it rather than a blank page with no clue.
+    console.error('Kata could not open its progress database', error);
+  });
 
 // Only a production build emits sw.js (src/pwa/service-worker-plugin.ts), and a
 // worker left over from a dev session would only serve stale files.
