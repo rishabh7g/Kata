@@ -175,6 +175,9 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The unlock cascade (#18): the draft-state tag ships in the bundle. The
   # live count and lock chain themselves are exercised by the app tests.
   has "$WORK/app.js" 'In progress' 'the draft In progress tag (#18)'
+  # The pending-Module placeholder (#28): its copy-block class ships in the
+  # bundle — the state itself is fixture-driven (no live Module is pending).
+  has "$WORK/app.js" 'module-pending-copy' 'the pending-Module placeholder (#28)'
 fi
 end
 

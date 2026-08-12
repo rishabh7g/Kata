@@ -318,14 +318,78 @@ describe('Module screen', () => {
     expect(await screen.findByText('exercise probe')).toBeInTheDocument();
   });
 
-  it('renders a pending Module without a crash or blank page (#28 adds the real copy)', async () => {
-    await renderAt('/modules/m02');
+  // ── Pending Module (#28): Module 1 passed, Module 2 unlocked but its
+  // content pack not authored — the placeholder state, never broken/blank.
+  it('renders the pending placeholder blocks with the prototype copy (#28)', async () => {
+    await renderAt('/modules/m02', [
+      { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
+    ]);
 
-    expect(await screen.findByText('Concept Page pending.')).toBeInTheDocument();
-    expect(screen.getByText('Model Examples pending.')).toBeInTheDocument();
-    // Zero briefs: the section heading with a quiet note, never a crash.
-    expect(screen.getByText('Exercises')).toBeInTheDocument();
-    expect(screen.getByText('Exercises pending.')).toBeInTheDocument();
+    // Header stays fully real: kicker, title, neutral tag, ghost back.
+    expect(await screen.findByText('Module 02')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Dependency Direction' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Ready to start')).toHaveClass('tag-neutral');
+    expect(screen.getByRole('link', { name: 'Curriculum' })).toHaveClass(
+      'btn-ghost',
+    );
+
+    // The three placeholder blocks, wording per the prototype's pending
+    // section (design/DevGym.dc.html § Module).
+    expect(
+      screen.getByText(
+        /Concept Page pending — drafted by the Generator once this Module unlocks; one human edit, then frozen\./,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Model Examples arrive with the Concept Page.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/No Exercises yet — the first is generated from an Exercise Spec\./),
+    ).toBeInTheDocument();
+  });
+
+  it('exposes no navigable Exercise routes on a pending Module (#28)', async () => {
+    const { container } = await renderAt('/modules/m02');
+    await screen.findByText('Exercises');
+
+    // No cards, no links besides the back button — nothing navigates to an
+    // Exercise, and no checklist form renders anywhere.
+    expect(container.querySelector('.module-exercise-card')).toBeNull();
+    const links = [...container.querySelectorAll('a')];
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/']);
+    expect(container.querySelector('form, input, button[type="submit"]')).toBeNull();
+  });
+
+  it('shows the pending note in the aside — no condition row, no submit (#28)', async () => {
+    const { container } = await renderAt('/modules/m02');
+    await screen.findByText('Exit Gate');
+
+    // Same 2px-bordered panel, but its only content is the pending note.
+    const aside = container.querySelector('aside.module-aside');
+    expect(aside?.querySelector('.module-gate-panel')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /The Behavioral Checklist arrives with the Concept Page — nothing to submit yet\./,
+      ),
+    ).toBeInTheDocument();
+
+    // A checklist that does not exist yet cannot be invited: no condition
+    // row, no unmet square, no submitted/not-submitted status, no poster.
+    expect(aside?.querySelector('.module-gate-condition')).toBeNull();
+    expect(aside?.querySelector('.module-gate-box')).toBeNull();
+    expect(aside?.textContent).not.toMatch(/submitted/i);
+    expect(aside?.querySelector('.module-gate-poster')).toBeNull();
+  });
+
+  it('uses no banned terms on the pending screen (#28)', async () => {
+    const { container } = await renderAt('/modules/m02');
+    await screen.findByText('Exit Gate');
+
+    expect(container.textContent ?? '').not.toMatch(
+      /lesson|course|level|quiz|flashcard|grade|score/i,
+    );
   });
 
   it('falls back to the Curriculum for an unknown Module id', async () => {

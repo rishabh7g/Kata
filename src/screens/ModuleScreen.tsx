@@ -18,9 +18,12 @@ import type { GateStatus } from '../progress';
  * and the Exercise cards (design/README.md § Screens › 2,
  * design/screens/02-state.png, 03-state.png).
  *
- * The pending-Module placeholder copy lands with #28; the aside column holds
- * the Exit Gate panel (#13) so the body grid (tokens.json layout.moduleGrid:
- * 1fr 350px) carries both columns.
+ * A pending Module (content pack not authored yet) renders the placeholder
+ * state instead (#28): the prototype's muted copy blocks for Concept Page /
+ * Model Examples / Exercises, no navigable Exercise cards, and a pending note
+ * in the Exit Gate aside. The aside column holds the Exit Gate panel (#13) so
+ * the body grid (tokens.json layout.moduleGrid: 1fr 350px) carries both
+ * columns.
  *
  * Everything rendered comes from `ICurriculum.getModule(id)` (#9). The cards
  * carry no suite status and no runs meta — the app knows nothing about the
@@ -70,8 +73,12 @@ export function ModuleScreen() {
           <section>
             <h6 className="module-section-label">Concept Page</h6>
             {module.pending ? (
-              // Bare minimum until the real placeholder copy lands (#28).
-              <p className="text-muted">Concept Page pending.</p>
+              // The prototype's pending copy, verbatim (DevGym.dc.html
+              // § Module, pending section).
+              <p className="text-muted module-pending-copy">
+                Concept Page pending — drafted by the Generator once this
+                Module unlocks; one human edit, then frozen.
+              </p>
             ) : (
               <div className="module-concept">
                 <Markdown source={stripLeadingTitle(module.conceptPageMarkdown)} />
@@ -82,7 +89,11 @@ export function ModuleScreen() {
           <section>
             <h6 className="module-section-label">Model Examples</h6>
             {module.modelExamples.length === 0 ? (
-              <p className="text-muted">Model Examples pending.</p>
+              // Pending copy per the prototype; also the quiet fallback for
+              // a pack with no examples — never a blank section.
+              <p className="text-muted module-pending-copy">
+                Model Examples arrive with the Concept Page.
+              </p>
             ) : (
               module.modelExamples.map((example, index) => (
                 <ModelExampleFigure key={index} example={example} />
@@ -93,8 +104,12 @@ export function ModuleScreen() {
           <section>
             <h6 className="module-section-label">Exercises</h6>
             {module.exercises.length === 0 ? (
-              // Quiet note, never a crash; #28 adds the real pending copy.
-              <p className="text-muted">Exercises pending.</p>
+              // Zero briefs → the prototype's pending line: no cards, so a
+              // pending Module exposes no navigable Exercise routes.
+              <p className="text-muted module-pending-copy">
+                No Exercises yet — the first is generated from an Exercise
+                Spec.
+              </p>
             ) : (
               <div className="module-exercises">
                 {module.exercises.map((exercise) => (
@@ -108,7 +123,11 @@ export function ModuleScreen() {
             )}
           </section>
         </div>
-        <ExitGateAside gate={gate} nextModule={nextModule} />
+        <ExitGateAside
+          gate={gate}
+          nextModule={nextModule}
+          pending={module.pending}
+        />
       </div>
     </>
   );
@@ -129,15 +148,21 @@ export function ModuleScreen() {
  * Exercise Test Suites green") is historical per the read-only decision (#3)
  * and is not built.
  *
+ * Pending Module → the same panel carries only a pending note (#28): a
+ * Behavioral Checklist that does not exist yet cannot render a condition
+ * row, and there is nothing to submit.
+ *
  * Exported so tests can reach every state directly — the Module 5 closing
  * line has no reachable pass path until all five packs ship (#24–#27).
  */
 export function ExitGateAside({
   gate,
   nextModule,
+  pending = false,
 }: {
   gate: GateStatus;
   nextModule: ModuleSummary | null; // null = nothing follows (Module 5)
+  pending?: boolean; // true = the Module's content pack is not authored yet
 }) {
   if (gate.passed && gate.checkpointAt !== null) {
     return (
@@ -149,6 +174,22 @@ export function ExitGateAside({
             Checkpoint · {formatCheckpointDate(gate.checkpointAt)}
           </div>
           <div className="module-gate-next">{nextModuleLine(nextModule)}</div>
+        </div>
+      </aside>
+    );
+  }
+
+  // Pending: the note replaces the condition row — no checklist exists yet,
+  // so nothing can be marked met or unmet and nothing invites a submission.
+  if (pending) {
+    return (
+      <aside className="module-aside">
+        <div className="module-gate-panel">
+          <h6 className="module-section-label">Exit Gate</h6>
+          <p className="text-muted module-gate-note module-gate-note-pending">
+            The Behavioral Checklist arrives with the Concept Page — nothing
+            to submit yet.
+          </p>
         </div>
       </aside>
     );

@@ -234,6 +234,13 @@ a.curriculum-row:hover {
   margin: var(--space-8) 0;
 }
 
+/* Pending-Module placeholder copy (#28): muted lines at tokens.json
+   typeScale.app.desc (13), capped at the prototype's 60ch. */
+.module-pending-copy {
+  max-width: 60ch;
+  font-size: 13px;
+}
+
 /* Concept Page prose, capped at 66ch (design/README.md § Screens › 2). The
    markdown carries its own title and the draft/edited/frozen note. */
 .module-concept {
@@ -399,6 +406,12 @@ a.curriculum-row:hover {
 .module-gate-note {
   font-size: 12px;
   margin: 14px 0 0;
+}
+
+/* Pending-Module aside note (#28): the panel's only content, so it needs no
+   condition-row offset above it. */
+.module-gate-note-pending {
+  margin: 0;
 }
 
 /* Passed poster (#17): the accent field with bg-colored type — the one place
