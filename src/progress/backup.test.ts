@@ -84,6 +84,45 @@ describe('parseProgressState', () => {
     expect(() => parseProgressState(text)).toThrow(reason);
   });
 
+  // #76: a non-ISO timestamp used to pass the parse and reach a screen, which
+  // rendered it as `Checkpoint · Invalid Date`. It is rejected at the door
+  // now — with the field and the record named, like every other reason.
+  it.each([
+    [
+      'a Checkpoint',
+      '{"schemaVersion":1,"checkpoints":[{"moduleId":"m01","passedAt":"banana"}],"submittedChecklists":[],"checklistDrafts":[]}',
+      /^checkpoints\[0\]: 'passedAt' is not an ISO date$/,
+    ],
+    [
+      'a submitted checklist',
+      '{"schemaVersion":1,"checkpoints":[],"submittedChecklists":[{"moduleId":"m01","answers":{"q1":"yes"},"submittedAt":"12/25/2026"}],"checklistDrafts":[]}',
+      /^submittedChecklists\[0\]: 'submittedAt' is not an ISO date$/,
+    ],
+    [
+      'a draft',
+      '{"schemaVersion":1,"checkpoints":[],"submittedChecklists":[],"checklistDrafts":[{"moduleId":"m02","answers":{},"savedAt":"2026"}]}',
+      /^checklistDrafts\[0\]: 'savedAt' is not an ISO date$/,
+    ],
+    [
+      'an hour that does not exist',
+      '{"schemaVersion":1,"checkpoints":[{"moduleId":"m01","passedAt":"2026-06-12T33:41:00.000Z"}],"submittedChecklists":[],"checklistDrafts":[]}',
+      /^checkpoints\[0\]: 'passedAt' is not an ISO date$/,
+    ],
+  ])('rejects an unparseable timestamp in %s', (_where, text, reason) => {
+    expect(() => parseProgressState(text)).toThrow(reason);
+  });
+
+  it.each([
+    '2026-06-12T09:41:00.000Z',
+    '2026-06-12T09:41:00Z',
+    '2026-06-12T09:41:00+10:00',
+  ])('accepts the ISO instant %s', (passedAt) => {
+    const file = JSON.stringify({ ...state, checkpoints: [{ moduleId: 'm01', passedAt }] });
+    expect(parseProgressState(file).checkpoints).toEqual([
+      { moduleId: 'm01', passedAt },
+    ]);
+  });
+
   it('accepts an empty draft — autosaves may hold nothing yet', () => {
     const withEmptyDraft: ProgressState = {
       ...state,
