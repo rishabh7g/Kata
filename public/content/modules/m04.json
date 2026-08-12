@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "id": "m04",
+  "conceptPageMarkdown": "# Naming & Ubiquitous Language\n\n*LLM first draft · human-edited once · frozen*\n\n## The cheapest change with the highest leverage\n\nRenaming is the cheapest change you can make to a codebase: no behavior\nmoves, and with the Test Suite at the Target Interface, nothing breaks.\nIt is also the highest-leverage change, because a name is read hundreds\nof times for every one time it is written — by you, by the next reader,\nand by every AI you collaborate with. A model prompted in the domain's\nown terms writes code you do not have to translate back; a model prompted\nover `Manager`s and `ProcessData`s guesses. This Module is about\nchoosing names from one shared vocabulary — a **Ubiquitous Language** —\nand holding every class, method, and variable to it.\n\n## One concept, one name — everywhere\n\nA Ubiquitous Language is a single agreed list of terms for the concepts\nin your domain, used everywhere: in conversation, in documents, in commit\nmessages, and in code. One concept gets exactly one name, and one name\nmeans exactly one concept. When the domain says **loan**, the code says\n`Loan` — not `Record` in one file, `Entry` in another, and\n`LoanDto` in a third. When a concept has no name yet, you name it\nfirst, then code it.\n\nThe payoff is mechanical, not aesthetic:\n\n- Search for a domain term and you find every place the code touches\n  that concept — grep becomes a design tool.\n- A sentence spoken by a domain expert translates into code almost word\n  for word, and back again.\n- A new reader predicts what a method does from its signature alone,\n  before opening the body.\n\n## Four checks that need no taste\n\nA good name states what the reader would otherwise discover by reading\nthe implementation. A bad name forces that reading — or lies, so the\nreader trusts it and is wrong. You do not need taste to tell them apart:\n\n1. **The prediction check.** Read only the name and signature and write\n   down what you expect the member to do. Then read the body. Anything\n   the body did that your prediction missed — or promised that the body\n   skipped — is a naming defect, whichever direction it runs.\n2. **The synonym count.** Pick one domain concept and search for every\n   word the code uses for it. A count above one means every caller\n   carries a translation table the code could have made unnecessary.\n3. **The vague-word grep.** Search for `Manager`, `Helper`, `Util`,\n   `Handler`, `Process`, `Data`, `Info`, `temp`, `flag`,\n   `item`. Each hit names *that a thing exists*, not what it is or\n   does. Ask of each: which noun or verb in this member's one-sentence\n   job description is missing from its name?\n4. **The scope-honesty check.** Count the side effects the name does not\n   mention — a `Get` that creates, a `Validate` that saves. Any\n   count above zero is a lie the codebase tells hundreds of times.\n\n## A name that will not come is a design probe\n\nNaming is not decoration on top of design — it is the cheapest design\nreview you can run. When a class cannot be named without *and*, *or*, or\na vague word, it usually holds more than one responsibility; the missing\nname is telling you where to split. State each class's responsibility in\none sentence starting with its name: a sentence that needs \"and\" was two\nclasses. And when two modules use different words for the same concept,\nthe boundary between them forces every caller to translate — the\nvocabulary clash marks the seam that needs one owner.\n\n## How this runs in your Exercises\n\n- In the refactor-type Exercise the behavior is already correct and the\n  Test Suite starts green — the planted Smell is entirely in the names.\n  The Target Interface's names are the Ubiquitous Language; rename\n  everything behind it into that language, suite green after each step.\n- In the construct-type Exercise the temptation is to let implementation\n  vocabulary write the code: `dict`, `entry`, `flag`, a helper\n  named `Manager`. The folder's glossary is the domain's language —\n  every name you introduce draws from it.\n- Either way, finish with the four checks above. The Behavioral\n  Checklist asks you the same countable questions, and they are the same\n  questions to ask of every module you and an AI write together from\n  now on.",
+  "modelExamples": [
+    {
+      "before": "// Correct behavior, borrowed vocabulary: nothing here speaks the\n// clinic's language, so every reader translates as they go.\npublic class DataManager\n{\n    private readonly List<Item> _list = new();\n\n    // \"Process\" what? The reader must open the body to learn that\n    // this books a patient into a slot — unless it is taken.\n    public bool ProcessItem(string id1, string id2)\n    {\n        foreach (var obj in _list)\n        {\n            if (obj.Key2 == id2) return false;\n        }\n        _list.Add(new Item { Key1 = id1, Key2 = id2 });\n        return true;\n    }\n\n    // \"GetData\" names a direction, not a concept: this counts the\n    // slots a patient has booked today.\n    public int GetData(string id1)\n    {\n        var temp = 0;\n        foreach (var obj in _list)\n        {\n            if (obj.Key1 == id1) temp++;\n        }\n        return temp;\n    }\n}\n\n// Grep test: search this file for \"appointment\", \"patient\", or\n// \"slot\" — the domain's three central words. Zero hits.",
+      "after": "// The same behavior in the clinic's own words. The domain expert's\n// sentence — \"book the patient into the slot, unless it is taken\" —\n// now reads straight off the code.\npublic class AppointmentBook\n{\n    private readonly List<Appointment> _appointments = new();\n\n    public bool Book(string patientId, string slotId)\n    {\n        foreach (var appointment in _appointments)\n        {\n            if (appointment.SlotId == slotId) return false;\n        }\n        _appointments.Add(new Appointment\n        {\n            PatientId = patientId,\n            SlotId = slotId,\n        });\n        return true;\n    }\n\n    public int BookingsFor(string patientId)\n    {\n        var bookings = 0;\n        foreach (var appointment in _appointments)\n        {\n            if (appointment.PatientId == patientId) bookings++;\n        }\n        return bookings;\n    }\n}\n\n// The same grep now finds every place the code touches the concept.\n// Not one line of behavior changed — only what the reader pays.",
+      "caption": "A pure rename — identical behavior, line for line — moved the class from borrowed vocabulary (Manager, Process, Item, Data, temp) into the clinic's Ubiquitous Language. Before: grep for the domain words finds nothing, and every reader re-derives what ProcessItem means. After: the code and the domain expert's sentence are the same sentence."
+    },
+    {
+      "before": "// Say this class's responsibility in one sentence starting with\n// its name: \"OrderService prices the order AND emails the\n// confirmation.\" The \"and\" is load-bearing — and so is the vague\n// name that let both jobs hide under one roof.\npublic class OrderService\n{\n    private readonly ISmtpClient _smtp;\n\n    public OrderService(ISmtpClient smtp) => _smtp = smtp;\n\n    public decimal Complete(Order order)\n    {\n        // Job one: price it.\n        decimal total = 0m;\n        foreach (var line in order.Lines)\n        {\n            total += line.UnitPrice * line.Quantity;\n        }\n        if (total >= 100m) total *= 0.95m;\n\n        // Job two: announce it.\n        _smtp.Send(\n            order.CustomerEmail,\n            \"Your order\",\n            $\"Your total is {total:C}.\");\n\n        return total;\n    }\n}\n\n// \"Service\" is the tell: a name vague enough to cover any second\n// job that wanders in. Nobody can call one job without the other.",
+      "after": "// Two sentences, no \"and\" — and now the names could not absorb a\n// stray second job if one tried to move in.\npublic class OrderPricer\n{\n    // \"OrderPricer prices the order.\" One sentence, whole.\n    public decimal Price(Order order)\n    {\n        decimal total = 0m;\n        foreach (var line in order.Lines)\n        {\n            total += line.UnitPrice * line.Quantity;\n        }\n        return total >= 100m ? total * 0.95m : total;\n    }\n}\n\npublic class ConfirmationMailer\n{\n    private readonly ISmtpClient _smtp;\n\n    public ConfirmationMailer(ISmtpClient smtp) => _smtp = smtp;\n\n    // \"ConfirmationMailer mails the confirmation.\" Also whole.\n    public void Send(Order order, decimal total)\n    {\n        _smtp.Send(\n            order.CustomerEmail,\n            \"Your order\",\n            $\"Your total is {total:C}.\");\n    }\n}\n\n// The caller now composes the two by name — and can price an order\n// without sending an email, which the old name quietly forbade.",
+      "caption": "The one-sentence test did the design work: \"OrderService prices the order and emails the confirmation\" needed an \"and\", so it was two classes wearing one vague name. Named honestly, OrderPricer and ConfirmationMailer each carry a whole sentence, and callers can finally use one job without buying the other."
+    },
+    {
+      "before": "// Every name here is trusted hundreds of times — and each one\n// lies about what the body does.\npublic class SubscriberDirectory\n{\n    private readonly Dictionary<string, Subscriber> _byEmail = new();\n\n    // \"Get\" — but an unknown email is silently REGISTERED. Callers\n    // probing \"does this subscriber exist?\" create it by asking.\n    public Subscriber GetSubscriber(string email)\n    {\n        if (!_byEmail.TryGetValue(email, out var subscriber))\n        {\n            subscriber = new Subscriber(email);\n            _byEmail[email] = subscriber;\n        }\n        return subscriber;\n    }\n\n    // \"Is…\" promises a pure question — but the check is also\n    // RECORDED, so asking twice gives a different history.\n    public bool IsActive(string email)\n    {\n        var subscriber = GetSubscriber(email);\n        subscriber.ChecksRecorded++;\n        return subscriber.Unsubscribed == false;\n    }\n}\n\n// The prediction check fails twice: read each signature, write\n// down what you expect, then read the body. Both bodies do more.",
+      "after": "// The same operations under honest names. Nothing about the\n// behavior changed yet — but now the names confess it.\npublic class SubscriberDirectory\n{\n    private readonly Dictionary<string, Subscriber> _byEmail = new();\n\n    // The name now carries the side effect it always had.\n    public Subscriber FindOrRegisterSubscriber(string email)\n    {\n        if (!_byEmail.TryGetValue(email, out var subscriber))\n        {\n            subscriber = new Subscriber(email);\n            _byEmail[email] = subscriber;\n        }\n        return subscriber;\n    }\n\n    // Honesty made the smell legible: a name that needs \"and\"\n    // is the split point, found by renaming alone.\n    public bool RecordCheckAndReportActive(string email)\n    {\n        var subscriber = FindOrRegisterSubscriber(email);\n        subscriber.ChecksRecorded++;\n        return subscriber.Unsubscribed == false;\n    }\n}\n\n// First make the name tell the truth; the truthful name then\n// tells you what to fix. A lying name hides the flaw forever.",
+      "caption": "Scope-honest renaming, behavior untouched: GetSubscriber registered strangers and IsActive wrote history, so both names were lies every caller believed. FindOrRegisterSubscriber and RecordCheckAndReportActive tell the truth — and the second name, needing \"And\", immediately exposes the next refactor. Honest names turn hidden design flaws into visible, countable ones."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "m04-e1",
+      "type": "refactor",
+      "title": "Rename a lending desk into the library's language",
+      "concept": "Naming & Ubiquitous Language",
+      "smell": "Off-domain and dishonest names: the lending desk behaves correctly and the boundary Test Suite starts green, but nothing behind the Target Interface speaks the library's language. The internals are written in borrowed vocabulary — Manager, Process, Data, item, temp, flag — the same domain concept goes by several names in different corners, and several names lie about scope: a Get that creates, a Check that mutates. Rename everything behind the Target Interface into the library's own terms (the glossary in smell-notes.md), Test Suite green after every rename.",
+      "targetInterfaceCode": "public interface ILendingDesk\n{\n    // Puts one copy of the title on the shelf; call once per copy.\n    void AddCopy(string title);\n\n    // Lends one shelved copy to the member. False — and nothing is\n    // recorded — when no copy is on the shelf, the member already\n    // holds 3 loans, or the member already holds this title.\n    bool CheckOut(string memberId, string title);\n\n    // Takes the member's copy of the title back onto the shelf.\n    // False when the member holds no loan of this title.\n    bool Return(string memberId, string title);\n\n    // Copies of the title on the shelf right now. Unknown title: 0.\n    int CopiesOnShelf(string title);\n}",
+      "sizeBudgetLoc": 250,
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m04/m04-e1"
+    },
+    {
+      "id": "m04-e2",
+      "type": "construct",
+      "title": "Build a front desk that speaks the hotel's language",
+      "concept": "Naming & Ubiquitous Language",
+      "smell": "The construct temptation is to let implementation vocabulary write the code: dictionaries named dict, loop variables named item, booleans named flag, a helper named Manager — behavior a Test Suite accepts but no hotelier could read. The folder README carries the hotel glossary — guest, room, stay, check-in, check-out, occupied, vacant — and every class, method, and variable you add draws its words from it, each private member's responsibility fitting one sentence without 'and'.",
+      "targetInterfaceCode": "public interface IFrontDesk\n{\n    // Opens the room for guests; call once per room.\n    void AddRoom(string roomNumber);\n\n    // Checks the guest in. False — and nothing is recorded — when\n    // the room is unknown or occupied, or the guest is already\n    // checked in anywhere in the hotel.\n    bool CheckIn(string guestName, string roomNumber);\n\n    // Checks out whoever occupies the room. False when the room is\n    // unknown or vacant.\n    bool CheckOut(string roomNumber);\n\n    // True while a guest occupies the room. Unknown room: false.\n    bool IsOccupied(string roomNumber);\n}",
+      "sizeBudgetLoc": 200,
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m04/m04-e2"
+    }
+  ],
+  "checklistQuestions": [
+    {
+      "id": "q1",
+      "prompt": "Grep your solution for Manager, Helper, Util, Handler, Process, Data, Info, temp, flag, item, and obj. Outside the Target Interface file, is the hit count zero?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — zero vague words survived"
+        },
+        {
+          "value": "no",
+          "label": "No — at least one vague name remains"
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "prompt": "State each class's and each private method's responsibility in one sentence starting with its name. Did any sentence need 'and'?",
+      "options": [
+        {
+          "value": "no",
+          "label": "No — every sentence came out whole"
+        },
+        {
+          "value": "yes",
+          "label": "Yes — at least one needed 'and'"
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "prompt": "For each member you named, read only the name and signature and write down what you expect it to do; then read the body. Count the members that did more, less, or other than the name promised (a Get that creates, an Is that records). Is the count zero?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — every name kept its promise"
+        },
+        {
+          "value": "no",
+          "label": "No — at least one body surprised me"
+        }
+      ]
+    }
+  ]
+}
