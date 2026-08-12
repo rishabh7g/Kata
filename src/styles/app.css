@@ -162,6 +162,53 @@ a.curriculum-row:hover {
   border-top: 2px solid var(--color-divider);
 }
 
+/* ── Progress backup (#29) — the quiet footer under the closing rule ──────
+   Ghost controls only (design/styles.css .btn-ghost); the note and error
+   at tokens.json typeScale.app.caption (11px). */
+.curriculum-backup {
+  margin-top: 14px;
+  padding-bottom: 40px;
+}
+
+.curriculum-backup-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.curriculum-backup-note {
+  font-size: 11px;
+  margin: 8px 0 0;
+  max-width: 62ch;
+}
+
+/* The confirm step: a 2px-rule panel (tokens.json layout.rules.major),
+   matching the checklist panel's quiet framing. */
+.curriculum-backup-confirm {
+  border: 2px solid var(--color-divider);
+  padding: 14px 16px;
+  margin-top: 12px;
+  max-width: 62ch;
+}
+
+.curriculum-backup-summary {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+
+.curriculum-backup-confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.curriculum-backup-error {
+  color: var(--color-accent);
+  font-size: 11px;
+  margin: 10px 0 0;
+  max-width: 62ch;
+}
+
 /* ── Module screen (#11, #12) — design/README.md § Screens › 2 ────────────
    Header block, Concept Page prose, the Model Examples grid, and the
    Exercise cards. The Exit Gate aside lands with #13 — the empty aside

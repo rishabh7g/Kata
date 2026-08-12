@@ -5,6 +5,7 @@ import { useProgress } from '../app/ProgressContext';
 import { useModuleSummaries } from '../app/useModuleSummaries';
 import type { ModuleId, ModuleSummary } from '../curriculum';
 import type { IProgress } from '../progress';
+import { ProgressBackup } from './ProgressBackup';
 
 /**
  * Curriculum — the fixed, ordered Module list with lock state
@@ -46,6 +47,8 @@ export function CurriculumScreen() {
           ))}
           {/* The closing 2px rule after the last row (tokens.json layout.rules). */}
           <div className="curriculum-closing-rule" />
+          {/* The backup story (#29): quiet export/import under the rule. */}
+          <ProgressBackup />
         </>
       )}
     </>
