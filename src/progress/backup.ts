@@ -8,6 +8,7 @@
 import type {
   ChecklistDraft,
   Checkpoint,
+  IsoDateTime,
   PartialChecklistAnswers,
   ProgressState,
   SubmittedChecklist,
@@ -79,6 +80,28 @@ function requireString(
   return value;
 }
 
+/**
+ * An ISO-8601 instant, exactly as the contract documents IsoDateTime and as
+ * the app writes it (`new Date().toISOString()`): date, time, and a zone.
+ * Date.parse alone is not the test — it also accepts '2026' and '12/25/2026',
+ * neither of which is the instant the contract promises — so the shape is
+ * checked by the pattern and the value by Date.parse (#76).
+ */
+const ISO_INSTANT =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function requireIsoDateTime(
+  record: Record<string, unknown>,
+  key: string,
+  where: string,
+): IsoDateTime {
+  const value = requireString(record, key, where);
+  if (!ISO_INSTANT.test(value) || Number.isNaN(Date.parse(value))) {
+    throw new Error(`${where}: '${key}' is not an ISO date`);
+  }
+  return value;
+}
+
 function parseAnswers(
   value: unknown,
   where: string,
@@ -100,7 +123,7 @@ function parseCheckpoint(value: unknown, where: string): Checkpoint {
   if (!isRecord(value)) throw new Error(`${where} is not an object`);
   return {
     moduleId: requireString(value, 'moduleId', where),
-    passedAt: requireString(value, 'passedAt', where),
+    passedAt: requireIsoDateTime(value, 'passedAt', where),
   };
 }
 
@@ -118,7 +141,7 @@ function parseSubmittedChecklist(
   return {
     moduleId: requireString(value, 'moduleId', where),
     answers: answers as SubmittedChecklist['answers'],
-    submittedAt: requireString(value, 'submittedAt', where),
+    submittedAt: requireIsoDateTime(value, 'submittedAt', where),
   };
 }
 
@@ -128,6 +151,6 @@ function parseChecklistDraft(value: unknown, where: string): ChecklistDraft {
     moduleId: requireString(value, 'moduleId', where),
     // Drafts are autosaves and may be partial — even empty.
     answers: parseAnswers(value.answers, where),
-    savedAt: requireString(value, 'savedAt', where),
+    savedAt: requireIsoDateTime(value, 'savedAt', where),
   };
 }

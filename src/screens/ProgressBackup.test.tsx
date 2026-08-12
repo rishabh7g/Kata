@@ -191,6 +191,31 @@ describe('Progress backup — import', () => {
     });
   });
 
+  // #76: this file used to import, and the row then read `Checkpoint ·
+  // Invalid Date`. The parse names the bad field, and nothing is written.
+  it('an unparseable Checkpoint date is rejected before the confirm', async () => {
+    const progress = await renderScreen();
+
+    pickFile(
+      '{"schemaVersion":1,"checkpoints":[{"moduleId":"m01","passedAt":"banana"}],"submittedChecklists":[],"checklistDrafts":[]}',
+    );
+
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toBe(
+      "Not a Kata progress file — checkpoints[0]: 'passedAt' is not an ISO date. Current progress is unchanged.",
+    );
+    expect(
+      screen.queryByText(/replace current progress\?/),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Invalid Date/)).not.toBeInTheDocument();
+    expect(await progress.exportState()).toEqual({
+      schemaVersion: 1,
+      checkpoints: [],
+      submittedChecklists: [],
+      checklistDrafts: [],
+    });
+  });
+
   it('a rejected pick clears once a valid file is picked after it', async () => {
     await renderScreen();
 
