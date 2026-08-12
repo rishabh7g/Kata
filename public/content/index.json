@@ -13,7 +13,7 @@
       "ordinal": 2,
       "title": "Dependency Direction",
       "description": "Coupling, cohesion, and pointing dependencies at stable abstractions.",
-      "pending": true
+      "pending": false
     },
     {
       "id": "m03",

@@ -15,7 +15,8 @@
 #
 # Exit codes: 0 ok · 2 usage/precondition · 10 shell · 11 app bundle ·
 #             12 stylesheet · 13 font · 14 manifest · 15 service worker ·
-#             16 icons · 17 content · 18 exercise folders
+#             16 icons · 17 content · 18 exercise folders ·
+#             19 m02 exercise folders
 #
 set -uo pipefail
 
@@ -261,6 +262,13 @@ else
       else
         bad "m01 is pending in the deployed index — Module 1 content (#8) is missing"
       fi
+      # Module 2 shipped in #24: the loop below must also fetch and validate
+      # content/modules/m02.json.
+      if [[ " $MODULES " == *" m02 "* ]]; then
+        note "m02 is non-pending — Module 2 content (#24) is live"
+      else
+        bad "m02 is pending in the deployed index — Module 2 content (#24) is missing"
+      fi
       for id in $MODULES; do
         get "${URL}content/modules/${id}.json" "$WORK/content/modules/${id}.json"
       done
@@ -299,6 +307,31 @@ else
     for folder_url in $FOLDER_URLS; do
       n=$((n + 1))
       get "$folder_url" "$WORK/exercise-folder-$n.html" || true
+    done
+  fi
+fi
+end
+
+# ─── 10. m02 exercise folders (#24) ────────────────────────────────────────
+# Module 2's two Exercise folders are committed (#24): the deployed m02.json
+# must carry both GitHub folder URLs and each must return 200.
+begin exercise-folders-m02 19
+M02_JSON="$WORK/content/modules/m02.json"
+if [[ ! -f "$M02_JSON" ]]; then
+  bad "the deployed m02.json was not fetched (content step failed?) — cannot read folderUrl"
+else
+  FOLDER_URLS="$(node -e '
+    const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+    console.log(data.exercises.map((e) => e.folderUrl).filter(Boolean).join(" "));
+  ' "$M02_JSON" 2>>"$LOG")"
+  COUNT=$(wc -w <<<"$FOLDER_URLS")
+  if ((COUNT < 2)); then
+    bad "deployed m02.json has $COUNT non-null folderUrl values (expected 2: #24)"
+  else
+    n=0
+    for folder_url in $FOLDER_URLS; do
+      n=$((n + 1))
+      get "$folder_url" "$WORK/m02-exercise-folder-$n.html" || true
     done
   fi
 fi

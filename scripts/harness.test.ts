@@ -98,7 +98,7 @@ describe('content schema + Module index (#7)', () => {
     }
   });
 
-  it('lists all five Modules, in Curriculum order, titles verbatim, only m01 authored', () => {
+  it('lists all five Modules, in Curriculum order, titles verbatim, m01–m02 authored', () => {
     const index = JSON.parse(
       readFileSync(join(REPO, 'public/content/index.json'), 'utf8'),
     ) as {
@@ -116,9 +116,9 @@ describe('content schema + Module index (#7)', () => {
     ]);
     expect(index.modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5]);
     expect(index.modules.map((m) => m.id)).toEqual(['m01', 'm02', 'm03', 'm04', 'm05']);
-    // A Module is pending until its content pack is authored: #8 shipped m01;
-    // m02–m05 stay pending until #24–#27.
-    expect(index.modules.map((m) => m.pending)).toEqual([false, true, true, true, true]);
+    // A Module is pending until its content pack is authored: #8 shipped m01,
+    // #24 shipped m02; m03–m05 stay pending until #25–#27.
+    expect(index.modules.map((m) => m.pending)).toEqual([false, false, true, true, true]);
   });
 });
 
@@ -146,7 +146,7 @@ describe('smoke.sh', () => {
     const result = run('scripts/smoke.sh', [], { KATA_URL: 'http://127.0.0.1:9/' });
 
     expect(result.status).toBe(10); // 10 = app shell, per scripts/README.md
-    expect(result.lines[0]).toMatch(/^SMOKE FAIL 0\/9 \| step shell \(exit 10\)/);
+    expect(result.lines[0]).toMatch(/^SMOKE FAIL 0\/10 \| step shell \(exit 10\)/);
     expect(result.lines.length).toBeLessThanOrEqual(25);
     expect(result.stdout).toContain('log: ');
   }, 30_000);
@@ -155,7 +155,13 @@ describe('smoke.sh', () => {
     const help = run('scripts/smoke.sh', ['--help']);
 
     expect(help.status).toBe(0);
-    for (const code of ['10 shell', '14 manifest', '17 content', '18 exercise folders']) {
+    for (const code of [
+      '10 shell',
+      '14 manifest',
+      '17 content',
+      '18 exercise folders',
+      '19 m02 exercise folders',
+    ]) {
       expect(help.stdout).toContain(code);
     }
   });

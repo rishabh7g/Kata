@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "id": "m02",
+  "conceptPageMarkdown": "# Dependency Direction\n\n*LLM first draft · human-edited once · frozen*\n\n## Every dependency is an arrow\n\nEvery piece of code depends on something: the classes it constructs, the\nmethods it calls, the types in its signatures. Each of those is an **arrow**\npointing from your code at something else — and each arrow is a bet that the\nthing it points at will not change. This Module is about noticing the arrows\nand aiming them deliberately, because some bets are far safer than others.\n\nWhen module A depends on module B, every change to B can force a change to A.\nChain a few of those and one edit ripples across the codebase: change how\norders are stored, and the pricing logic, the email formatter, and the test\nsetup all break. That ripple is not bad luck — it is the mechanical\nconsequence of arrows pointing at things that change often.\n\nThe fix is not removing dependencies (impossible) but aiming them. Some things\nare **stable**: small abstractions that say *what* is needed — \"something that\ncan save an order\", \"something that tells the time\". Others are **volatile**:\nconcrete details of *how* — a specific database, a file format, a vendor SDK,\ntoday's business rule. Point your arrows at the stable abstractions, and make\nthe volatile details point at those same abstractions from their side. Then\nthe details can churn freely and nothing upstream notices.\n\n## Coupling and cohesion — both countable\n\n- **Coupling** is how much one Code Module must know about another to use it.\n  Count it: how many of B's types appear in A's signatures, fields, and method\n  bodies? If B's constructor changed, how many files would stop compiling? A\n  high count means A depends on B's *shape*, not just its service.\n- **Cohesion** is whether the things inside one Code Module belong together.\n  Test it: state the class's responsibility in one sentence. If the sentence\n  needs the word \"and\", the class holds two responsibilities — and every\n  dependent inherits both reasons to change. This is single responsibility\n  (SOLID's S), measured behaviorally.\n\nHigh cohesion keeps every arrow's target small and single-purpose. Low\ncoupling keeps the number of arrows into any volatile thing near zero.\n\n## Reversing an arrow\n\nIn C#, aiming a dependency means depending on a small C# `interface` you own\ninstead of a concrete class you don't. The pattern — dependency inversion,\nSOLID's D — has three observable parts:\n\n1. The **policy** — the code expressing a business decision — declares a small\n   C# `interface` describing only what it needs, named in its own vocabulary.\n2. The **volatile detail** — the database wrapper, the HTTP client, the clock —\n   *implements* that `interface`. The arrow now points from detail to\n   abstraction: the reverse of the naive direction.\n3. The outermost edge of the program (composition, at startup) picks the\n   concrete implementation and hands it in through the constructor.\n\nWatch what this does to change: swapping the database means writing one new\nimplementation and editing one line at the edge. The policy is untouched. If\nyou cannot make that claim about your own code — if swapping a detail would\nedit the policy — an arrow is pointing the wrong way.\n\nSOLID's remaining letters need no theory of their own here: open/closed,\nsubstitutability, and narrow C# `interface`s show up in this Module's\nBehavioral Checklist as things you count or do.\n\n## Five checks, each yes/no\n\n- Does a `new` for a volatile class (database, file system, HTTP, clock)\n  appear inside business logic? Every `new` is a hard-wired arrow at a\n  concrete type.\n- Do the `using` directives in your core logic name infrastructure\n  namespaces — data access, network, vendor SDKs? Each one is an inbound\n  ripple path.\n- Pretend one detail changed — the storage technology, the message format.\n  Count the files you would edit. More than the implementation itself plus one\n  composition line means the arrows point at the detail.\n- Can the Test Suite at the Target Interface run without the real database or\n  network present? If not, the policy depends on the detail.\n- State each class's responsibility in one sentence. Any \"and\" is low\n  cohesion, and every dependent inherits both halves.\n\nThe Exercises in this Module plant exactly these Smells: policy code that\nconstructs its own details, and business rules threaded through a concrete\nstorage format. Your job is to turn the arrows around — the Target Interface\nshows where they must end up pointing.",
+  "modelExamples": [
+    {
+      "before": "// The pricing policy constructs its own details: two hard\n// arrows from business logic into volatile infrastructure.\npublic class InvoiceService\n{\n    public void Issue(Order order)\n    {\n        var store = new SqlInvoiceStore(\n            \"Server=db;Database=billing;Trusted_Connection=True\");\n        var notifier = new SmtpNotifier(\"smtp.internal\", 587);\n\n        var invoice = Invoice.From(order);\n        store.Insert(invoice);\n        notifier.Send(order.CustomerEmail, invoice);\n    }\n}\n\n// Swapping the database or the mail vendor edits this class:\n// the policy changes whenever a detail changes.",
+      "after": "// The policy declares what it needs, in its own vocabulary.\n// The details implement it — both arrows now point inward.\npublic interface IInvoiceStore\n{\n    void Add(Invoice invoice);\n}\n\npublic interface ICustomerNotifier\n{\n    void InvoiceIssued(Invoice invoice);\n}\n\npublic class InvoiceService\n{\n    private readonly IInvoiceStore _store;\n    private readonly ICustomerNotifier _notifier;\n\n    public InvoiceService(\n        IInvoiceStore store, ICustomerNotifier notifier)\n    {\n        _store = store;\n        _notifier = notifier;\n    }\n\n    public void Issue(Order order)\n    {\n        var invoice = Invoice.From(order);\n        _store.Add(invoice);\n        _notifier.InvoiceIssued(invoice);\n    }\n}\n\n// At the program's edge, once:\n// new InvoiceService(\n//     new SqlInvoiceStore(cs), new SmtpNotifier(host, port));",
+      "caption": "The policy stopped constructing its own details: it declares two small C# interfaces in its own vocabulary, and the SQL store and SMTP notifier now depend on the policy’s abstractions instead. The arrows reversed — swapping a vendor is one line at the edge."
+    },
+    {
+      "before": "// There is an interface — but it leaks the technology through\n// every signature. Callers still depend on SQL, in detail.\npublic interface IOrderData\n{\n    SqlConnection OpenConnection(string connectionString);\n    DataTable RunQuery(SqlConnection connection, string sql);\n    void Execute(SqlConnection connection, string insertSql);\n}\n\n// The \"abstracted\" caller, still speaking SQL:\npublic class OrderStatistics\n{\n    private readonly IOrderData _data;\n\n    public OrderStatistics(IOrderData data) => _data = data;\n\n    public int CountFor(string customerId)\n    {\n        using var connection =\n            _data.OpenConnection(Config.OrdersDb);\n        var rows = _data.RunQuery(connection,\n            \"SELECT * FROM Orders WHERE CustomerId = '\"\n                + customerId + \"'\");\n        return rows.Rows.Count;\n    }\n}",
+      "after": "// A stable abstraction speaks the caller's language and hides\n// the technology completely. Swap SQL for anything — nothing\n// on this side of the arrow moves.\npublic interface IOrderArchive\n{\n    IReadOnlyList<Order> OrdersFor(string customerId);\n}\n\npublic class OrderStatistics\n{\n    private readonly IOrderArchive _archive;\n\n    public OrderStatistics(IOrderArchive archive) =>\n        _archive = archive;\n\n    public int CountFor(string customerId) =>\n        _archive.OrdersFor(customerId).Count;\n}\n\n// SqlOrderArchive implements IOrderArchive at the edge and\n// owns connections, SQL text, and escaping — all of it now\n// invisible from the policy side.",
+      "caption": "An abstraction that names SqlConnection and query strings is no abstraction — every caller still points at the database. Rewritten in domain vocabulary, the technology terms vanish from the policy side entirely, and the detail can change without a ripple."
+    },
+    {
+      "before": "// One class, three responsibilities: computes pay, formats\n// the payslip, and delivers it. Every dependent of PayrollRun\n// changes when any one of the three changes.\npublic class PayrollRun\n{\n    public string RunFor(Employee employee)\n    {\n        // 1. Policy: compute the pay\n        var gross = employee.HoursWorked * employee.HourlyRate;\n        var tax = gross * TaxRateFor(employee);\n        var net = gross - tax;\n\n        // 2. Presentation: format the payslip\n        var html = \"<h1>Payslip</h1>\"\n            + $\"<p>{employee.Name}: {net:C}</p>\";\n\n        // 3. Delivery: write it where the portal reads it\n        File.WriteAllText(\n            $\"/var/portal/payslips/{employee.Id}.html\", html);\n        return html;\n    }\n\n    private static decimal TaxRateFor(Employee e) =>\n        e.Country == \"AU\" ? 0.32m : 0.25m;\n}",
+      "after": "// One sentence per class, no \"and\". The pay rules are the\n// stable center; formatting and delivery point at them.\npublic class PayCalculator\n{\n    public Pay For(Employee employee)\n    {\n        var gross = employee.HoursWorked * employee.HourlyRate;\n        var tax = gross * TaxRateFor(employee);\n        return new Pay(gross, tax, gross - tax);\n    }\n\n    private static decimal TaxRateFor(Employee e) =>\n        e.Country == \"AU\" ? 0.32m : 0.25m;\n}\n\npublic class PayslipFormatter\n{\n    public string Html(Employee employee, Pay pay) =>\n        \"<h1>Payslip</h1>\"\n            + $\"<p>{employee.Name}: {pay.Net:C}</p>\";\n}\n\npublic class PortalDelivery\n{\n    public void Publish(string employeeId, string html) =>\n        File.WriteAllText(\n            $\"/var/portal/payslips/{employeeId}.html\", html);\n}",
+      "caption": "The \"and\" class split along its responsibility sentences. The pay rules — the piece everything else truly depends on — now sit in a class with one reason to change; formatting and delivery churn without touching them."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "m02-e1",
+      "type": "refactor",
+      "title": "Reverse the arrows in a rental late-fee ledger",
+      "concept": "Dependency Direction",
+      "smell": "Dependency direction: the late-fee policy — the business rules — points its arrows at a concrete detail. It constructs its own CSV file store with new, parses raw CSV lines inside the fee rules, and helper signatures pass file paths and CSV fragments through the business logic, so changing the storage format means editing the policy.",
+      "targetInterfaceCode": "public interface IRentalLedger\n{\n    void RecordCheckout(string rentalId, DateTime dueBackUtc);\n    void RecordReturn(string rentalId, DateTime returnedAtUtc);\n\n    // 0m when returned at or before the due moment; then 2.50m per\n    // started 24h period late, capped at 50m. Throws for a rentalId\n    // never checked out or not yet returned.\n    decimal LateFeeFor(string rentalId);\n}",
+      "sizeBudgetLoc": 250,
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m02/m02-e1"
+    },
+    {
+      "id": "m02-e2",
+      "type": "construct",
+      "title": "Build a currency quoter that owns its arrows",
+      "concept": "Dependency Direction",
+      "smell": "The stub tempts the naive arrow: quoting policy that reaches out to a concrete rates source — a hard-coded table, a static cache, an HTTP client — from inside the calculation. The rates source is the volatile detail; the policy must own the abstraction (IExchangeRates) and receive the implementation through its constructor.",
+      "targetInterfaceCode": "public interface IExchangeRates\n{\n    // Base-currency units per one unit of currencyCode.\n    // Throws KeyNotFoundException for a code it does not know.\n    decimal UnitsPerBase(string currencyCode);\n}\n\npublic interface IPriceQuoter\n{\n    // amount * the rate for currencyCode, rounded to 2 decimals\n    // away from zero. Negative amount: ArgumentOutOfRangeException.\n    decimal QuoteInBase(decimal amount, string currencyCode);\n}",
+      "sizeBudgetLoc": 200,
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m02/m02-e2"
+    }
+  ],
+  "checklistQuestions": [
+    {
+      "id": "q1",
+      "prompt": "Grep your policy classes for `new` on volatile types — database, file system, HTTP client, clock. Is the count zero?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — zero hard-wired arrows"
+        },
+        {
+          "value": "no",
+          "label": "No — at least one new in policy code"
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "prompt": "For each C# interface your policy code depends on, count the members its consumers never call. Is that count zero for every interface?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — every member is used"
+        },
+        {
+          "value": "no",
+          "label": "No — at least one unused member"
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "prompt": "Replace each production implementation with the simplest substitute you can write — an in-memory fake — and rerun the Test Suite. Did every test pass without editing the policy?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — green with fakes, policy untouched"
+        },
+        {
+          "value": "no",
+          "label": "No — a test failed or the policy needed edits"
+        }
+      ]
+    }
+  ]
+}
