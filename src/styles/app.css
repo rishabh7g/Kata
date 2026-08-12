@@ -108,7 +108,13 @@
   max-width: 62ch;
 }
 
-/* tokens.json typeScale.app.cardTitle: 16 / 800. */
+/* tokens.json typeScale.app.cardTitle: 16 / 800.
+
+   The tag under this class is an h1 — a notice is the whole screen when it is
+   raised (#94) — and this class is what keeps it card-title sized rather than
+   42px. Size travels on the class, level on the tag (#75). The size and the
+   margin are both stated because the browser's own `section h1` rule sets
+   both; a class beats it, but only for what the class declares. */
 .app-notice-title {
   font-size: 16px;
   margin: 0 0 12px;

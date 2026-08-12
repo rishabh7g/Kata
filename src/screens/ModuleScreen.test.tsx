@@ -688,6 +688,19 @@ describe('Module content that will not load (#69)', () => {
     expect(container.querySelector('.module-aside')).not.toBeInTheDocument();
   });
 
+  it('is a screen with an outline: the notice title is the h1 (#94)', async () => {
+    const { container } = await renderAt('/modules/m01', [], undefined, offlineSource());
+    await screen.findByRole('alert');
+
+    // The failure state is the whole screen, so its title is the only
+    // heading — and it has to be the h1, not the h2 it used to be.
+    expect(expectWellFormedOutline(container)).toEqual([
+      "h1 This Module's content is not available",
+    ]);
+    // Level on the tag, size on the class (#75): still the 16px card title.
+    expect(container.querySelector('h1')).toHaveClass('app-notice-title');
+  });
+
   it('keeps the Curriculum back link — never a dead end', async () => {
     await renderAt('/modules/m01', [], undefined, offlineSource());
     await screen.findByRole('alert');

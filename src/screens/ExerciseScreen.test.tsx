@@ -874,6 +874,22 @@ describe("Module content that will not load (#69)", () => {
     expect(container.querySelector('.exercise-aside')).not.toBeInTheDocument();
   });
 
+  it('is a screen with an outline: the notice title is the h1 (#94)', async () => {
+    const { container } = await renderAt(
+      '/modules/m01/exercises/m01-e1',
+      undefined,
+      undefined,
+      offlineSource(),
+    );
+    await screen.findByRole('alert');
+
+    // Same surface, same rule as the Module screen's failure state.
+    expect(expectWellFormedOutline(container)).toEqual([
+      "h1 This Module's content is not available",
+    ]);
+    expect(container.querySelector('h1')).toHaveClass('app-notice-title');
+  });
+
   it('goes back to the Curriculum, not to the Module that will not load', async () => {
     await renderAt(
       '/modules/m01/exercises/m01-e1',
