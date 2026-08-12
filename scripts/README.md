@@ -32,6 +32,7 @@ node scripts/validate-content.mjs                   # repo layout; also runs in 
 | `test-scoped.sh` | 0 ok · 2 usage/precondition (including no args without `FULL=1`) · otherwise Vitest's own status |
 | `validate-content.mjs` | 0 ok or SKIP · 2 usage · 3 invalid content · 4 missing schema/content path |
 | `draft-concept.mjs` | 0 ok · 2 usage (bad flag/module id) · 3 draft exists without `--force` · 4 claude CLI missing/failed · 5 non-JSON or empty CLI output |
+| `draft-exercise.mjs` | 0 ok · 2 usage (bad flag/brief) · 3 exercise folder exists (new Exercise id, no `--force`) · 4 claude CLI missing/failed · 5 CLI output breaks the JSON contract |
 
 ## Authoring: `draft-concept.mjs` (#20)
 
@@ -53,6 +54,34 @@ node scripts/draft-concept.mjs m02 --force     # overwrite an existing draft
   then paste the frozen text into `public/content/modules/mNN.json` as
   `conceptPageMarkdown` and check it with `node scripts/validate-content.mjs`.
   `public/content/modules/m01.json` is the canonical example of tone and shape.
+
+## Authoring: `draft-exercise.mjs` (#21)
+
+Drafts one Exercise's practice material — flawed source (refactor type) or
+stub (construct type), the xUnit Test Suite, `smell-notes.md` — into a
+candidate folder `exercises/<module>/<exercise-id>/` for human review before
+commit (#23). Same authoring-time-only footing as `draft-concept.mjs`; the
+shared plumbing lives in `scripts/lib/authoring.mjs`.
+
+```sh
+node scripts/draft-exercise.mjs public/content/modules/m01.json m01-e1
+                                    # DRAFT m01-e1 ok → exercises/m01/m01-e1 | 177 src LOC (budget 250)
+node scripts/draft-exercise.mjs path/to/brief.json            # a standalone brief file
+node scripts/draft-exercise.mjs path/to/brief.json --dry-run  # print the prompt, write nothing
+```
+
+- Input is an Exercise brief JSON (shape per `schemas/module-content.schema.json`
+  › `exerciseBrief`), either standalone or picked out of a Module pack by id.
+- **The Test Suite is generated from the brief's Target Interface, never from
+  the flawed code** — tests written from the flawed code would bless the Smell.
+  The script writes the Target Interface `.cs` and both `net10.0` csproj files
+  deterministically; the model never gets to paraphrase the interface.
+- **No `--force`:** an existing folder exits 3 — regeneration is always a NEW
+  Exercise id (`docs/engineering.md` § 5), never an overwrite.
+- The summary line reports generated src LOC and says `OVER the N LOC budget`
+  when the draft exceeds the brief's `sizeBudgetLoc`.
+- After review, `dotnet build tests/Exercise.Tests.csproj` inside the folder
+  must pass; CI will compile every committed folder (#22).
 
 ## Content checks are live (#7)
 
