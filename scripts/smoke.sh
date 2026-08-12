@@ -156,6 +156,9 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # markup shipping in the bundle is what "the route serves the screen" means.
   has "$WORK/app.js" 'module-concept' 'the Module Concept Page container (#11)'
   has "$WORK/app.js" 'module-example-grid' 'the Model Examples grid (#11)'
+  # The Exercise route (#15) is hash-routed too: the same 200 document, with
+  # the Spec grid container shipping in this bundle.
+  has "$WORK/app.js" 'exercise-spec-grid' 'the Exercise Spec grid (#15)'
 fi
 end
 
