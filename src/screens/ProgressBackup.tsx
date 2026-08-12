@@ -41,11 +41,10 @@ export function ProgressBackup() {
     URL.revokeObjectURL(url);
   }
 
-  async function readPickedFile(files: FileList | null) {
+  async function readPickedFile(file: File | null) {
     setError(null);
     setPendingImport(null);
-    const file = files?.[0];
-    if (file === undefined) return;
+    if (file === null) return;
     try {
       setPendingImport(parseProgressState(await file.text()));
     } catch (cause) {
@@ -97,10 +96,13 @@ export function ProgressBackup() {
           hidden
           aria-label="Progress file"
           onChange={(event) => {
-            const files = event.target.files;
-            // Reset first so picking the same file again re-fires change.
+            // Grab the File itself, not the FileList: in Chrome input.files
+            // is the SAME live object across the reset below, so a captured
+            // list is empty by the time the async read runs. A File is
+            // immutable. Then reset, so re-picking the same file re-fires.
+            const file = event.target.files?.[0] ?? null;
             event.target.value = '';
-            void readPickedFile(files);
+            void readPickedFile(file);
           }}
         />
       </div>
