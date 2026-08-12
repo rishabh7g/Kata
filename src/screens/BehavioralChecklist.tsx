@@ -19,15 +19,20 @@ import type {
  * submission and the Module's one Checkpoint atomically, and the panel flips
  * to the read-only submitted state without a reload. No free-text field:
  * three radio pairs are the entire form.
+ *
+ * `onSubmitted` fires once the stored submission is confirmed — the Exercise
+ * screen re-reads the gate off it so the banner appears without a reload (#19).
  */
 export function BehavioralChecklist({
   moduleId,
   moduleOrdinal,
   questions,
+  onSubmitted,
 }: {
   moduleId: string;
   moduleOrdinal: number;
   questions: readonly ChecklistQuestion[];
+  onSubmitted?: () => void;
 }) {
   const progress = useProgress();
   // undefined = still loading; null = not submitted yet (form state).
@@ -97,7 +102,10 @@ export function BehavioralChecklist({
               // Re-read rather than trust local state: submitChecklist is
               // idempotent, so this shows the stored submission either way.
               .then(() => progress.getSubmittedChecklist(moduleId))
-              .then((stored) => setSubmitted(stored))
+              .then((stored) => {
+                setSubmitted(stored);
+                onSubmitted?.();
+              })
               .catch((error: unknown) => {
                 console.error(`Failed to submit checklist for ${moduleId}`, error);
               })

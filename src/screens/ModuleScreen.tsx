@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { Markdown } from '../app/Markdown';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
+import { useGateStatus } from '../app/useGateStatus';
 import { useModuleDetail } from '../app/useModuleDetail';
 import { useModuleSummaries } from '../app/useModuleSummaries';
 import type {
@@ -11,7 +11,7 @@ import type {
   ModuleDetail,
   ModuleSummary,
 } from '../curriculum';
-import type { GateStatus, IProgress } from '../progress';
+import type { GateStatus } from '../progress';
 
 /**
  * Module — the reading surface: header, Concept Page prose, Model Examples,
@@ -35,7 +35,7 @@ export function ModuleScreen() {
   const modules = useModuleSummaries(curriculum);
   // Live gate state from IProgress (#14): the poster and the header tag key
   // off this, not off ICurriculum's stubbed CheckpointReader (replaced in #18).
-  const gate = useGateStatus(useProgress(), id ?? '');
+  const { gate } = useGateStatus(useProgress(), id ?? '');
 
   // Still loading: render nothing rather than a made-up placeholder — the
   // gate state loads with the content so the aside never flashes unmet.
@@ -115,37 +115,6 @@ export function ModuleScreen() {
 }
 
 /**
- * `IProgress.getGateStatus` for this Module — `undefined` while loading, so
- * the screen can hold the aside rather than flash the wrong gate state.
- */
-function useGateStatus(
-  progress: IProgress,
-  moduleId: string,
-): GateStatus | undefined {
-  const [gate, setGate] = useState<GateStatus | undefined>(undefined);
-
-  useEffect(() => {
-    let cancelled = false;
-    setGate(undefined);
-    progress
-      .getGateStatus(moduleId)
-      .then((status) => {
-        if (!cancelled) setGate(status);
-      })
-      .catch((error: unknown) => {
-        // IndexedDB refusing to open is the only real cause; the read
-        // surfaces still work, so log rather than blank the screen forever.
-        console.error(`Failed to load gate status for ${moduleId}`, error);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [progress, moduleId]);
-
-  return gate;
-}
-
-/**
  * The sticky Exit Gate aside (design/README.md § Screens › 2 › Exit Gate
  * aside), driven by live `IProgress.getGateStatus` (#17).
  *
@@ -179,11 +148,7 @@ export function ExitGateAside({
           <div className="module-gate-checkpoint">
             Checkpoint · {formatCheckpointDate(gate.checkpointAt)}
           </div>
-          <div className="module-gate-next">
-            {nextModule !== null
-              ? `Module ${String(nextModule.ordinal).padStart(2, '0')} — ${nextModule.title} is unlocked.`
-              : 'All five Modules passed — the Curriculum is complete.'}
-          </div>
+          <div className="module-gate-next">{nextModuleLine(nextModule)}</div>
         </div>
       </aside>
     );
@@ -217,6 +182,17 @@ export function ExitGateAside({
       </div>
     </aside>
   );
+}
+
+/**
+ * The passed-state next-Module line — one text rule for the poster above and
+ * the Exercise gate banner (#19): the following Module by ordinal and title,
+ * or the closing line when nothing follows (Module 5).
+ */
+export function nextModuleLine(nextModule: ModuleSummary | null): string {
+  return nextModule !== null
+    ? `Module ${String(nextModule.ordinal).padStart(2, '0')} — ${nextModule.title} is unlocked.`
+    : 'All five Modules passed — the Curriculum is complete.';
 }
 
 /**
