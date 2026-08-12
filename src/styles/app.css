@@ -422,12 +422,14 @@ a.curriculum-row:hover {
   min-width: 0;
 }
 
-/* BEFORE neutral-600 / AFTER accent-700 (design/README.md § Screens › 2). */
+/* BEFORE muted / AFTER accent-700 (design/README.md § Screens › 2). The label
+   was neutral-600, which reads 3.55:1 on the surface cell — under the AA floor
+   (#70); the muted token is the same role one step darker. */
 .module-example-label {
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-neutral-600);
+  color: var(--color-text-muted);
   margin-bottom: 8px;
 }
 
@@ -672,13 +674,14 @@ a.curriculum-row:hover {
   grid-template-columns: 130px 1fr;
 }
 
+/* Was neutral-600 (3.85:1 on the ground) — the muted token clears AA (#70). */
 .exercise-spec-label {
   padding: 10px 0;
   border-top: 1px solid var(--color-divider);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-neutral-600);
+  color: var(--color-text-muted);
 }
 
 .exercise-spec-value {
