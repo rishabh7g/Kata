@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
+import { useDocumentTitle } from '../app/useDocumentTitle';
 import { useModuleSummaries } from '../app/useModuleSummaries';
 import type { ModuleId, ModuleSummary } from '../curriculum';
 import type { IProgress } from '../progress';
@@ -21,6 +22,8 @@ import { ProgressBackup } from './ProgressBackup';
 export function CurriculumScreen() {
   const modules = useModuleSummaries(useCurriculum());
   const draftModuleIds = useDraftModuleIds(useProgress(), modules);
+  // The home screen is the app itself: the tab reads plain `Kata` (#77).
+  useDocumentTitle(null);
 
   return (
     <>
