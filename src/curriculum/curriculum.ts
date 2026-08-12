@@ -28,9 +28,15 @@ export function createCurriculum(
   function orderedEntries(): Promise<readonly ModuleIndexEntry[]> {
     indexPromise ??= content
       .loadIndex()
-      .then((index) =>
-        [...index.modules].sort((a, b) => a.ordinal - b.ordinal),
-      );
+      .then((index) => [...index.modules].sort((a, b) => a.ordinal - b.ordinal))
+      .catch((error: unknown) => {
+        // A failed load is not an answer worth caching: drop it so the next
+        // call fetches again instead of replaying the rejection forever —
+        // otherwise a screen that offers `Try again` after an offline failure
+        // could never succeed, even back online (#69).
+        indexPromise = null;
+        throw error;
+      });
     return indexPromise;
   }
 

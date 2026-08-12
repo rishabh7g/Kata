@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { CurriculumProvider } from '../app/CurriculumContext';
 import { ProgressProvider } from '../app/ProgressContext';
@@ -109,8 +109,9 @@ async function renderAt(
   path: string,
   checkpoints: readonly Checkpoint[] = [],
   progress?: IProgress,
+  contentSource: ContentSource = source,
 ) {
-  const curriculum = createCurriculum(source, {
+  const curriculum = createCurriculum(contentSource, {
     listCheckpoints: async () => checkpoints,
   });
   const activeProgress = progress ?? (await createProgress());
@@ -537,5 +538,106 @@ describe('Module screen', () => {
 
     const text = container.textContent ?? '';
     expect(text).not.toMatch(/lesson|course|level|quiz|flashcard|grade|score/i);
+  });
+});
+
+/**
+ * The repro from #69: online once (so the app shell is precached), offline
+ * before this Module was ever read. The index is in the service worker cache
+ * — the nav still counts Checkpoints — but the content JSON is not, so its
+ * fetch rejects and `getModule` rejects with it.
+ */
+function offlineSource(failures = Number.POSITIVE_INFINITY): ContentSource {
+  let attempts = 0;
+  return {
+    loadIndex: async () => index,
+    loadModuleContent: async (id) => {
+      attempts += 1;
+      if (attempts <= failures) throw new TypeError('Failed to fetch');
+      return id === 'm01' ? content : null;
+    },
+  };
+}
+
+describe('Module content that will not load (#69)', () => {
+  beforeEach(() => {
+    // The hook logs the failure for whoever is looking at the console; these
+    // tests are about what the learner sees, so keep the run quiet.
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('says the content is not available instead of rendering nothing', async () => {
+    const { container } = await renderAt('/modules/m01', [], undefined, offlineSource());
+
+    const notice = await screen.findByRole('alert');
+    expect(
+      screen.getByRole('heading', {
+        name: "This Module's content is not available",
+      }),
+    ).toBeInTheDocument();
+    // Names the file, the cause, and what to do — the #68 Notice pattern.
+    expect(notice).toHaveTextContent('content/modules/m01.json');
+    expect(notice).toHaveTextContent('not available offline');
+    expect(notice).toHaveTextContent('Reconnect and try again');
+    // The browser's own words for the failure.
+    expect(notice).toHaveTextContent('TypeError: Failed to fetch');
+    expect(notice).toHaveClass('app-notice');
+    // Nothing pretends the Module loaded: no header, no Exit Gate aside.
+    expect(container.querySelector('.module-header')).not.toBeInTheDocument();
+    expect(container.querySelector('.module-aside')).not.toBeInTheDocument();
+  });
+
+  it('keeps the Curriculum back link — never a dead end', async () => {
+    await renderAt('/modules/m01', [], undefined, offlineSource());
+    await screen.findByRole('alert');
+
+    fireEvent.click(screen.getByRole('link', { name: 'Curriculum' }));
+
+    expect(screen.getByText('curriculum probe')).toBeInTheDocument();
+  });
+
+  it('loads the Module on Try again once the fetch succeeds — no reload', async () => {
+    await renderAt('/modules/m01', [], undefined, offlineSource(1));
+    await screen.findByRole('alert');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    // Same mount, no navigation: the Module simply renders.
+    expect(await screen.findByText('Concept Page')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('still renders a pending Module — a missing content file is not a failure', async () => {
+    // m02 is pending: its content file 404s, which the content source turns
+    // into the pending shape. That must never reach the unavailable surface.
+    await renderAt('/modules/m02');
+
+    expect(
+      await screen.findByText(/Concept Page pending/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('still logs the failure for whoever is looking at the console', async () => {
+    await renderAt('/modules/m01', [], undefined, offlineSource());
+    await screen.findByRole('alert');
+
+    expect(console.error).toHaveBeenCalledWith(
+      'Failed to load Module m01',
+      expect.any(TypeError),
+    );
+  });
+
+  it('uses no banned terms (docs/ubiquitous-language.md § Banned)', async () => {
+    const { container } = await renderAt('/modules/m01', [], undefined, offlineSource());
+    await screen.findByRole('alert');
+
+    expect(container.textContent ?? '').not.toMatch(
+      /lesson|course|level|quiz|flashcard|grade|score/i,
+    );
   });
 });

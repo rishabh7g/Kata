@@ -46,6 +46,23 @@ describe('createHttpContentSource', () => {
     expect(loaded).toBeNull();
   });
 
+  it('propagates a failed Module fetch — offline is not a missing file (#69)', async () => {
+    // The network refusing is nothing like a 404: the file may exist and be
+    // perfectly authored. The rejection has to reach the screen so it can say
+    // "not available" instead of rendering the pending Module placeholder.
+    const failure = new TypeError('Failed to fetch');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw failure;
+      }),
+    );
+
+    await expect(
+      createHttpContentSource('/Kata/').loadModuleContent('m03'),
+    ).rejects.toThrow(failure);
+  });
+
   it('throws on a non-404 failure loading the index', async () => {
     stubFetch(() => new Response('boom', { status: 500 }));
 

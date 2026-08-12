@@ -1,4 +1,6 @@
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { BackArrowIcon } from '../app/BackArrowIcon';
+import { ModuleUnavailable } from '../app/ModuleUnavailable';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
 import { useGateStatus } from '../app/useGateStatus';
@@ -26,7 +28,11 @@ import { nextModuleLine } from './ModuleScreen';
 export function ExerciseScreen() {
   const { id, exerciseId } = useParams();
   const curriculum = useCurriculum();
-  const module = useModuleDetail(curriculum, id ?? '');
+  const {
+    detail: module,
+    error: loadError,
+    retry,
+  } = useModuleDetail(curriculum, id ?? '');
   // The banner's next-Module line names the following Module by title —
   // the poster's text rule (#17), shared via nextModuleLine.
   const modules = useModuleSummaries(curriculum);
@@ -35,6 +41,17 @@ export function ExerciseScreen() {
   const { gate, refresh } = useGateStatus(useProgress(), id ?? '');
   const navigate = useNavigate();
 
+  // The Module's content would not load: the brief lives inside it, so this
+  // screen is as blank as the Module's — same surface, same way out (#69).
+  if (loadError !== null) {
+    return (
+      <ModuleUnavailable
+        moduleId={id ?? ''}
+        error={loadError}
+        onRetry={retry}
+      />
+    );
+  }
   // Still loading: render nothing rather than a made-up placeholder — the
   // gate state loads with the content so the aside never flashes stale.
   if (module === undefined || modules === null || gate === undefined) {
@@ -181,26 +198,5 @@ function PracticeMaterial({ exercise }: { exercise: ExerciseBrief }) {
         </>
       )}
     </section>
-  );
-}
-
-// Icon copied from the design reference (design/DevGym.dc.html § Exercise).
-
-function BackArrowIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="m12 19-7-7 7-7" />
-      <path d="M19 12H5" />
-    </svg>
   );
 }

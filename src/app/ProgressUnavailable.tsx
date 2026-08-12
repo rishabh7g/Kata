@@ -1,3 +1,4 @@
+import { describeError } from './describeError';
 import { KataMark } from './KataMark';
 import { Notice } from './Notice';
 
@@ -47,18 +48,4 @@ export function ProgressUnavailable({ error }: { error: unknown }) {
       </main>
     </div>
   );
-}
-
-/**
- * The browser's own words for the refusal, e.g. `SecurityError: blocked`.
- * Duck-typed rather than `instanceof Error`: what IndexedDB rejects with is a
- * DOMException, which does not inherit from Error everywhere.
- */
-function describeError(error: unknown): string | null {
-  if (typeof error !== 'object' || error === null) return null;
-  const { name, message } = error as { name?: unknown; message?: unknown };
-  if (typeof name !== 'string' || name === '') return null;
-  return typeof message === 'string' && message !== ''
-    ? `${name}: ${message}`
-    : name;
 }

@@ -92,6 +92,20 @@
   font-size: 11px;
 }
 
+/* The one action a notice may offer (#69's Try again) — ghost only, and
+   flush left under the copy; the recovery is never a primary action. */
+.app-notice-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* Inline file paths inside a notice read as data, not as prose. */
+.app-notice code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
 /* ── Curriculum screen (#10) — design/README.md § Screens › 1 ─────────────
    Header: kicker + 54px title with a 340px muted intro column on the shared
    baseline. Rows: tokens.json layout.curriculumRow — grid 104px 1fr 230px
