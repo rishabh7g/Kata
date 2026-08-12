@@ -13,10 +13,19 @@ Decoding the old labels you will still see in the prototype and captures (all th
 ## Fidelity
 **High-fidelity.** Colors, type, spacing, rules, and states are final. Recreate pixel-close; `styles.css` + `tokens.json` carry every value — never hard-code a hex or px the tokens already carry.
 
+## Contrast floor
+Every string the app renders clears **WCAG 2.1 AA (SC 1.4.3)** against the background it actually composites onto — measured over the rendered DOM, not guessed from the token:
+
+- **4.5:1** for body text — anything under 18.66px/700 or 24px.
+- **3:1** for large text (≥ 24px, or ≥ 18.66px at weight 700).
+- **Only two exemptions,** both WCAG's own: text inside an *inactive* component (a locked Curriculum row at 0.5 opacity, a disabled button), and purely decorative rules and dividers.
+
+So: **secondary text is `--color-text-muted`** (`neutral-700`, 5.83:1 on bg / 5.38:1 on surface), never ink at an alpha — 55% ink read 3.65:1 and failed on every screen (#70). A new token that carries text has to be measured against `--color-bg` *and* `--color-surface` before it ships.
+
 ## Brand
 - **Name: Kata** — the owner's decision, chosen from the three brand explorations in `design/brand/` (DevGym · Praxis · Kata). `brand/Brand Kata.dc.html` is the adopted brand card.
 - **Mark:** `assets/kata-mark.svg` — three steps climbing (ink) to an accent square: the TDD speed limit, the accent square is the gate passed. Ink + accent only; never recolor, never round.
-- **Nav lockup:** 18px mark + "Kata" in Archivo 800 / 18px, flush left. Right side: `CHECKPOINTS n / 5` in 12px uppercase, 55% ink.
+- **Nav lockup:** 18px mark + "Kata" in Archivo 800 / 18px, flush left. Right side: `CHECKPOINTS n / 5` in 12px uppercase, muted (`--color-text-muted`).
 - **Historical reference:** `DevGym.dc.html`, `brand/Brand DevGym.dc.html` / `Brand Praxis.dc.html`, `assets/devgym-mark.svg`, and `screens/*.png` keep the old name — not re-captured or edited, kept only as visual reference to prior states.
 
 ## Screens
@@ -32,7 +41,7 @@ Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everyth
 - **Purpose:** Concept Page, Model Examples, Exercise list, Exit Gate status. Data: `ICurriculum.getModule(id)` + `IProgress.getGateStatus(id)`.
 - **Header:** ghost back button (← Curriculum), kicker `MODULE nn`, 44px title, status tag right-aligned. No rule under the header.
 - **Body grid:** `1fr 350px`, gap 56. Sections in the main column separated by 2px `.hr` rules: Concept Page (paragraphs, 66ch max, with `LLM first draft · human-edited once · frozen` note) → Model Examples → Exercises.
-- **Model Examples:** before/after pair in a 2px-bordered grid, cells split by a 2px divider (`repeat(auto-fit, minmax(300px, 1fr))` — stacks when narrow). Cell: surface fill, 16/18 padding, BEFORE label (10px uppercase, neutral-600) / AFTER label (accent-700), code 13px/1.65 mono, `overflow-x: auto`. Caption 11px below.
+- **Model Examples:** before/after pair in a 2px-bordered grid, cells split by a 2px divider (`repeat(auto-fit, minmax(300px, 1fr))` — stacks when narrow). Cell: surface fill, 16/18 padding, BEFORE label (10px uppercase, muted) / AFTER label (accent-700), code 13px/1.65 mono, `overflow-x: auto`. Caption 11px below.
 - **Exercise cards:** `.card` row — type tag (`Refactor`/`Construct`, outline), title 16px/800 + Smell line 12px muted, arrow icon. Hover: `--shadow-md`. Whole card navigates. **No status column** — the app knows nothing about the learner's code; the captures' `Green · 12 / 12` column is historical and is not built.
 - **Exit Gate aside:** sticky (top 84). Not passed → 2px-bordered panel with a **single condition row** (check icon when met, 14px empty ink-outline square when not): "Behavioral Checklist submitted" + status; closing note about checkpoint-based progression. There is no second row: the gate is the checklist alone. Passed → the **poster**: accent field, bg-colored type, "Passed." at 32px/800, `Checkpoint · date`, next-Module-unlocked line. The poster is the one place red runs as a field.
 - **Pending Module (03–05, once unlocked):** placeholder copy for Concept Page / Examples / Exercises (see prototype).
