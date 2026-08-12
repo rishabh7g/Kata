@@ -162,6 +162,10 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The Behavioral Checklist (#16): the form and its one primary action.
   has "$WORK/app.js" 'exercise-checklist-item' 'the Behavioral Checklist form (#16)'
   has "$WORK/app.js" 'Submit Behavioral Checklist' 'the checklist submit action (#16)'
+  # The Exit Gate poster (#17): the passed-state accent field on the Module
+  # screen — its container class and display line ship in this bundle.
+  has "$WORK/app.js" 'module-gate-poster' 'the Exit Gate poster (#17)'
+  has "$WORK/app.js" 'Passed.' 'the poster display line (#17)'
 fi
 end
 

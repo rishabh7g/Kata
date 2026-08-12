@@ -1,15 +1,20 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { IDBFactory } from 'fake-indexeddb';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { App } from '../App';
 import { CurriculumProvider } from '../app/CurriculumContext';
+import { ProgressProvider } from '../app/ProgressContext';
 import type {
   Checkpoint,
   ContentSource,
   ModuleContent,
   ModuleIndex,
+  ModuleSummary,
 } from '../curriculum';
 import { createCurriculum } from '../curriculum';
+import type { GateStatus, IProgress } from '../progress';
+import { createProgress } from '../progress';
 import { ExitGateAside, ModuleScreen } from './ModuleScreen';
 
 // As in CurriculumScreen.test.tsx: the fixture is the real createCurriculum
@@ -95,30 +100,71 @@ const source: ContentSource = {
   loadModuleContent: async (id) => (id === 'm01' ? content : null),
 };
 
-function renderAt(path: string, checkpoints: readonly Checkpoint[] = []) {
+beforeEach(() => {
+  // A brand-new browser profile per test (#14's prescribed environment).
+  globalThis.indexedDB = new IDBFactory();
+});
+
+async function renderAt(
+  path: string,
+  checkpoints: readonly Checkpoint[] = [],
+  progress?: IProgress,
+) {
   const curriculum = createCurriculum(source, {
     listCheckpoints: async () => checkpoints,
   });
-  return render(
+  const activeProgress = progress ?? (await createProgress());
+  const utils = render(
     <CurriculumProvider curriculum={curriculum}>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route path="/" element={<p>curriculum probe</p>} />
-          <Route path="/modules/:id" element={<ModuleScreen />} />
-          {/* Where a card's link lands once #15 builds the screen. */}
-          <Route
-            path="/modules/:id/exercises/:exerciseId"
-            element={<p>exercise probe</p>}
-          />
-        </Routes>
-      </MemoryRouter>
+      <ProgressProvider progress={activeProgress}>
+        <MemoryRouter initialEntries={[path]}>
+          <Routes>
+            <Route path="/" element={<p>curriculum probe</p>} />
+            <Route path="/modules/:id" element={<ModuleScreen />} />
+            {/* Where a card's link lands once #15 builds the screen. */}
+            <Route
+              path="/modules/:id/exercises/:exerciseId"
+              element={<p>exercise probe</p>}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ProgressProvider>
     </CurriculumProvider>,
   );
+  return { ...utils, progress: activeProgress };
 }
+
+/** A real IProgress with Module 1's Behavioral Checklist already submitted. */
+async function passedProgress(): Promise<IProgress> {
+  const progress = await createProgress();
+  await progress.submitChecklist('m01', { q1: 'a', q2: 'b', q3: 'a' });
+  return progress;
+}
+
+/** A GateStatus fixture for driving ExitGateAside states directly. */
+function gateFixture(overrides: Partial<GateStatus> = {}): GateStatus {
+  return {
+    moduleId: 'm01',
+    passed: false,
+    checklistSubmittedAt: null,
+    checkpointAt: null,
+    ...overrides,
+  };
+}
+
+const nextSummary: ModuleSummary = {
+  id: 'm02',
+  ordinal: 2,
+  title: 'Dependency Direction',
+  description: 'Point dependencies at stable abstractions.',
+  pending: true,
+  unlocked: true,
+  checkpointAt: null,
+};
 
 describe('Module screen', () => {
   it('renders the Concept Page markdown as styled prose in the 66ch container', async () => {
-    const { container } = renderAt('/modules/m01');
+    const { container } = await renderAt('/modules/m01');
     await screen.findByText('Concept Page');
 
     // The markdown's own leading `# title` is stripped — the header h1 (#12)
@@ -155,7 +201,7 @@ describe('Module screen', () => {
   });
 
   it('shows the draft/edited/frozen note from the markdown', async () => {
-    renderAt('/modules/m01');
+    await renderAt('/modules/m01');
 
     expect(
       await screen.findByText('LLM first draft · human-edited once · frozen'),
@@ -163,7 +209,7 @@ describe('Module screen', () => {
   });
 
   it('renders every Model Example as a BEFORE/AFTER pair with its caption', async () => {
-    const { container } = renderAt('/modules/m01');
+    const { container } = await renderAt('/modules/m01');
     await screen.findByText('Model Examples');
 
     const figures = container.querySelectorAll('.module-example');
@@ -188,9 +234,11 @@ describe('Module screen', () => {
     });
     render(
       <CurriculumProvider curriculum={curriculum}>
-        <MemoryRouter initialEntries={['/modules/m01']}>
-          <App />
-        </MemoryRouter>
+        <ProgressProvider progress={await createProgress()}>
+          <MemoryRouter initialEntries={['/modules/m01']}>
+            <App />
+          </MemoryRouter>
+        </ProgressProvider>
       </CurriculumProvider>,
     );
 
@@ -200,7 +248,7 @@ describe('Module screen', () => {
   });
 
   it('shows the header: kicker, 44px title, status tag, ghost back button (#12)', async () => {
-    renderAt('/modules/m01');
+    await renderAt('/modules/m01');
 
     expect(await screen.findByText('Module 01')).toBeInTheDocument();
     expect(
@@ -214,7 +262,7 @@ describe('Module screen', () => {
   });
 
   it('flips the header tag to Exit Gate passed once a Checkpoint exists', async () => {
-    renderAt('/modules/m01', [
+    await renderAt('/modules/m01', [
       { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
     ]);
 
@@ -225,7 +273,7 @@ describe('Module screen', () => {
   });
 
   it('returns to the Curriculum via the back button', async () => {
-    renderAt('/modules/m01');
+    await renderAt('/modules/m01');
 
     fireEvent.click(await screen.findByRole('link', { name: 'Curriculum' }));
 
@@ -233,7 +281,7 @@ describe('Module screen', () => {
   });
 
   it('renders one card per brief — type tag, title, Smell line, arrow, no run status (#3)', async () => {
-    const { container } = renderAt('/modules/m01');
+    const { container } = await renderAt('/modules/m01');
     await screen.findByText('Exercises');
 
     const cards = [...container.querySelectorAll('.module-exercise-card')];
@@ -261,7 +309,7 @@ describe('Module screen', () => {
   });
 
   it('navigates to the Exercise route from anywhere on the card', async () => {
-    renderAt('/modules/m01');
+    await renderAt('/modules/m01');
     await screen.findByText('Exercises');
 
     // The whole card is the link; its title is inside it.
@@ -271,7 +319,7 @@ describe('Module screen', () => {
   });
 
   it('renders a pending Module without a crash or blank page (#28 adds the real copy)', async () => {
-    renderAt('/modules/m02');
+    await renderAt('/modules/m02');
 
     expect(await screen.findByText('Concept Page pending.')).toBeInTheDocument();
     expect(screen.getByText('Model Examples pending.')).toBeInTheDocument();
@@ -281,13 +329,13 @@ describe('Module screen', () => {
   });
 
   it('falls back to the Curriculum for an unknown Module id', async () => {
-    renderAt('/modules/nope');
+    await renderAt('/modules/nope');
 
     expect(await screen.findByText('curriculum probe')).toBeInTheDocument();
   });
 
   it('shows the Exit Gate aside with exactly one unmet condition row (#13)', async () => {
-    const { container } = renderAt('/modules/m01');
+    const { container } = await renderAt('/modules/m01');
     await screen.findByText('Exit Gate');
 
     // The sticky aside sits in the reserved 350px column (sticky offset via
@@ -296,8 +344,8 @@ describe('Module screen', () => {
     expect(aside).toBeInTheDocument();
     expect(aside?.querySelector('.module-gate-panel')).toBeInTheDocument();
 
-    // Exactly ONE condition row: the checklist. No IProgress (#14) exists,
-    // so it renders unmet — the empty ink-outline square, no check icon.
+    // Exactly ONE condition row: the checklist. Nothing submitted yet, so
+    // it renders unmet — the empty ink-outline square, no check icon.
     const rows = [...(aside?.querySelectorAll('.module-gate-condition') ?? [])];
     expect(rows).toHaveLength(1);
     expect(rows[0]?.textContent).toContain('Behavioral Checklist submitted');
@@ -306,8 +354,15 @@ describe('Module screen', () => {
     expect(rows[0]?.querySelector('svg')).not.toBeInTheDocument();
   });
 
-  it('styles the met condition state, reachable via fixture until #16 wires it', () => {
-    const { container } = render(<ExitGateAside checklistSubmitted={true} />);
+  it('styles the met condition state (fixture: submitted but not passed)', () => {
+    // Unreachable through IProgress — submitting IS passing — but the row's
+    // met styling stays covered in case the gate ever gains a condition.
+    const { container } = render(
+      <ExitGateAside
+        gate={gateFixture({ checklistSubmittedAt: '2026-08-12T09:41:00.000Z' })}
+        nextModule={nextSummary}
+      />,
+    );
 
     const row = container.querySelector('.module-gate-condition');
     // The check icon replaces the empty square; the row text flips too.
@@ -318,8 +373,67 @@ describe('Module screen', () => {
     expect(row?.textContent).not.toContain('Not yet submitted');
   });
 
+  it('shows the accent poster after Module 1’s checklist is submitted (#17)', async () => {
+    const { container } = await renderAt(
+      '/modules/m01',
+      [],
+      await passedProgress(),
+    );
+    await screen.findByText('Passed.');
+
+    // The poster replaces the bordered condition panel entirely.
+    const poster = container.querySelector('.module-gate-poster');
+    expect(poster).toBeInTheDocument();
+    expect(container.querySelector('.module-gate-panel')).not.toBeInTheDocument();
+    expect(screen.queryByText('Not yet submitted')).not.toBeInTheDocument();
+
+    // Bg-colored type on the accent field: the poster's own classes carry the
+    // colors (app.css .module-gate-poster / -label / -passed), never ink.
+    expect(poster?.querySelector('h6')).toHaveClass('module-gate-poster-label');
+    expect(screen.getByText('Passed.')).toHaveClass('module-gate-passed');
+
+    // The real Checkpoint date, in the Curriculum row format (12 Aug 2026).
+    expect(screen.getByText(/^Checkpoint · \d{1,2} [A-Z][a-z]{2} \d{4}$/)).toHaveClass(
+      'module-gate-checkpoint',
+    );
+    // The next Module is named by ordinal and title.
+    expect(
+      screen.getByText('Module 02 — Dependency Direction is unlocked.'),
+    ).toBeInTheDocument();
+
+    // The header tag flips with the live gate, not the stubbed Checkpoint
+    // seam (#18): accent Exit Gate passed, no banned terms anywhere.
+    expect(screen.getByText('Exit Gate passed')).toHaveClass('tag-accent');
+    expect(screen.queryByText('Ready to start')).not.toBeInTheDocument();
+    expect(container.textContent ?? '').not.toMatch(
+      /lesson|course|level|quiz|flashcard|grade|score/i,
+    );
+  });
+
+  it('shows the Module 5 closing line when no Module follows (fixture)', () => {
+    const { container } = render(
+      <ExitGateAside
+        gate={gateFixture({
+          moduleId: 'm05',
+          passed: true,
+          checklistSubmittedAt: '2026-08-12T09:41:00.000Z',
+          checkpointAt: '2026-08-12T09:41:00.000Z',
+        })}
+        nextModule={null}
+      />,
+    );
+
+    expect(container.querySelector('.module-gate-poster')).toBeInTheDocument();
+    expect(screen.getByText('Passed.')).toBeInTheDocument();
+    expect(
+      screen.getByText('All five Modules passed — the Curriculum is complete.'),
+    ).toBeInTheDocument();
+    // Nothing follows Module 5: no next-Module line.
+    expect(container.textContent ?? '').not.toMatch(/is unlocked\./);
+  });
+
   it('renders the Checkpoint note; no schedule talk, no Test-Suites row (#3)', async () => {
-    const { container } = renderAt('/modules/m01');
+    const { container } = await renderAt('/modules/m01');
     await screen.findByText('Exit Gate');
 
     expect(
@@ -335,7 +449,7 @@ describe('Module screen', () => {
   });
 
   it('uses no banned terms (docs/ubiquitous-language.md § Banned)', async () => {
-    const { container } = renderAt('/modules/m01');
+    const { container } = await renderAt('/modules/m01');
     await screen.findByText('Model Examples');
 
     const text = container.textContent ?? '';

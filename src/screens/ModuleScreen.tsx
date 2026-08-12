@@ -1,8 +1,17 @@
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { Markdown } from '../app/Markdown';
 import { useCurriculum } from '../app/CurriculumContext';
+import { useProgress } from '../app/ProgressContext';
 import { useModuleDetail } from '../app/useModuleDetail';
-import type { ExerciseBrief, ModelExample, ModuleDetail } from '../curriculum';
+import { useModuleSummaries } from '../app/useModuleSummaries';
+import type {
+  ExerciseBrief,
+  ModelExample,
+  ModuleDetail,
+  ModuleSummary,
+} from '../curriculum';
+import type { GateStatus, IProgress } from '../progress';
 
 /**
  * Module — the reading surface: header, Concept Page prose, Model Examples,
@@ -20,12 +29,24 @@ import type { ExerciseBrief, ModelExample, ModuleDetail } from '../curriculum';
  */
 export function ModuleScreen() {
   const { id } = useParams();
-  const module = useModuleDetail(useCurriculum(), id ?? '');
+  const curriculum = useCurriculum();
+  const module = useModuleDetail(curriculum, id ?? '');
+  // The poster's next-Module line names the following Module by title (#17).
+  const modules = useModuleSummaries(curriculum);
+  // Live gate state from IProgress (#14): the poster and the header tag key
+  // off this, not off ICurriculum's stubbed CheckpointReader (replaced in #18).
+  const gate = useGateStatus(useProgress(), id ?? '');
 
-  // Still loading: render nothing rather than a made-up placeholder.
-  if (module === undefined) return null;
+  // Still loading: render nothing rather than a made-up placeholder — the
+  // gate state loads with the content so the aside never flashes unmet.
+  if (module === undefined || modules === null || gate === undefined) {
+    return null;
+  }
   // Unknown id: back to the Curriculum, never a dead end (mirrors App.tsx).
   if (module === null) return <Navigate to="/" replace />;
+
+  const nextModule =
+    modules.find((summary) => summary.ordinal === module.ordinal + 1) ?? null;
 
   return (
     <>
@@ -42,7 +63,7 @@ export function ModuleScreen() {
           </p>
           <h1 className="module-title">{module.title}</h1>
         </div>
-        <ModuleStatusTag module={module} />
+        <ModuleStatusTag module={module} gatePassed={gate.passed} />
       </header>
       <div className="module-body">
         <div>
@@ -87,30 +108,88 @@ export function ModuleScreen() {
             )}
           </section>
         </div>
-        {/* Read-only for now: no IProgress (#14) means no submitted checklist
-            can exist, so the condition is always unmet here. #16/#17 wire the
-            live state and the passed poster. */}
-        <ExitGateAside checklistSubmitted={false} />
+        <ExitGateAside gate={gate} nextModule={nextModule} />
       </div>
     </>
   );
 }
 
 /**
- * The sticky Exit Gate panel (design/README.md § Screens › 2 › Exit Gate
- * aside): 2px-bordered, with a SINGLE condition row — "Behavioral Checklist
- * submitted" — and the checkpoint-based-progression note. The gate is the
- * checklist alone: the captures' second row ("All Exercise Test Suites
- * green") is historical per the read-only decision (#3) and is not built.
+ * `IProgress.getGateStatus` for this Module — `undefined` while loading, so
+ * the screen can hold the aside rather than flash the wrong gate state.
+ */
+function useGateStatus(
+  progress: IProgress,
+  moduleId: string,
+): GateStatus | undefined {
+  const [gate, setGate] = useState<GateStatus | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    setGate(undefined);
+    progress
+      .getGateStatus(moduleId)
+      .then((status) => {
+        if (!cancelled) setGate(status);
+      })
+      .catch((error: unknown) => {
+        // IndexedDB refusing to open is the only real cause; the read
+        // surfaces still work, so log rather than blank the screen forever.
+        console.error(`Failed to load gate status for ${moduleId}`, error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [progress, moduleId]);
+
+  return gate;
+}
+
+/**
+ * The sticky Exit Gate aside (design/README.md § Screens › 2 › Exit Gate
+ * aside), driven by live `IProgress.getGateStatus` (#17).
  *
- * Exported so tests can reach the met state (check icon) before #16 wires a
- * real submission; the screen itself always renders it unmet until then.
+ * Passed → the poster: accent field, bg-colored type (the one place red runs
+ * as a field — tokens.json semantics.passed), "Passed." at 32px/800,
+ * `Checkpoint · date` from the recorded Checkpoint, and the next-Module
+ * line — or the closing line when nothing follows (Module 5).
+ *
+ * Not passed → the 2px-bordered panel with a SINGLE condition row —
+ * "Behavioral Checklist submitted" — and the checkpoint-based-progression
+ * note. The gate is the checklist alone: the captures' second row ("All
+ * Exercise Test Suites green") is historical per the read-only decision (#3)
+ * and is not built.
+ *
+ * Exported so tests can reach every state directly — the Module 5 closing
+ * line has no reachable pass path until all five packs ship (#24–#27).
  */
 export function ExitGateAside({
-  checklistSubmitted,
+  gate,
+  nextModule,
 }: {
-  checklistSubmitted: boolean;
+  gate: GateStatus;
+  nextModule: ModuleSummary | null; // null = nothing follows (Module 5)
 }) {
+  if (gate.passed && gate.checkpointAt !== null) {
+    return (
+      <aside className="module-aside">
+        <div className="module-gate-poster">
+          <h6 className="module-gate-poster-label">Exit Gate</h6>
+          <div className="module-gate-passed">Passed.</div>
+          <div className="module-gate-checkpoint">
+            Checkpoint · {formatCheckpointDate(gate.checkpointAt)}
+          </div>
+          <div className="module-gate-next">
+            {nextModule !== null
+              ? `Module ${String(nextModule.ordinal).padStart(2, '0')} — ${nextModule.title} is unlocked.`
+              : 'All five Modules passed — the Curriculum is complete.'}
+          </div>
+        </div>
+      </aside>
+    );
+  }
+
+  const checklistSubmitted = gate.checklistSubmittedAt !== null;
   return (
     <aside className="module-aside">
       <div className="module-gate-panel">
@@ -143,9 +222,17 @@ export function ExitGateAside({
 /**
  * The header's right-aligned tag, mirroring the Curriculum row tags: the
  * `In progress` outline flip needs IProgress draft state and lands with #18.
+ * Live gate state flips it too (#17) — ICurriculum's `checkpointAt` reads
+ * through the stubbed CheckpointReader until #18 wires the real one.
  */
-function ModuleStatusTag({ module }: { module: ModuleDetail }) {
-  if (module.checkpointAt !== null) {
+function ModuleStatusTag({
+  module,
+  gatePassed,
+}: {
+  module: ModuleDetail;
+  gatePassed: boolean;
+}) {
+  if (gatePassed || module.checkpointAt !== null) {
     return (
       <span className="tag tag-accent module-header-tag">Exit Gate passed</span>
     );
@@ -163,6 +250,15 @@ function ModuleStatusTag({ module }: { module: ModuleDetail }) {
  */
 function stripLeadingTitle(markdown: string): string {
   return markdown.replace(/^\s*#[^\S\n]+[^\n]*\n?/, '');
+}
+
+/** '2026-06-12T…Z' → '12 Jun 2026' — as on the Curriculum rows (#10). */
+function formatCheckpointDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 /**

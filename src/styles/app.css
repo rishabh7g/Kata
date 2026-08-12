@@ -401,6 +401,41 @@ a.curriculum-row:hover {
   margin: 14px 0 0;
 }
 
+/* Passed poster (#17): the accent field with bg-colored type — the one place
+   red runs as a field (tokens.json semantics.passed; prototype § Module). */
+.module-gate-poster {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  padding: 28px 24px;
+}
+
+/* The section label inherits ink by default; the poster's runs bg-colored. */
+.module-gate-poster-label {
+  margin: 0 0 14px;
+  color: var(--color-bg);
+  opacity: 0.75;
+}
+
+/* "Passed." — 32px/800 display type (prototype § Module poster). */
+.module-gate-passed {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 32px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+.module-gate-checkpoint {
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+/* Next-Module-unlocked line (or Module 5's closing line). */
+.module-gate-next {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
 /* ── Exercise screen (#15) — design/README.md § Screens › 3 ───────────────
    Header, the Exercise Spec grid, the immutable Target Interface block, and
    the practice-material link. The aside column stays empty until the
