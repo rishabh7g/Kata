@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "id": "m03",
+  "conceptPageMarkdown": "# Testing at Boundaries + TDD loop\n\n*LLM first draft · human-edited once · frozen*\n\n## Tests belong at the boundary\n\nYou already know the Target Interface is the one part of an Exercise you\ncannot change. This Module makes that constraint the whole point: tests belong\nat that boundary and nowhere else. A test written against the Target Interface\nsays **what the code must do for its caller**. A test written against an\ninternal class says *how the code happens to do it today* — and it breaks the\nmoment you improve the design, which is exactly when you need it most.\n\nA test earns its keep two ways: it fails when behavior is wrong, and it stays\ngreen when behavior is preserved. Internals-coupled tests fail both duties.\nThey can pass while the observable behavior is broken — they check a helper,\nnot the outcome — and they fail during a refactor that changed nothing a\ncaller could notice. When that happens you either abandon the refactor or\nrewrite the tests, and a rewritten test proves little: it was written to match\nthe new code, not to constrain it.\n\nBoundary tests give you the opposite deal. Everything behind the Target\nInterface is yours — rename it, split it, merge it, delete it. If the Test\nSuite stays green, the behavior survived. This is what makes the Test Suite in\nevery Exercise the trustworthy artifact: it does not care how you got there.\n\nTwo countable signs your tests sit at the wrong depth:\n\n- Read the `using` directives and constructor calls in the test file. Count\n  the types a real caller of the Target Interface would never touch. Every one\n  is a test reaching into internals.\n- Rename a private method or an internal class — behavior unchanged. Count the\n  tests that fail or stop compiling. Each one was coupled to structure, not\n  behavior.\n\n## Hidden dependencies surface at the boundary\n\nVolatile dependencies the policy grabs for itself — the system clock, the file\nsystem, the network — show up in tests as tolerance assertions, sleeps, and\nflakes. `DateTime.UtcNow` read inside the policy means expiry \"in 14 days\"\ncan only be tested by re-doing the arithmetic and allowing a few seconds of\nslack. The fix is Module 2's move seen from the testing side: the dependency\nenters through the boundary as a small C# `interface` — a clock, a store —\nand the Test Suite hands in a fake it fully controls. Then the exact boundary\nmoment — the last legal second, the first expired one — becomes a plain\nassertion instead of a tolerance window.\n\n## The TDD loop, and small steps as the speed limit\n\nThe loop is three moves, repeated:\n\n1. **Red** — write one failing test against the Target Interface. Run it and\n   read the failure: it must fail for the right reason (the behavior is\n   missing), not a typo or a setup error.\n2. **Green** — write the least code that makes it pass. Not the best code, not\n   the general solution. The least.\n3. **Refactor** — with the Test Suite green, improve everything behind the\n   boundary. Tests do not change in this step. The urge to edit a test while\n   refactoring means either the test was written against internals, or the\n   behavior is changing under the refactor's name.\n\nSmall steps are not a style preference; they are the speed limit that keeps\nthe loop informative. One test per loop. After each Green, state in one\nsentence what a caller can now rely on that they could not before — a sentence\nthat needs \"and\" was two steps. And keep each change small enough that when\nthe suite goes red, you know which edit did it without a debugger: **the\nfailure locates itself**. Bisecting your own last ten minutes of work means\nthe steps were too big.\n\n## How this runs in your Exercises\n\n- In a construct-type Exercise, run `dotnet test` before writing anything and\n  count the failures — that number is your worklist. Make one test pass at a\n  time, in the order that needs the least code, and build nothing that no red\n  test currently demands.\n- In a refactor-type Exercise, the Test Suite starts green and must stay green\n  after every small step.\n- Either way, finish with this check: could someone rebuild the implementation\n  from the Target Interface and the Test Suite alone? If yes, your tests\n  describe behavior.\n\nThis Module's Exercises plant exactly these Smells: a surface widened so tests\ncould watch the internals run, and a clock begging to be read instead of\ninjected. The Behavioral Checklist is how you catch them in your own code from\nnow on.",
+  "modelExamples": [
+    {
+      "before": "// This test pins the pipeline, not the price: it drives the\n// internal steps in order and asserts intermediate state.\npublic class FareCalculatorTests\n{\n    [Fact]\n    public void DiscountPipeline_SetsEachIntermediateField()\n    {\n        var calculator = new FareCalculator();\n        calculator.AddLeg(\"SYD-MEL\", 89.00m);\n        calculator.AddLeg(\"MEL-HBA\", 61.00m);\n\n        calculator.RecalculateBaseFare();\n        Assert.Equal(150.00m, calculator.BaseFareSoFar);\n\n        calculator.ApplySaverDiscount();\n        Assert.Equal(0.10m, calculator.DiscountRateApplied);\n        Assert.Single(calculator.DiscountAuditLog);\n\n        Assert.Equal(135.00m, calculator.FareAfterDiscount);\n    }\n}\n\n// Fold the three steps into one method — behavior identical —\n// and this test does not fail: it stops compiling.",
+      "after": "// The same rules pinned at the Target Interface: legs in, one\n// observable fare out. The pipeline is free to change shape.\npublic class FareCalculatorTests\n{\n    private static IFareCalculator Create() => new FareCalculator();\n\n    [Fact]\n    public void TwoLegsReaching150_EarnTheSaverDiscount()\n    {\n        IFareCalculator calculator = Create();\n        calculator.AddLeg(\"SYD-MEL\", 89.00m);\n        calculator.AddLeg(\"MEL-HBA\", 61.00m);\n\n        Assert.Equal(135.00m, calculator.TotalFare());\n    }\n\n    [Fact]\n    public void ASingleShortLeg_PaysTheFullFare()\n    {\n        IFareCalculator calculator = Create();\n        calculator.AddLeg(\"SYD-MEL\", 89.00m);\n\n        Assert.Equal(89.00m, calculator.TotalFare());\n    }\n}\n\n// Merge the steps, rename every field, delete the audit log —\n// these tests stay green as long as the fares stay right.",
+      "caption": "The test stopped pinning the pipeline: every assertion now goes through the Target Interface, so the steps, fields, and audit log behind it can be renamed, merged, or deleted while the Test Suite stays green. Structure-coupled tests fail on refactors; boundary tests fail only on broken behavior."
+    },
+    {
+      "before": "// The policy reads the real clock, so the test can only assert\n// \"roughly\" — it re-implements the rule and hopes nothing ticks\n// across a boundary mid-run.\npublic class TrialPeriodTests\n{\n    [Fact]\n    public void Trial_LastsFourteenDays()\n    {\n        // Stamps DateTime.UtcNow inside its constructor.\n        var trial = new TrialPeriod();\n\n        Assert.False(trial.HasExpired());\n\n        // Expiry cannot be reached without waiting 14 real days,\n        // so the \"test\" repeats the arithmetic instead:\n        var expected = DateTime.UtcNow.AddDays(14);\n        Assert.True(\n            (trial.ExpiresAtUtc - expected).Duration()\n                < TimeSpan.FromSeconds(5));\n    }\n}\n\n// A tolerance assertion is the tell: a volatile dependency is\n// leaking through the boundary, out of the test's control.",
+      "after": "// Time enters through the boundary, so the Test Suite owns it:\n// a fake clock drives the trial to the exact moment that matters.\npublic class TrialPeriodTests\n{\n    private sealed class FakeClock : IClock\n    {\n        public DateTime UtcNow { get; set; }\n    }\n\n    [Fact]\n    public void Trial_ExpiresTheInstantFourteenDaysPass()\n    {\n        var clock = new FakeClock\n        {\n            UtcNow = new DateTime(2026, 3, 1, 9, 0, 0,\n                DateTimeKind.Utc),\n        };\n        var trial = new TrialPeriod(clock);\n\n        clock.UtcNow = clock.UtcNow.AddDays(14);\n        Assert.False(trial.HasExpired());\n\n        clock.UtcNow = clock.UtcNow.AddSeconds(1);\n        Assert.True(trial.HasExpired());\n    }\n}\n\n// No tolerance, no waiting: the expiry boundary itself — the\n// last legal second and the first expired one — is now pinned.",
+      "caption": "The real clock made expiry untestable — the before side re-implements the arithmetic and allows five seconds of slack. With time injected at the boundary, the Test Suite drives a fake clock to the exact expiry instant and asserts behavior, not arithmetic."
+    },
+    {
+      "before": "// One test, every rule at once. When it goes red, which rule\n// broke? The name cannot tell you — it claims everything.\npublic class BaggageFeeTests\n{\n    [Fact]\n    public void Fees_WorkCorrectly()\n    {\n        var fees = new BaggageFees();\n\n        Assert.Equal(0m, fees.FeeFor(bags: 1, tier: \"none\"));\n        Assert.Equal(0m, fees.FeeFor(bags: 1, tier: \"gold\"));\n        Assert.Equal(35m, fees.FeeFor(bags: 2, tier: \"none\"));\n        Assert.Equal(0m, fees.FeeFor(bags: 2, tier: \"gold\"));\n        Assert.Equal(70m, fees.FeeFor(bags: 3, tier: \"none\"));\n        Assert.Equal(35m, fees.FeeFor(bags: 3, tier: \"gold\"));\n        Assert.Equal(105m, fees.FeeFor(bags: 4, tier: \"none\"));\n        Assert.Throws<ArgumentOutOfRangeException>(\n            () => fees.FeeFor(bags: -1, tier: \"none\"));\n    }\n}\n\n// Eight claims share one name and one failure message. The\n// first broken Assert also hides every claim after it.",
+      "after": "// One rule per test, named as the rule. A red run now reads as\n// a spec violation: the failing name states what broke.\npublic class BaggageFeeTests\n{\n    [Fact]\n    public void TheFirstBag_FliesFree() =>\n        Assert.Equal(0m, new BaggageFees().FeeFor(1, \"none\"));\n\n    [Fact]\n    public void EachExtraBag_CostsThirtyFive() =>\n        Assert.Equal(70m, new BaggageFees().FeeFor(3, \"none\"));\n\n    [Fact]\n    public void GoldMembers_GetTheirSecondBagFree() =>\n        Assert.Equal(0m, new BaggageFees().FeeFor(2, \"gold\"));\n\n    [Fact]\n    public void GoldMembers_PayFromTheirThirdBag() =>\n        Assert.Equal(35m, new BaggageFees().FeeFor(3, \"gold\"));\n\n    [Fact]\n    public void NegativeBagCounts_AreRejected() =>\n        Assert.Throws<ArgumentOutOfRangeException>(\n            () => new BaggageFees().FeeFor(-1, \"none\"));\n}\n\n// This is also the TDD worklist: each name was one Red — the\n// least test that could fail — then one Green, then Refactor.",
+      "caption": "The everything-test split into one rule per test. A failing name now states exactly which rule broke, no assert is hidden behind an earlier failure — and the list of names doubles as the TDD worklist: each was written red-first, made green with the least code, then refactored behind the boundary."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "m03-e1",
+      "type": "refactor",
+      "title": "Shrink a basket pricer's test-widened surface",
+      "concept": "Testing at Boundaries + TDD loop",
+      "smell": "Testing through the internals: the basket pricer was made \"testable\" by widening its surface. Public step methods the old tests drove in sequence, public fields exposing intermediate pipeline state, and a public discount audit log exist only so tests could watch the pipeline run — renaming one step broke tests while every price stayed identical. All the behavior is observable at the Target Interface; hide the steps and the state again, with the boundary Test Suite green the whole time.",
+      "targetInterfaceCode": "public interface IBasketPricer\n{\n    // Accumulates quantity * unitPrice per call; the same sku may\n    // be added more than once. Negative unitPrice or quantity < 1:\n    // ArgumentOutOfRangeException.\n    void AddItem(string sku, decimal unitPrice, int quantity);\n\n    // Subtotal minus the tier discount — 5% off subtotals of 100m\n    // or more, 10% off 250m or more — rounded to 2 decimals away\n    // from zero. Empty basket: 0m.\n    decimal Total();\n}",
+      "sizeBudgetLoc": 250,
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m03/m03-e1"
+    },
+    {
+      "id": "m03-e2",
+      "type": "construct",
+      "title": "Grow a rate limiter red-to-green behind a fake clock",
+      "concept": "Testing at Boundaries + TDD loop",
+      "smell": "The construct temptation is to skip the loop and the boundary at once: implement everything in one sitting against the real clock — DateTime.UtcNow read inside the policy — leaving the sliding window testable only by actually waiting it out. Time is the volatile dependency: the limiter receives IClock through its constructor, the Test Suite drives a fake clock, and you work one red test at a time, top to bottom.",
+      "targetInterfaceCode": "public interface IClock\n{\n    // The current UTC moment; the Test Suite supplies a fake.\n    DateTime UtcNow { get; }\n}\n\npublic interface IRateLimiter\n{\n    // True — and the call is recorded — while fewer than 5 calls\n    // for this key were recorded in the last 60 seconds (a call\n    // ages out once it is MORE than 60 seconds old). A refused\n    // call is never recorded. Keys are independent.\n    bool TryPass(string key);\n}",
+      "sizeBudgetLoc": 200,
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m03/m03-e2"
+    }
+  ],
+  "checklistQuestions": [
+    {
+      "id": "q1",
+      "prompt": "Grep your Test Suite for every type and member that is not on the Target Interface — concrete classes, public fields, step methods. Beyond the single construction line (the CreateX() factory), is the count zero?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — the tests touch only the boundary"
+        },
+        {
+          "value": "no",
+          "label": "No — at least one test reaches into internals"
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "prompt": "Rename every private member and extract one helper class — behavior unchanged — then rerun the Test Suite. Did it stay green with zero edits to any test?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — green, no test edited"
+        },
+        {
+          "value": "no",
+          "label": "No — a test broke or needed editing"
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "prompt": "Comment out one business rule in the implementation and rerun the Test Suite (restore it after). Did at least one test fail, with a name that states the rule you broke?",
+      "options": [
+        {
+          "value": "yes",
+          "label": "Yes — the failure named the broken rule"
+        },
+        {
+          "value": "no",
+          "label": "No — all green, or the failure said nothing"
+        }
+      ]
+    }
+  ]
+}

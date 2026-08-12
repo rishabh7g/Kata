@@ -16,7 +16,7 @@
 # Exit codes: 0 ok · 2 usage/precondition · 10 shell · 11 app bundle ·
 #             12 stylesheet · 13 font · 14 manifest · 15 service worker ·
 #             16 icons · 17 content · 18 exercise folders ·
-#             19 m02 exercise folders
+#             19 m02 exercise folders · 20 m03 exercise folders
 #
 set -uo pipefail
 
@@ -269,6 +269,13 @@ else
       else
         bad "m02 is pending in the deployed index — Module 2 content (#24) is missing"
       fi
+      # Module 3 shipped in #25: the loop below must also fetch and validate
+      # content/modules/m03.json.
+      if [[ " $MODULES " == *" m03 "* ]]; then
+        note "m03 is non-pending — Module 3 content (#25) is live"
+      else
+        bad "m03 is pending in the deployed index — Module 3 content (#25) is missing"
+      fi
       for id in $MODULES; do
         get "${URL}content/modules/${id}.json" "$WORK/content/modules/${id}.json"
       done
@@ -332,6 +339,31 @@ else
     for folder_url in $FOLDER_URLS; do
       n=$((n + 1))
       get "$folder_url" "$WORK/m02-exercise-folder-$n.html" || true
+    done
+  fi
+fi
+end
+
+# ─── 11. m03 exercise folders (#25) ────────────────────────────────────────
+# Module 3's two Exercise folders are committed (#25): the deployed m03.json
+# must carry both GitHub folder URLs and each must return 200.
+begin exercise-folders-m03 20
+M03_JSON="$WORK/content/modules/m03.json"
+if [[ ! -f "$M03_JSON" ]]; then
+  bad "the deployed m03.json was not fetched (content step failed?) — cannot read folderUrl"
+else
+  FOLDER_URLS="$(node -e '
+    const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+    console.log(data.exercises.map((e) => e.folderUrl).filter(Boolean).join(" "));
+  ' "$M03_JSON" 2>>"$LOG")"
+  COUNT=$(wc -w <<<"$FOLDER_URLS")
+  if ((COUNT < 2)); then
+    bad "deployed m03.json has $COUNT non-null folderUrl values (expected 2: #25)"
+  else
+    n=0
+    for folder_url in $FOLDER_URLS; do
+      n=$((n + 1))
+      get "$folder_url" "$WORK/m03-exercise-folder-$n.html" || true
     done
   fi
 fi

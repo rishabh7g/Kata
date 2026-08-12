@@ -20,7 +20,7 @@
       "ordinal": 3,
       "title": "Testing at Boundaries + TDD loop",
       "description": "Test the Target Interface, not the internals — small steps as the speed limit.",
-      "pending": true
+      "pending": false
     },
     {
       "id": "m04",
