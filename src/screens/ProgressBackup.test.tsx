@@ -228,6 +228,105 @@ describe('Progress backup — import', () => {
   });
 });
 
+// #78: the confirm claimed role="alertdialog" while behaving like a
+// paragraph — no focus, no Escape, no way back to where you were.
+describe('Progress backup — the confirm is the dialog it claims to be', () => {
+  function importButton() {
+    return screen.getByRole('button', { name: 'Import progress' });
+  }
+
+  function confirmDialog() {
+    return screen.getByRole('alertdialog', { name: 'Confirm import' });
+  }
+
+  it('moves focus into the confirm as it opens, with the summary as its description', async () => {
+    await renderScreen();
+    importButton().focus();
+
+    pickFile(serializeProgressState(m01Passed));
+
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'Confirm import',
+    });
+    await waitFor(() => expect(dialog).toHaveFocus());
+    // The question being asked is read out with the dialog's own name.
+    const describedBy = dialog.getAttribute('aria-describedby');
+    expect(document.getElementById(describedBy ?? '')?.textContent).toBe(
+      '1 Checkpoint, 1 checklist — replace current progress?',
+    );
+  });
+
+  it('Escape cancels: nothing is written and focus is back on Import progress', async () => {
+    const progress = await renderScreen();
+    const before = await progress.exportState();
+    importButton().focus();
+    pickFile(serializeProgressState(m01Passed));
+    await waitFor(() => expect(confirmDialog()).toHaveFocus());
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('alertdialog', { name: 'Confirm import' }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(importButton()).toHaveFocus();
+    expect(await progress.exportState()).toEqual(before);
+    expect(screen.queryByText('Exit Gate passed')).not.toBeInTheDocument();
+  });
+
+  it('Cancel does the same — dismissed, unchanged, focus returned', async () => {
+    const progress = await renderScreen();
+    const before = await progress.exportState();
+    pickFile(serializeProgressState(m01Passed));
+    await screen.findByRole('alertdialog', { name: 'Confirm import' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(
+      screen.queryByRole('alertdialog', { name: 'Confirm import' }),
+    ).not.toBeInTheDocument();
+    expect(importButton()).toHaveFocus();
+    expect(await progress.exportState()).toEqual(before);
+  });
+
+  it('Escape does nothing once no confirm is open', async () => {
+    const progress = await renderScreen(m01Passed);
+    const before = await progress.exportState();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(await progress.exportState()).toEqual(before);
+    expect(screen.getByText('Exit Gate passed')).toBeInTheDocument();
+  });
+
+  it('Replace imports, then says so and hands focus back — never to <body>', async () => {
+    const progress = await renderScreen();
+    pickFile(serializeProgressState(m01Passed));
+    await screen.findByRole('alertdialog', { name: 'Confirm import' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Replace progress' }));
+
+    // The import itself, and the re-navigation that re-reads the rows.
+    await waitFor(async () => {
+      expect(await progress.exportState()).toEqual(m01Passed);
+    });
+    expect(await screen.findByText('Exit Gate passed')).toBeInTheDocument();
+    // The button that opened the confirm is where focus lands, and the live
+    // region is what says the replace happened (#73's announcer).
+    await waitFor(() => expect(importButton()).toHaveFocus());
+    expect(screen.getByRole('status').textContent).toBe(
+      'Progress replaced — 1 Checkpoint, 1 checklist imported.',
+    );
+  });
+
+  it('says nothing on load — the live region only announces what arrives', async () => {
+    await renderScreen(m01Passed);
+
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+});
+
 describe('Progress backup — copy', () => {
   it('uses no banned terms (docs/ubiquitous-language.md § Banned)', async () => {
     await renderScreen();
