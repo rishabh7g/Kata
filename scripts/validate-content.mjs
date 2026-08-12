@@ -11,10 +11,12 @@
  *   node scripts/validate-content.mjs                     # repo layout (CI, smoke)
  *   node scripts/validate-content.mjs <schema> <file|dir>  # an explicit pair
  *
- * The schema and the content land in #7. Until they do, the repo-layout mode
- * prints an explicit SKIP and exits 0 — it never pretends to have passed, and
- * it needs no edit to go live: it becomes a real gate the moment #7 commits
- * schemas/module-index.schema.json and public/content/index.json.
+ * The schema and the content shipped in #7, so the repo-layout mode is a real
+ * gate: schemas/module-index.schema.json against public/content/index.json,
+ * then schemas/module-content.schema.json against every file under
+ * public/content/modules/ (none while every Module is still pending). The SKIP
+ * path below only fires if those files ever go missing — it never pretends to
+ * have passed.
  *
  * Output contract (scripts/README.md): one line on success, full transcript to
  * .checks/content.log, and on failure only the offending files with their

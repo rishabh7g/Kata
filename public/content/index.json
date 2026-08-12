@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "id": "m01",
+      "ordinal": 1,
+      "title": "Deep Modules & Information Hiding",
+      "description": "Hide the most complexity behind the smallest surface — the generative root of good design.",
+      "pending": true
+    },
+    {
+      "id": "m02",
+      "ordinal": 2,
+      "title": "Dependency Direction",
+      "description": "Coupling, cohesion, and pointing dependencies at stable abstractions.",
+      "pending": true
+    },
+    {
+      "id": "m03",
+      "ordinal": 3,
+      "title": "Testing at Boundaries + TDD loop",
+      "description": "Test the Target Interface, not the internals — small steps as the speed limit.",
+      "pending": true
+    },
+    {
+      "id": "m04",
+      "ordinal": 4,
+      "title": "Naming & Ubiquitous Language",
+      "description": "The cheapest, highest-leverage improvement — names drawn from the Ubiquitous Language.",
+      "pending": true
+    },
+    {
+      "id": "m05",
+      "ordinal": 5,
+      "title": "Error Design",
+      "description": "Define errors out of existence — API design for backend .NET work.",
+      "pending": true
+    }
+  ]
+}
