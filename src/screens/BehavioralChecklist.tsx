@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { useProgress } from '../app/ProgressContext';
 import type { ChecklistQuestion } from '../curriculum';
 import type {
@@ -41,6 +41,19 @@ export function BehavioralChecklist({
   >(undefined);
   const [picks, setPicks] = useState<PartialChecklistAnswers>({});
   const [submitting, setSubmitting] = useState(false);
+  // Submit unmounts the button that had focus, so focus would fall back to
+  // <body> and the next Tab would restart at the nav (#73). The panel that
+  // replaced it takes focus instead — but only on the flip: a plain load of
+  // an already-submitted Module must not steal the learner's focus.
+  const panelRef = useRef<HTMLDivElement>(null);
+  const focusPanelOnFlip = useRef(false);
+
+  useEffect(() => {
+    if (!focusPanelOnFlip.current) return;
+    if (submitted === undefined || submitted === null) return;
+    focusPanelOnFlip.current = false;
+    panelRef.current?.focus();
+  }, [submitted]);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +90,11 @@ export function BehavioralChecklist({
         </span>
       </div>
       {submitted !== null ? (
-        <SubmittedPanel submitted={submitted} questions={questions} />
+        <SubmittedPanel
+          submitted={submitted}
+          questions={questions}
+          panelRef={panelRef}
+        />
       ) : (
         <ChecklistForm
           moduleId={moduleId}
@@ -103,6 +120,7 @@ export function BehavioralChecklist({
               // idempotent, so this shows the stored submission either way.
               .then(() => progress.getSubmittedChecklist(moduleId))
               .then((stored) => {
+                focusPanelOnFlip.current = true;
                 setSubmitted(stored);
                 onSubmitted?.();
               })
@@ -224,17 +242,31 @@ function ChecklistForm({
  * panel, check + `Submitted · time` (14px/800), then question/answer rows
  * (1px rules, answers at 600 weight). Nothing here is editable — a Module
  * never gets a second submission.
+ *
+ * It is where focus goes when the form flips (#73), so it is a named group
+ * (`Submitted · time`) that can hold focus programmatically — `tabIndex={-1}`
+ * keeps it out of the Tab order, so Tab from here carries on down the page
+ * rather than round-tripping through a panel nobody tabs to.
  */
 function SubmittedPanel({
   submitted,
   questions,
+  panelRef,
 }: {
   submitted: SubmittedChecklist;
   questions: readonly ChecklistQuestion[];
+  panelRef?: RefObject<HTMLDivElement | null>;
 }) {
+  const submittedLineId = 'exercise-checklist-submitted-line';
   return (
-    <div className="exercise-checklist-panel">
-      <div className="exercise-checklist-submitted-line">
+    <div
+      className="exercise-checklist-panel"
+      ref={panelRef}
+      tabIndex={-1}
+      role="group"
+      aria-labelledby={submittedLineId}
+    >
+      <div className="exercise-checklist-submitted-line" id={submittedLineId}>
         <SubmittedCheckIcon />
         <span>Submitted · {formatSubmittedAt(submitted.submittedAt)}</span>
       </div>
