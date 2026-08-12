@@ -1,0 +1,52 @@
+# CI gate for committed practice material (#22): every exercises/**/ folder's
+# xUnit Test Suite must compile, so a learner cloning a folder never hits a
+# broken build (docs/engineering.md § 6). Build only — Kata never runs the
+# tests and never gates on their results.
+#
+# Separate from deploy.yml on purpose: the Pages deploy ships dist/ and knows
+# nothing about dotnet; this job path-filters to exercises/** so docs-only or
+# app-only changes never pay for an SDK install. With zero folders committed
+# the script passes with an explicit "0 Test Suites (none committed yet)".
+name: Exercises
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'exercises/**'
+      - 'scripts/build-exercises.sh'
+      - '.github/workflows/exercises.yml'
+  pull_request:
+    paths:
+      - 'exercises/**'
+      - 'scripts/build-exercises.sh'
+      - '.github/workflows/exercises.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Test Suites compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Host/CI fact: exercise folders target net10.0 (docs/engineering.md § 6).
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      # Terse output: one line per folder + a final count in the job log; the
+      # full dotnet transcript goes to .checks/exercises.log for the artifact.
+      - name: Build every exercise Test Suite
+        run: scripts/build-exercises.sh
+
+      - name: Upload full build logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: exercise-build-logs
+          path: .checks/exercises.log
+          if-no-files-found: ignore

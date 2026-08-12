@@ -8,12 +8,14 @@ detail to a file. Read the log only when a line says FAIL.**
 | `scripts/smoke.sh` | the **deployed** site (`$KATA_URL`, default <https://rishabh7g.github.io/Kata/>) | `SMOKE 8/8 ok \| <url>` |
 | `scripts/test-scoped.sh <file…>` | Vitest over just the files a change touched | `TEST ok \| 2 passed (2) \| 12 passed (12) \| <files>` |
 | `scripts/validate-content.mjs [<schema> <file\|dir>]` | content JSON against its JSON Schema | `CONTENT ok (1 file)` |
+| `scripts/build-exercises.sh` | every committed `exercises/**/` folder compiles (`dotnet build`, build only) | `EXERCISES ok \| 2/2 Test Suites compile` |
 
 ```sh
 scripts/smoke.sh                                    # after a deploy
 scripts/test-scoped.sh src/pwa/sw.test.ts           # after a change
 FULL=1 scripts/test-scoped.sh                       # the whole suite, on purpose
 node scripts/validate-content.mjs                   # repo layout; also runs in CI
+scripts/build-exercises.sh                          # exercise folders; also runs in CI (#22)
 ```
 
 ## The contract
@@ -31,6 +33,7 @@ node scripts/validate-content.mjs                   # repo layout; also runs in 
 | `smoke.sh` | 0 ok · 2 usage/precondition · 10 shell · 11 app bundle · 12 stylesheet · 13 font · 14 manifest · 15 service worker · 16 icons · 17 content |
 | `test-scoped.sh` | 0 ok · 2 usage/precondition (including no args without `FULL=1`) · otherwise Vitest's own status |
 | `validate-content.mjs` | 0 ok or SKIP · 2 usage · 3 invalid content · 4 missing schema/content path |
+| `build-exercises.sh` | 0 ok (including the explicit zero-folders pass) · 2 usage/precondition (dotnet missing) · 3 one or more folders failed to build |
 | `draft-concept.mjs` | 0 ok · 2 usage (bad flag/module id) · 3 draft exists without `--force` · 4 claude CLI missing/failed · 5 non-JSON or empty CLI output |
 | `draft-exercise.mjs` | 0 ok · 2 usage (bad flag/brief) · 3 exercise folder exists (new Exercise id, no `--force`) · 4 claude CLI missing/failed · 5 CLI output breaks the JSON contract |
 
@@ -82,6 +85,16 @@ node scripts/draft-exercise.mjs path/to/brief.json --dry-run  # print the prompt
   when the draft exceeds the brief's `sizeBudgetLoc`.
 - After review, `dotnet build tests/Exercise.Tests.csproj` inside the folder
   must pass; CI will compile every committed folder (#22).
+
+## CI: exercise Test Suites must compile (#22)
+
+`build-exercises.sh` also runs in `.github/workflows/exercises.yml` — its own
+workflow, separate from the Pages deploy, path-filtered to `exercises/**` (plus
+the script and the workflow file). One `ok <folder>` line per Exercise folder
+and a final count go to the job log; the full dotnet transcript is uploaded as
+the `exercise-build-logs` artifact. With zero folders committed the job passes
+with the explicit `0 Test Suites (none committed yet)` line. Build only — Kata
+never runs `dotnet test` in CI (`docs/engineering.md` § 6).
 
 ## Content checks are live (#7)
 
