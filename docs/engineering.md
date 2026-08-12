@@ -438,6 +438,12 @@ or device identity, no timestamps beyond `passedAt`, `submittedAt`, and
 Checkpoints — which is exactly why `exportState`/`importState` exist as the
 backup story.
 
+**When IndexedDB will not open at all** (site data blocked for the origin, a
+hardened privacy profile, some embedded webviews), there is no Kata to run:
+`IProgress` is the only write path. The bootstrap (`src/app/bootstrap.tsx`)
+renders the `ProgressUnavailable` notice instead of the app — the cause and the
+one fix the learner controls, on the page rather than in the console (#68).
+
 ---
 
 ## 5. Authoring-time content workflow

@@ -3,8 +3,10 @@ import type { IProgress } from '../progress';
 
 /**
  * The seam the screens write and read learner progress through — the only
- * write path in the app (design/README.md § Interactions). main.tsx provides
- * the real IProgress (IndexedDB, #14); tests provide one over fake-indexeddb.
+ * write path in the app (design/README.md § Interactions). The bootstrap
+ * (src/app/bootstrap.tsx) provides the real IProgress (IndexedDB, #14) — and
+ * when it cannot open, no app at all (#68); tests provide one over
+ * fake-indexeddb.
  * Screens never construct their own: Checkpoint integrity is IProgress's job,
  * rendering is theirs.
  */
