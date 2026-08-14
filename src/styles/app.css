@@ -37,18 +37,32 @@
   }
 }
 
-.app-shell {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+/* Needed for .app-shell's `height: 100%` fallback line to mean anything —
+   percentage heights resolve against the containing block's own height,
+   which is otherwise auto all the way up (#104). */
+html, body {
+  height: 100%;
 }
 
-/* tokens.json layout.nav: sticky top 0, border-bottom 2px divider, bg ground.
-   The rule and the flex row come from .nav in design/styles.css. */
+/* The shell is a fixed frame — exactly one scroll area (#104), the content
+   region below. The shell itself never scrolls: overflow: hidden is what
+   stops the document from doing it, and the dvh unit (with height: 100% as
+   the fallback for engines without it) means the shell is never taller than
+   the actual viewport the way the older viewport-height unit is on mobile,
+   where the URL bar shrinks the visible area without shrinking that unit. */
+.app-shell {
+  height: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* tokens.json layout.nav: border-bottom 2px divider, bg ground. The rule and
+   the flex row come from .nav in design/styles.css. flex: none in the shell
+   column is what makes this fixed now — position: sticky was doing that job
+   against page scroll, which no longer exists (#104). */
 .app-nav {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   background: var(--color-bg);
   flex: none;
   height: var(--header-height);
@@ -74,8 +88,15 @@
   text-transform: uppercase;
 }
 
+/* The one scroll area (#104): min-height: 0 is load-bearing — without it a
+   flex child refuses to scroll and grows instead. overscroll-behavior:
+   contain means no pull-to-refresh and no scroll chaining out of the app. */
 .app-main {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 /* Present to a screen reader, absent to the eye — the live region (#73) and
