@@ -21,7 +21,7 @@ const appCss = read('./app.css');
 function rules(css: string): { selectors: string; body: string }[] {
   const out: { selectors: string; body: string }[] = [];
   for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    out.push({ selectors: match[1].trim(), body: match[2] });
+    out.push({ selectors: (match[1] ?? '').trim(), body: match[2] ?? '' });
   }
   return out;
 }
