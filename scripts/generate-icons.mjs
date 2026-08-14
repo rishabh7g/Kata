@@ -31,6 +31,8 @@ const ICONS = [
   { file: 'icon-192.png', size: 192, scale: 1 },
   { file: 'icon-512.png', size: 512, scale: 1 },
   { file: 'icon-maskable-512.png', size: 512, scale: MASKABLE_SCALE },
+  { file: 'apple-touch-icon-180.png', size: 180, scale: 1 },
+  { file: 'favicon-32.png', size: 32, scale: 1 },
 ];
 
 /** Reads the mark's viewBox and its solid rects. */
