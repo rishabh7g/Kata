@@ -274,7 +274,7 @@ a.curriculum-row:hover {
    fixed 230px status column force page-level horizontal scroll at phone
    widths — stack the intro under the title and drop the status under the
    text cell instead. The design system never scrolls a page sideways. */
-@media (max-width: 720px) {
+@media (max-width: 767px) {
   .curriculum-header {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -394,10 +394,12 @@ a.curriculum-row:hover {
   flex: none;
 }
 
-/* tokens.json layout.moduleGrid: 1fr 350px, gap 56. */
+/* tokens.json layout.moduleGrid: 1fr 350px, gap 56. Single column is the
+   base rule; the two-column form is a laptop-band affordance (#103) added
+   below at min-width: 1024px, not a phone-band collapse of a wide default. */
 .module-body {
   display: grid;
-  grid-template-columns: 1fr 350px;
+  grid-template-columns: 1fr;
   gap: 56px;
   align-items: start;
 }
@@ -409,12 +411,12 @@ a.curriculum-row:hover {
   min-width: 0;
 }
 
-/* Narrow viewports: the aside column would squeeze the main column below the
-   examples' 300px cell minimum and force page-level horizontal scroll —
-   collapse to one column instead (the examples then stack via auto-fit). */
-@media (max-width: 960px) {
+/* Laptop band: the aside column would squeeze the main column below the
+   examples' 300px cell minimum and force page-level horizontal scroll at
+   narrower widths — two columns only from min-width: 1024px up. */
+@media (min-width: 1024px) {
   .module-body {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 350px;
   }
 }
 
@@ -710,10 +712,11 @@ a.curriculum-row:hover {
   max-width: 24ch;
 }
 
-/* tokens.json layout.exerciseGrid: 1fr 400px, gap 56. */
+/* tokens.json layout.exerciseGrid: 1fr 400px, gap 56. Single column is the
+   base rule, as on the Module body (#103); two columns from min-width: 1024px. */
 .exercise-body {
   display: grid;
-  grid-template-columns: 1fr 400px;
+  grid-template-columns: 1fr;
   gap: 56px;
   align-items: start;
 }
@@ -724,10 +727,11 @@ a.curriculum-row:hover {
   min-width: 0;
 }
 
-/* Narrow viewports: collapse to one column, as the Module body does. */
-@media (max-width: 960px) {
+/* Laptop band: two columns only from min-width: 1024px up, as the Module
+   body does. */
+@media (min-width: 1024px) {
   .exercise-body {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 400px;
   }
 }
 
