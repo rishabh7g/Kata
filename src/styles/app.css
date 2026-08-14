@@ -9,13 +9,32 @@
 :root {
   /* Mirrors design/tokens.json § layout. */
   --layout-container-max: 1200px;
-  --layout-gutter: 40px;
   --layout-aside-sticky-top: 84px;
   --header-height: 52px;
+
+  /* The house gutter ramp (design/tokens.json § layout.gutter): 16px below
+     768px, 24px from 768–1023px, 32px at 1024px and above. Switched by
+     min-width only — never a max-width around the same value. */
+  --gutter-sm: 16px;
+  --gutter-md: 24px;
+  --gutter-lg: 32px;
+  --gutter: var(--gutter-sm);
 
   /* The prototype's mono stack (design/DevGym.dc.html); tokens.json
      typeScale.app carries the code sizes, this carries the family once. */
   --font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: var(--gutter-md);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --gutter: var(--gutter-lg);
+  }
 }
 
 .app-shell {
@@ -95,11 +114,13 @@
   text-transform: uppercase;
 }
 
-/* design/README.md § Screens: max-width 1200px, 40px gutters, flush left. */
+/* design/README.md § Screens: max-width 1200px, gutter ramp, flush left. */
 .app-container {
   max-width: var(--layout-container-max);
   margin: 0 auto;
-  padding: 56px var(--layout-gutter) 80px;
+  padding-block: 56px 80px;
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
 }
 
 /* ── Notice (#68) — the app's one failure panel ───────────────────────────
