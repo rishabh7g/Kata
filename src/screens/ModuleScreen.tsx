@@ -258,7 +258,7 @@ export function ExitGateAside({
       <aside className="module-aside">
         <div className="module-gate-panel">
           <h2 className="module-section-label">{s['gate.label']}</h2>
-          <p className="text-muted module-gate-note module-gate-note-pending">
+          <p className="text-muted module-gate-note-pending">
             {s['gate.pendingNote']}
           </p>
         </div>
@@ -291,7 +291,9 @@ export function ExitGateAside({
             </div>
           </div>
         </div>
-        <p className="text-muted module-gate-note">{s['gate.note']}</p>
+        {/* The "Checkpoint-based — advance when the gate is passed…" note
+            was read-once reassurance copy — deleted on the copy pass
+            (#113). */}
       </div>
     </aside>
   );

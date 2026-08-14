@@ -52,15 +52,11 @@ const en = {
       submitted: 'Submitted',
       notSubmitted: 'Not yet submitted',
     },
-    note: 'Checkpoint-based — advance when the gate is passed, whether that takes 2 days or 2 months.',
     exercisePassedLine: 'Exit Gate passed — Checkpoint recorded.',
   },
 
   curriculum: {
-    kicker: 'Curriculum — fixed order, foundations down',
     title: 'Learn design by producing code.',
-    intro:
-      'Five Modules. Advance by passing each Exit Gate — the Behavioral Checklist, self-assessed. No timelines, no streaks.',
     row: {
       locked: "Locked — pass the previous Module's Exit Gate to unlock it.",
     },
@@ -107,7 +103,9 @@ const en = {
     },
     targetInterface: {
       immutableTag: 'Immutable',
-      note: 'Tests are written against this and only this. Wanting to change it is a signal to record and discuss — not an allowed move.',
+      // Trimmed (#113): the `Immutable` tag already says "don't touch it";
+      // this keeps only the one instruction clause.
+      note: 'Wanting to change it is a signal to record and discuss — not an allowed move.',
     },
     practiceMaterial: {
       pending:
@@ -120,9 +118,13 @@ const en = {
 
   checklist: {
     heading: 'Behavioral Checklist',
-    meta: 'Module {ordinal} gate · behaviorally answerable only — never opinion',
+    // Trimmed to the value (#113): "Module NN gate" carries live data; the
+    // rest was prose wrapped around it.
+    meta: 'Module {ordinal} gate',
     submitLabel: 'Submit Behavioral Checklist',
-    note: "Answer all three checks to submit. Opinion checks are banned — the smell you can't see is what you're learning to see.",
+    // Trimmed (#113): the first sentence is the only instruction on the
+    // step and survives; the second was an explainer.
+    note: 'Answer all three checks to submit.',
     submittedLine: 'Submitted · {time}',
   },
 
@@ -130,7 +132,10 @@ const en = {
     exportLabel: 'Export progress',
     importLabel: 'Import progress',
     fileInputLabel: 'Progress file',
-    note: "Backup as a file: export downloads {fileName} — Checkpoints and checklist answers. Import replaces current progress with a file's contents.",
+    // Trimmed to the value (#113): {fileName} is live data, and "Import
+    // replaces…" guards the destructive action; the framing sentence
+    // around them ("Backup as a file: export downloads…") went.
+    note: "{fileName}. Import replaces current progress with a file's contents.",
     confirmDialogLabel: 'Confirm import',
     confirmSummary: '{checkpoints}, {checklists} — replace current progress?',
     confirmReplace: 'Replace progress',

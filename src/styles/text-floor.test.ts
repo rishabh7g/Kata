@@ -33,7 +33,6 @@ const ALLOWED_LABEL_SELECTORS = new Set([
   '.module-gate-poster-label',
   '.exercise-section-label',
   '.exercise-section-label-inline',
-  '.curriculum-kicker',
   '.module-kicker',
   '.exercise-kicker',
   '.exercise-spec-label',

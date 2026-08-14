@@ -29,12 +29,11 @@ export function CurriculumScreen() {
 
   return (
     <>
+      {/* The kicker ("Curriculum — fixed order, foundations down") and the
+          intro ("Five Modules. Advance by passing each Exit Gate…") were
+          read-once explainer copy — deleted on the copy pass (#113). */}
       <header className="curriculum-header">
-        <div>
-          <p className="curriculum-kicker">{s['curriculum.kicker']}</p>
-          <h1 className="curriculum-title">{s['curriculum.title']}</h1>
-        </div>
-        <p className="text-muted curriculum-intro">{s['curriculum.intro']}</p>
+        <h1 className="curriculum-title">{s['curriculum.title']}</h1>
       </header>
       {modules !== null && (
         <>

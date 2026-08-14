@@ -293,8 +293,10 @@ describe('Exercise screen', () => {
     await screen.findByText('Target Interface');
 
     expect(screen.getByText('Immutable')).toHaveClass('tag-accent');
+    // Trimmed to the one instruction clause (#113): the `Immutable` tag
+    // already says "don't touch it".
     expect(
-      screen.getByText(/Tests are written against this and only this/),
+      screen.getByText(/Wanting to change it is a signal to record and discuss/),
     ).toBeInTheDocument();
     const code = container.querySelector('pre.exercise-interface-code');
     expect(code?.textContent).toContain('public interface IDocumentStore');

@@ -212,28 +212,13 @@ html, body {
   padding-bottom: 36px;
 }
 
-/* The kicker: h6 type in the design system — 13px uppercase accent-text (#71:
-   the brand red reads 3.76:1 on the ground, under AA for a 13px string). */
-.curriculum-kicker {
-  font-family: var(--font-heading);
-  font-weight: var(--font-heading-weight);
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-accent-text);
-  margin: 0 0 12px;
-}
-
-/* tokens.json typeScale.app.curriculumTitle: 54. */
+/* tokens.json typeScale.app.curriculumTitle: 54. The kicker and intro
+   classes that used to sit here (.curriculum-kicker, .curriculum-intro)
+   styled the read-once explainer copy deleted on the copy pass (#113). */
 .curriculum-title {
   font-size: 54px;
   margin: 0;
   max-width: 15ch;
-}
-
-.curriculum-intro {
-  margin: 0 0 6px;
-  font-size: 16px;
 }
 
 .curriculum-row {
@@ -656,15 +641,14 @@ a.curriculum-row:hover {
   font-size: 16px;
 }
 
-/* tokens.json typeScale.app.meta: raised to the 16px body-text floor (#108). */
-.module-gate-note {
-  font-size: 16px;
-  margin: 14px 0 0;
-}
-
 /* Pending-Module aside note (#28): the panel's only content, so it needs no
-   condition-row offset above it. */
+   condition-row offset above it. tokens.json typeScale.app.meta: raised to
+   the 16px body-text floor (#108). The not-pending sibling this shared with
+   (.module-gate-note, the "Checkpoint-based — advance…" reassurance line)
+   was deleted on the copy pass (#113); its font-size lives here now, the
+   only place still rendering this type. */
 .module-gate-note-pending {
+  font-size: 16px;
   margin: 0;
 }
 
