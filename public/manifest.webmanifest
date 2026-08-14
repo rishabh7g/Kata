@@ -4,6 +4,7 @@
   "description": "Learn software design fundamentals through authored C# exercises.",
   "start_url": "./",
   "scope": "./",
+  "id": "./",
   "display": "standalone",
   "theme_color": "#f3f2f2",
   "background_color": "#f3f2f2",

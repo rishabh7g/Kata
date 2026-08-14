@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 const manifest: {
   name: string;
   short_name: string;
+  id: string;
   start_url: string;
   scope: string;
   display: string;
@@ -40,11 +41,15 @@ describe('web app manifest', () => {
     expect(manifest.display).toBe('standalone');
   });
 
-  it('keeps start_url and scope relative, so they follow the base path', () => {
+  it('keeps start_url, scope and id relative, so they follow the base path', () => {
     // Resolved against the manifest's own URL, these are /Kata/ on Pages and
     // stay correct anywhere else the app is served from.
     expect(manifest.start_url).toBe('./');
     expect(manifest.scope).toBe('./');
+    // id pins app identity independently of start_url — without it, moving
+    // Kata to a different sub-path or domain would re-install it as a
+    // second app rather than update the existing one (#111).
+    expect(manifest.id).toBe('./');
     expect(
       manifest.icons.every((icon) => icon.src.startsWith('./')),
     ).toBe(true);
