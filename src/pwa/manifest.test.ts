@@ -61,6 +61,16 @@ describe('web app manifest', () => {
       '<link rel="manifest" href="%BASE_URL%manifest.webmanifest" />',
     );
   });
+
+  // House UI baseline standard: the static tag is exactly this string, no
+  // zoom flags (maximum-scale / user-scalable), so the web stays fully
+  // zoomable per WCAG 2.1 SC 1.4.4 / 1.4.10. viewport-fit=cover is required
+  // for every env(safe-area-inset-*) in the app to resolve to anything but 0.
+  it('pins the exact static viewport tag, with viewport-fit=cover', () => {
+    expect(indexHtml).toContain(
+      '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />',
+    );
+  });
 });
 
 describe('manifest icons', () => {
