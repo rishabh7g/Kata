@@ -11,6 +11,7 @@
   --layout-container-max: 1200px;
   --layout-gutter: 40px;
   --layout-aside-sticky-top: 84px;
+  --header-height: 52px;
 
   /* The prototype's mono stack (design/DevGym.dc.html); tokens.json
      typeScale.app carries the code sizes, this carries the family once. */
@@ -30,6 +31,9 @@
   top: 0;
   z-index: 10;
   background: var(--color-bg);
+  flex: none;
+  height: var(--header-height);
+  padding-top: max(var(--space-3), env(safe-area-inset-top));
 }
 
 /* .nav-brand already carries the heading font, weight 800 and margin-right:auto;
