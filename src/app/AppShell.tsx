@@ -4,9 +4,9 @@ import { useCurriculum } from './CurriculumContext';
 import { useModuleSummaries } from './useModuleSummaries';
 
 /**
- * The chrome every screen sits in: the sticky nav with the Kata lockup and the
- * Checkpoint count, then the container the screens render into
- * (design/README.md § Brand and § Screens).
+ * The chrome every screen sits in: the fixed nav with the Kata lockup and the
+ * Checkpoint count, then the one scroll area (.app-main) the screens render
+ * into (design/README.md § Brand and § Screens; #104).
  *
  * The count comes from `ICurriculum.getModules()`: Checkpoints recorded over
  * Modules in the index — both counted, never hard-coded, and never a
