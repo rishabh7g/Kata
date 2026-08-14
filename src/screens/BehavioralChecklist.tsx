@@ -6,6 +6,7 @@ import type {
   PartialChecklistAnswers,
   SubmittedChecklist,
 } from '../progress';
+import { interpolate, useStrings } from '../strings/strings';
 
 /**
  * The Behavioral Checklist panel — the whole Exit Gate, and the only write
@@ -34,6 +35,7 @@ export function BehavioralChecklist({
   questions: readonly ChecklistQuestion[];
   onSubmitted?: () => void;
 }) {
+  const s = useStrings();
   const progress = useProgress();
   // undefined = still loading; null = not submitted yet (form state).
   const [submitted, setSubmitted] = useState<
@@ -81,12 +83,13 @@ export function BehavioralChecklist({
   if (submitted === undefined) return null;
 
   return (
-    <section aria-label="Behavioral Checklist">
+    <section aria-label={s['checklist.heading']}>
       <div className="exercise-checklist-heading">
-        <h2 className="exercise-section-label-inline">Behavioral Checklist</h2>
+        <h2 className="exercise-section-label-inline">{s['checklist.heading']}</h2>
         <span className="text-muted exercise-checklist-meta">
-          Module {String(moduleOrdinal).padStart(2, '0')} gate · behaviorally
-          answerable only — never opinion
+          {interpolate(s['checklist.meta'], {
+            ordinal: String(moduleOrdinal).padStart(2, '0'),
+          })}
         </span>
       </div>
       {submitted !== null ? (
@@ -181,6 +184,7 @@ function ChecklistForm({
   onPick: (questionId: string, value: string) => void;
   onSubmit: () => void;
 }) {
+  const s = useStrings();
   const complete = completeAnswers(questions, picks) !== null;
   return (
     <div>
@@ -227,12 +231,9 @@ function ChecklistForm({
         disabled={!complete || submitting}
         onClick={onSubmit}
       >
-        Submit Behavioral Checklist
+        {s['checklist.submitLabel']}
       </button>
-      <p className="text-muted exercise-checklist-note">
-        Answer all three checks to submit. Opinion checks are banned — the
-        smell you can't see is what you're learning to see.
-      </p>
+      <p className="text-muted exercise-checklist-note">{s['checklist.note']}</p>
     </div>
   );
 }
@@ -257,6 +258,7 @@ function SubmittedPanel({
   questions: readonly ChecklistQuestion[];
   panelRef?: RefObject<HTMLDivElement | null>;
 }) {
+  const s = useStrings();
   const submittedLineId = 'exercise-checklist-submitted-line';
   return (
     <div
@@ -268,7 +270,11 @@ function SubmittedPanel({
     >
       <div className="exercise-checklist-submitted-line" id={submittedLineId}>
         <SubmittedCheckIcon />
-        <span>Submitted · {formatSubmittedAt(submitted.submittedAt)}</span>
+        <span>
+          {interpolate(s['checklist.submittedLine'], {
+            time: formatSubmittedAt(submitted.submittedAt),
+          })}
+        </span>
       </div>
       {questions.map((question) => (
         <div className="exercise-checklist-row" key={question.id}>

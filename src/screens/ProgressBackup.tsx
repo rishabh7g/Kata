@@ -8,6 +8,7 @@ import {
   parseProgressState,
   serializeProgressState,
 } from '../progress';
+import { interpolate, useStrings } from '../strings/strings';
 
 /**
  * Progress export/import (#29) — the backup story for a no-accounts,
@@ -29,6 +30,7 @@ import {
  * ways out are one keystroke and one button.
  */
 export function ProgressBackup() {
+  const s = useStrings();
   const progress = useProgress();
   const navigate = useNavigate();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -97,9 +99,7 @@ export function ProgressBackup() {
       setPendingImport(parseProgressState(await file.text()));
     } catch (cause) {
       const reason = cause instanceof Error ? cause.message : String(cause);
-      setError(
-        `Not a Kata progress file — ${reason}. Current progress is unchanged.`,
-      );
+      setError(interpolate(s['backup.importParseError'], { reason }));
     }
   }
 
@@ -109,7 +109,13 @@ export function ProgressBackup() {
       await progress.importState(pendingImport);
       setPendingImport(null);
       setAnnouncement(
-        `Progress replaced — ${count(pendingImport.checkpoints.length, 'Checkpoint')}, ${count(pendingImport.submittedChecklists.length, 'checklist')} imported.`,
+        interpolate(s['backup.importReplacedAnnouncement'], {
+          checkpoints: count(pendingImport.checkpoints.length, s['backup.checkpointNoun']),
+          checklists: count(
+            pendingImport.submittedChecklists.length,
+            s['backup.checklistNoun'],
+          ),
+        }),
       );
       importButton.current?.focus();
       // Same route, new location key: the nav Checkpoint count and the rows
@@ -118,9 +124,7 @@ export function ProgressBackup() {
     } catch (cause) {
       setPendingImport(null);
       const reason = cause instanceof Error ? cause.message : String(cause);
-      setError(
-        `Import failed — ${reason}. Current progress is unchanged.`,
-      );
+      setError(interpolate(s['backup.importFailedError'], { reason }));
     }
   }
 
@@ -132,7 +136,7 @@ export function ProgressBackup() {
           className="btn btn-ghost curriculum-backup-export"
           onClick={() => void exportProgress()}
         >
-          Export progress
+          {s['backup.exportLabel']}
         </button>
         <button
           ref={importButton}
@@ -140,14 +144,14 @@ export function ProgressBackup() {
           className="btn btn-ghost curriculum-backup-import"
           onClick={() => fileInput.current?.click()}
         >
-          Import progress
+          {s['backup.importLabel']}
         </button>
         <input
           ref={fileInput}
           type="file"
           accept="application/json,.json"
           hidden
-          aria-label="Progress file"
+          aria-label={s['backup.fileInputLabel']}
           onChange={(event) => {
             // Grab the File itself, not the FileList: in Chrome input.files
             // is the SAME live object across the reset below, so a captured
@@ -160,9 +164,7 @@ export function ProgressBackup() {
         />
       </div>
       <p className="text-muted curriculum-backup-note">
-        Backup as a file: export downloads {PROGRESS_FILE_NAME} — Checkpoints
-        and checklist answers. Import replaces current progress with a file's
-        contents.
+        {interpolate(s['backup.note'], { fileName: PROGRESS_FILE_NAME })}
       </p>
       {pendingImport !== null && (
         <div
@@ -170,13 +172,17 @@ export function ProgressBackup() {
           className="curriculum-backup-confirm"
           role="alertdialog"
           tabIndex={-1}
-          aria-label="Confirm import"
+          aria-label={s['backup.confirmDialogLabel']}
           aria-describedby={SUMMARY_ID}
         >
           <p className="curriculum-backup-summary" id={SUMMARY_ID}>
-            {count(pendingImport.checkpoints.length, 'Checkpoint')},{' '}
-            {count(pendingImport.submittedChecklists.length, 'checklist')} —
-            replace current progress?
+            {interpolate(s['backup.confirmSummary'], {
+              checkpoints: count(pendingImport.checkpoints.length, s['backup.checkpointNoun']),
+              checklists: count(
+                pendingImport.submittedChecklists.length,
+                s['backup.checklistNoun'],
+              ),
+            })}
           </p>
           <div className="curriculum-backup-confirm-actions">
             <button
@@ -184,14 +190,14 @@ export function ProgressBackup() {
               className="btn btn-primary curriculum-backup-replace"
               onClick={() => void confirmImport()}
             >
-              Replace progress
+              {s['backup.confirmReplace']}
             </button>
             <button
               type="button"
               className="btn btn-ghost"
               onClick={cancelImport}
             >
-              Cancel
+              {s['backup.confirmCancel']}
             </button>
           </div>
         </div>

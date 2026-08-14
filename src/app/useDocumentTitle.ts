@@ -1,6 +1,14 @@
 import { useEffect } from 'react';
 
-/** The tab's name on the Curriculum, and whenever no screen has named one. */
+/**
+ * The tab's name on the Curriculum, and whenever no screen has named one.
+ *
+ * Deliberately NOT a `src/strings/en.ts` key (#112): a product name is not
+ * translatable prose, the same call the reference app makes by keeping its
+ * own brand name in a dedicated `brand.ts` rather than `strings.json`. This
+ * is the one place it lives; every other "Kata" in the shell is this same
+ * literal, not a second copy of the decision.
+ */
 export const APP_TITLE = 'Kata';
 
 /**

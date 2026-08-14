@@ -16,6 +16,7 @@ import type {
   ModuleSummary,
 } from '../curriculum';
 import type { GateStatus, IProgress } from '../progress';
+import { interpolate, useStrings, type Strings } from '../strings/strings';
 
 /**
  * Module — the reading surface: header, Concept Page prose, Model Examples,
@@ -35,6 +36,7 @@ import type { GateStatus, IProgress } from '../progress';
  * historical and is not built.
  */
 export function ModuleScreen() {
+  const s = useStrings();
   const { id } = useParams();
   const curriculum = useCurriculum();
   const progress = useProgress();
@@ -57,7 +59,10 @@ export function ModuleScreen() {
   useDocumentTitle(
     module === undefined || module === null
       ? null
-      : `Module ${ordinalLabel(module.ordinal)} — ${module.title}`,
+      : interpolate(s['module.tabTitle'], {
+          ordinal: ordinalLabel(module.ordinal),
+          title: module.title,
+        }),
   );
 
   // The content would not load (offline, before this Module was ever read).
@@ -87,14 +92,14 @@ export function ModuleScreen() {
     <>
       <Link to="/" className="btn btn-ghost module-back">
         <BackArrowIcon />
-        Curriculum
+        {s['shell.backToCurriculum']}
       </Link>
       {/* Header: kicker + 44px title, status tag on the shared baseline,
           no rule underneath (design/README.md § Screens › 2 header). */}
       <header className="module-header">
         <div>
           <p className="module-kicker">
-            Module {ordinalLabel(module.ordinal)}
+            {interpolate(s['module.ordinalLabel'], { ordinal: ordinalLabel(module.ordinal) })}
           </p>
           <h1 className="module-title">{module.title}</h1>
         </div>
@@ -109,12 +114,12 @@ export function ModuleScreen() {
           <ConceptSection module={module} />
           <div className="hr module-rule" />
           <section>
-            <h2 className="module-section-label">Model Examples</h2>
+            <h2 className="module-section-label">{s['module.sectionLabel.modelExamples']}</h2>
             {module.modelExamples.length === 0 ? (
               // Pending copy per the prototype; also the quiet fallback for
               // a pack with no examples — never a blank section.
               <p className="text-muted module-pending-copy">
-                Model Examples arrive with the Concept Page.
+                {s['module.pending.modelExamples']}
               </p>
             ) : (
               module.modelExamples.map((example, index) => (
@@ -124,13 +129,12 @@ export function ModuleScreen() {
           </section>
           <div className="hr module-rule" />
           <section>
-            <h2 className="module-section-label">Exercises</h2>
+            <h2 className="module-section-label">{s['module.sectionLabel.exercises']}</h2>
             {module.exercises.length === 0 ? (
               // Zero briefs → the prototype's pending line: no cards, so a
               // pending Module exposes no navigable Exercise routes.
               <p className="text-muted module-pending-copy">
-                No Exercises yet — the first is generated from an Exercise
-                Spec.
+                {s['module.pending.exercises']}
               </p>
             ) : (
               <div className="module-exercises">
@@ -164,15 +168,15 @@ export function ModuleScreen() {
  * one simply renders no note.
  */
 function ConceptSection({ module }: { module: ModuleDetail }) {
+  const s = useStrings();
   if (module.pending) {
     return (
       <section>
-        <h2 className="module-section-label">Concept Page</h2>
+        <h2 className="module-section-label">{s['module.sectionLabel.conceptPage']}</h2>
         {/* The prototype's pending copy, verbatim (DevGym.dc.html § Module,
             pending section). */}
         <p className="text-muted module-pending-copy">
-          Concept Page pending — drafted by the Generator once this Module
-          unlocks; one human edit, then frozen.
+          {s['module.pending.conceptPage']}
         </p>
       </section>
     );
@@ -185,7 +189,7 @@ function ConceptSection({ module }: { module: ModuleDetail }) {
     <section>
       <div className="module-concept-heading">
         <h2 className="module-section-label module-section-label-inline">
-          Concept Page
+          {s['module.sectionLabel.conceptPage']}
         </h2>
         {note !== null && (
           <span className="text-muted module-concept-note">{note}</span>
@@ -229,16 +233,19 @@ export function ExitGateAside({
   nextModule: ModuleSummary | null; // null = nothing follows (Module 5)
   pending?: boolean; // true = the Module's content pack is not authored yet
 }) {
+  const s = useStrings();
   if (gate.passed && gate.checkpointAt !== null) {
     return (
       <aside className="module-aside">
         <div className="module-gate-poster">
-          <h2 className="module-gate-poster-label">Exit Gate</h2>
-          <div className="module-gate-passed">Passed.</div>
+          <h2 className="module-gate-poster-label">{s['gate.label']}</h2>
+          <div className="module-gate-passed">{s['gate.passedLine']}</div>
           <div className="module-gate-checkpoint">
-            Checkpoint · {formatCheckpointDate(gate.checkpointAt)}
+            {interpolate(s['gate.checkpointLine'], {
+              date: formatCheckpointDate(gate.checkpointAt),
+            })}
           </div>
-          <div className="module-gate-next">{nextModuleLine(nextModule)}</div>
+          <div className="module-gate-next">{nextModuleLine(s, nextModule)}</div>
         </div>
       </aside>
     );
@@ -250,10 +257,9 @@ export function ExitGateAside({
     return (
       <aside className="module-aside">
         <div className="module-gate-panel">
-          <h2 className="module-section-label">Exit Gate</h2>
+          <h2 className="module-section-label">{s['gate.label']}</h2>
           <p className="text-muted module-gate-note module-gate-note-pending">
-            The Behavioral Checklist arrives with the Concept Page — nothing
-            to submit yet.
+            {s['gate.pendingNote']}
           </p>
         </div>
       </aside>
@@ -264,7 +270,7 @@ export function ExitGateAside({
   return (
     <aside className="module-aside">
       <div className="module-gate-panel">
-        <h2 className="module-section-label">Exit Gate</h2>
+        <h2 className="module-section-label">{s['gate.label']}</h2>
         <div className="module-gate-condition">
           {checklistSubmitted ? (
             <GateCheckIcon />
@@ -276,17 +282,16 @@ export function ExitGateAside({
           )}
           <div>
             <div className="module-gate-condition-title">
-              Behavioral Checklist submitted
+              {s['gate.condition.title']}
             </div>
             <div className="text-muted module-gate-condition-status">
-              {checklistSubmitted ? 'Submitted' : 'Not yet submitted'}
+              {checklistSubmitted
+                ? s['gate.condition.submitted']
+                : s['gate.condition.notSubmitted']}
             </div>
           </div>
         </div>
-        <p className="text-muted module-gate-note">
-          Checkpoint-based — advance when the gate is passed, whether that
-          takes 2 days or 2 months.
-        </p>
+        <p className="text-muted module-gate-note">{s['gate.note']}</p>
       </div>
     </aside>
   );
@@ -305,12 +310,13 @@ export function ordinalLabel(ordinal: number): string {
  * the Exercise gate banner (#19): the following Module by ordinal and title,
  * or the closing line when nothing follows (Module 5).
  */
-export function nextModuleLine(nextModule: ModuleSummary | null): string {
-  // "… unlocked." with no "is" — the prototype's exact line (DevGym.dc.html
-  // § Module nextNote) and screens/02-state.png (#30).
+export function nextModuleLine(s: Strings, nextModule: ModuleSummary | null): string {
   return nextModule !== null
-    ? `Module ${ordinalLabel(nextModule.ordinal)} — ${nextModule.title} unlocked.`
-    : 'All five Modules passed — the Curriculum is complete.';
+    ? interpolate(s['gate.nextModuleLine'], {
+        ordinal: ordinalLabel(nextModule.ordinal),
+        title: nextModule.title,
+      })
+    : s['gate.allModulesPassedLine'];
 }
 
 /**
@@ -328,18 +334,19 @@ function ModuleStatusTag({
   gatePassed: boolean;
   inProgress: boolean;
 }) {
+  const s = useStrings();
   if (gatePassed || module.checkpointAt !== null) {
     return (
-      <span className="tag tag-accent module-header-tag">Exit Gate passed</span>
+      <span className="tag tag-accent module-header-tag">{s['status.gatePassed']}</span>
     );
   }
   if (inProgress) {
     return (
-      <span className="tag tag-outline module-header-tag">In progress</span>
+      <span className="tag tag-outline module-header-tag">{s['status.inProgress']}</span>
     );
   }
   return (
-    <span className="tag tag-neutral module-header-tag">Ready to start</span>
+    <span className="tag tag-neutral module-header-tag">{s['status.readyToStart']}</span>
   );
 }
 
@@ -420,13 +427,16 @@ function ExerciseCard({
   moduleId: string;
   exercise: ExerciseBrief;
 }) {
+  const s = useStrings();
   return (
     <Link
       to={`/modules/${moduleId}/exercises/${exercise.id}`}
       className="card module-exercise-card"
     >
       <span className="tag tag-outline">
-        {exercise.type === 'refactor' ? 'Refactor' : 'Construct'}
+        {exercise.type === 'refactor'
+          ? s['module.exercise.tagRefactor']
+          : s['module.exercise.tagConstruct']}
       </span>
       <div className="module-exercise-text">
         <div className="module-exercise-title">{exercise.title}</div>
@@ -486,16 +496,17 @@ function ArrowRightIcon() {
  * scroll inside their cell — never the page (all in app.css).
  */
 function ModelExampleFigure({ example }: { example: ModelExample }) {
+  const s = useStrings();
   return (
     <figure className="module-example">
       <div className="module-example-grid">
         <div className="module-example-cell">
-          <div className="module-example-label">Before</div>
+          <div className="module-example-label">{s['module.example.before']}</div>
           <pre className="module-example-code">{example.before}</pre>
         </div>
         <div className="module-example-cell">
           <div className="module-example-label module-example-label-after">
-            After
+            {s['module.example.after']}
           </div>
           <pre className="module-example-code">{example.after}</pre>
         </div>
