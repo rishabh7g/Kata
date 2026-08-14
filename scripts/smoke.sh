@@ -231,7 +231,7 @@ end
 
 # ─── 7. icons and favicon ──────────────────────────────────────────────────
 begin icons 16
-for icon in icons/icon-192.png icons/icon-512.png icons/icon-maskable-512.png; do
+for icon in icons/icon-192.png icons/icon-512.png icons/icon-maskable-512.png icons/apple-touch-icon-180.png icons/favicon-32.png; do
   if get "${URL}${icon}" "$WORK/$(basename "$icon")"; then
     magic "$WORK/$(basename "$icon")" 'PNG'
   fi
