@@ -613,14 +613,13 @@ describe('Module screen', () => {
     expect(container.textContent ?? '').not.toMatch(/unlocked\./);
   });
 
-  it('renders the Checkpoint note; no schedule talk, no Test-Suites row (#3)', async () => {
+  it('has no schedule talk, no Test-Suites row (#3, #113)', async () => {
     const { container } = await renderAt('/modules/m01');
     await screen.findByText('Exit Gate');
 
-    expect(
-      screen.getByText(/Checkpoint-based — advance when the gate is passed/),
-    ).toBeInTheDocument();
-
+    // The read-once "Checkpoint-based — advance when the gate is passed…"
+    // reassurance note was deleted (#113): it carried no live data, was not
+    // an instruction, and guarded nothing.
     const text = container.textContent ?? '';
     // Nothing calendar-shaped anywhere on the screen.
     expect(text).not.toMatch(/timeline|streak|schedule|deadline|per week/i);

@@ -214,15 +214,13 @@ describe('the contrast floor', () => {
       const accentText = /var\(--color-accent-text\)/;
       // Links, ghost labels, outline tags, kickers, the AFTER label, the
       // import error — the roles the QA sweep measured at 3.47–3.76 (#71).
+      // `.curriculum-kicker` styled the read-once Curriculum kicker deleted
+      // on the copy pass (#113); the two remaining screen kickers stay.
       expect(rule('a')).toMatch(accentText);
       expect(rule('.btn-ghost')).toMatch(accentText);
       expect(rule('.tag-outline')).toMatch(accentText);
       expect(rule('.card-kicker')).toMatch(accentText);
-      for (const kicker of [
-        '.curriculum-kicker',
-        '.module-kicker',
-        '.exercise-kicker',
-      ]) {
+      for (const kicker of ['.module-kicker', '.exercise-kicker']) {
         expect(rule(kicker)).toMatch(accentText);
       }
       expect(rule('.curriculum-backup-error')).toMatch(accentText);

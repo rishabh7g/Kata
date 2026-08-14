@@ -66,10 +66,13 @@ export const STRINGS_KEYS = [
   'status.readyToStart',
   'gate.checkpointLine',
 
-  // Curriculum screen.
-  'curriculum.kicker',
+  // Curriculum screen. `curriculum.kicker` ("Curriculum — fixed order,
+  // foundations down") and `curriculum.intro` ("Five Modules. Advance by
+  // passing each Exit Gate…") were removed on the read-once copy pass
+  // (#113) — both were pure explainer, read once and skimmed past forever
+  // after, and neither carried live data, instructed a step, or guarded a
+  // destructive action.
   'curriculum.title',
-  'curriculum.intro',
   'curriculum.row.locked',
 
   // Module screen.
@@ -96,7 +99,10 @@ export const STRINGS_KEYS = [
   'gate.condition.title',
   'gate.condition.submitted',
   'gate.condition.notSubmitted',
-  'gate.note',
+  // `gate.note` ("Checkpoint-based — advance when the gate is passed,
+  // whether that takes 2 days or 2 months.") was removed on #113: pure
+  // reassurance copy that carried no data, instructed nothing, guarded
+  // nothing.
   'gate.exercisePassedLine',
 
   // Exercise screen.
@@ -173,9 +179,7 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   /** The recorded Checkpoint's date, already formatted by the caller. */
   'gate.checkpointLine': ['{date}'],
 
-  'curriculum.kicker': [],
   'curriculum.title': [],
-  'curriculum.intro': [],
   'curriculum.row.locked': [],
 
   /** The zero-padded ordinal — `Module {ordinal}` reads `Module 03`. */
@@ -202,7 +206,6 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'gate.condition.title': [],
   'gate.condition.submitted': [],
   'gate.condition.notSubmitted': [],
-  'gate.note': [],
   'gate.exercisePassedLine': [],
 
   /** The brief's own id and its Module's ordinal. */
