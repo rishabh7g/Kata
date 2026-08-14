@@ -6,6 +6,7 @@ import { useDocumentTitle } from '../app/useDocumentTitle';
 import { useModuleSummaries } from '../app/useModuleSummaries';
 import type { ModuleId, ModuleSummary } from '../curriculum';
 import type { IProgress } from '../progress';
+import { interpolate, useStrings } from '../strings/strings';
 import { ProgressBackup } from './ProgressBackup';
 
 /**
@@ -20,6 +21,7 @@ import { ProgressBackup } from './ProgressBackup';
  * carry: it drives the outline `In progress` tag (#18).
  */
 export function CurriculumScreen() {
+  const s = useStrings();
   const modules = useModuleSummaries(useCurriculum());
   const draftModuleIds = useDraftModuleIds(useProgress(), modules);
   // The home screen is the app itself: the tab reads plain `Kata` (#77).
@@ -29,15 +31,10 @@ export function CurriculumScreen() {
     <>
       <header className="curriculum-header">
         <div>
-          <p className="curriculum-kicker">
-            Curriculum — fixed order, foundations down
-          </p>
-          <h1 className="curriculum-title">Learn design by producing code.</h1>
+          <p className="curriculum-kicker">{s['curriculum.kicker']}</p>
+          <h1 className="curriculum-title">{s['curriculum.title']}</h1>
         </div>
-        <p className="text-muted curriculum-intro">
-          Five Modules. Advance by passing each Exit Gate — the Behavioral
-          Checklist, self-assessed. No timelines, no streaks.
-        </p>
+        <p className="text-muted curriculum-intro">{s['curriculum.intro']}</p>
       </header>
       {modules !== null && (
         <>
@@ -156,27 +153,28 @@ function StatusTag({
   // #73), so the capture is untouched, and placed here so it is read where
   // every other row's state is read. It also answers the question the visual
   // cues answer — why activating the row does nothing.
+  const s = useStrings();
   if (!module.unlocked) {
     return (
-      <span className="visually-hidden">
-        Locked — pass the previous Module's Exit Gate to unlock it.
-      </span>
+      <span className="visually-hidden">{s['curriculum.row.locked']}</span>
     );
   }
   if (module.checkpointAt !== null) {
     return (
       <>
-        <span className="tag tag-accent">Exit Gate passed</span>
+        <span className="tag tag-accent">{s['status.gatePassed']}</span>
         <span className="text-muted curriculum-checkpoint-date">
-          Checkpoint · {formatCheckpointDate(module.checkpointAt)}
+          {interpolate(s['gate.checkpointLine'], {
+            date: formatCheckpointDate(module.checkpointAt),
+          })}
         </span>
       </>
     );
   }
   if (inProgress) {
-    return <span className="tag tag-outline">In progress</span>;
+    return <span className="tag tag-outline">{s['status.inProgress']}</span>;
   }
-  return <span className="tag tag-neutral">Ready to start</span>;
+  return <span className="tag tag-neutral">{s['status.readyToStart']}</span>;
 }
 
 /** '2026-06-12T…Z' → '12 Jun 2026', the format the mock shows. */

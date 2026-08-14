@@ -13,7 +13,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    // scripts/ carries the check-script tests (scripts/README.md).
-    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts'],
+    // scripts/ carries the check-script tests (scripts/README.md); tools/
+    // carries the strings-pack build checker's own tests (#112).
+    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts', 'tools/**/*.test.ts'],
   },
 });

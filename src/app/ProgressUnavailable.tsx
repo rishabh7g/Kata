@@ -1,6 +1,7 @@
 import { describeError } from './describeError';
 import { KataMark } from './KataMark';
 import { Notice } from './Notice';
+import { interpolate, useStrings } from '../strings/strings';
 
 /**
  * What the learner sees when IndexedDB refuses to open (#68): site data
@@ -15,6 +16,7 @@ import { Notice } from './Notice';
  * enough to build them.
  */
 export function ProgressUnavailable({ error }: { error: unknown }) {
+  const s = useStrings();
   const detail = describeError(error);
   const origin = window.location.host;
 
@@ -28,18 +30,9 @@ export function ProgressUnavailable({ error }: { error: unknown }) {
       </header>
       <main className="app-main">
         <div className="app-container">
-          <Notice title="Kata cannot open its progress database">
-            <p>
-              Kata keeps your Checkpoints and Behavioral Checklist answers in
-              this browser and nowhere else, and this browser will not let it
-              open that storage. Site data is blocked for {origin}, or this
-              window is a private or hardened mode that blocks it.
-            </p>
-            <p>
-              Allow site data for {origin} and reload the page. Checkpoints
-              already recorded are untouched — they are still in the browser
-              that recorded them.
-            </p>
+          <Notice title={s['notice.progressUnavailable.title']}>
+            <p>{interpolate(s['notice.progressUnavailable.body1'], { origin })}</p>
+            <p>{interpolate(s['notice.progressUnavailable.body2'], { origin })}</p>
             {detail !== null && (
               <p className="text-muted app-notice-detail">{detail}</p>
             )}

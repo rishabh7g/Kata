@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { BackArrowIcon } from './BackArrowIcon';
 import { describeError } from './describeError';
 import { Notice } from './Notice';
+import { useStrings } from '../strings/strings';
 
 /**
  * What the Module and Exercise screens show when `ICurriculum.getModule(id)`
@@ -28,33 +29,28 @@ export function ModuleUnavailable({
   error: unknown;
   onRetry: () => void;
 }) {
+  const s = useStrings();
   const detail = describeError(error);
 
   return (
     <>
       <Link to="/" className="btn btn-ghost module-back">
         <BackArrowIcon />
-        Curriculum
+        {s['shell.backToCurriculum']}
       </Link>
-      <Notice title="This Module's content is not available">
+      <Notice title={s['notice.moduleUnavailable.title']}>
         <p>
-          Kata reads this Module from{' '}
-          <code>content/modules/{moduleId}.json</code>, fetched the moment you
-          open it, and that request failed. A Module is stored for offline use
-          as it is read — so one you have not opened online yet is not
-          available offline.
+          {s['notice.moduleUnavailable.body1Before']}{' '}
+          <code>content/modules/{moduleId}.json</code>
+          {s['notice.moduleUnavailable.body1After']}
         </p>
-        <p>
-          Reconnect and try again. Nothing is lost: your Checkpoints and
-          Behavioral Checklist answers live in this browser, not in the file
-          that failed to load.
-        </p>
+        <p>{s['notice.moduleUnavailable.body2']}</p>
         {detail !== null && (
           <p className="text-muted app-notice-detail">{detail}</p>
         )}
         <div className="app-notice-actions">
           <button type="button" className="btn btn-ghost" onClick={onRetry}>
-            Try again
+            {s['notice.moduleUnavailable.retry']}
           </button>
         </div>
       </Notice>

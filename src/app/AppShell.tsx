@@ -2,6 +2,7 @@ import { Link, Outlet } from 'react-router-dom';
 import { KataMark } from './KataMark';
 import { useCurriculum } from './CurriculumContext';
 import { useModuleSummaries } from './useModuleSummaries';
+import { interpolate, useStrings } from '../strings/strings';
 
 /**
  * The chrome every screen sits in: the fixed nav with the Kata lockup and the
@@ -15,6 +16,7 @@ import { useModuleSummaries } from './useModuleSummaries';
  * every navigation, so passing an Exit Gate moves the count on return.
  */
 export function AppShell() {
+  const s = useStrings();
   const modules = useModuleSummaries(useCurriculum());
   const passed = modules?.filter((m) => m.checkpointAt !== null).length;
 
@@ -26,7 +28,11 @@ export function AppShell() {
           Kata
         </Link>
         <span className="text-muted app-nav-checkpoints">
-          {modules !== null && `Checkpoints ${passed} / ${modules.length}`}
+          {modules !== null &&
+            interpolate(s['shell.checkpointCount'], {
+              passed: passed ?? 0,
+              total: modules.length,
+            })}
         </span>
       </header>
       <main className="app-main">
