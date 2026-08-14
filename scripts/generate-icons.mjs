@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 // Regenerates the manifest's raster app icons into public/icons/.
 //
-//   node scripts/generate-icons.mjs
+//   npm run icons
+//
+// Generated, not built (house UI standard): icons are committed and this
+// script is the receipt. It does not run in `build` — an icon set
+// regenerating every build is a binary diff nobody reads. Re-run it by hand
+// whenever design/assets/kata-mark.svg or design/tokens.json's color.bg
+// changes, and commit whatever comes out (a clean tree stays clean).
 //
 // The Kata mark (design/assets/kata-mark.svg) is three axis-aligned squares on
 // the ground colour from design/tokens.json — both are read here, so the icons
