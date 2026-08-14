@@ -96,3 +96,42 @@ describe('manifest icons', () => {
     expect(`${bytes.readUInt32BE(16)}x${bytes.readUInt32BE(20)}`).toBe(icon.sizes);
   });
 });
+
+// The two icons the house UI standard requires that sit outside the
+// manifest's own `icons` array (#109): iOS reads apple-touch-icon-180.png
+// straight off index.html's <link>, and favicon-32.png is the PNG fallback
+// tab icon for browsers that will not take the SVG favicon.
+describe('the two icons outside the manifest (#109)', () => {
+  const read = (relative: string): Buffer =>
+    readFileSync(new URL(`../../public/${relative}`, import.meta.url));
+
+  it('ships apple-touch-icon-180.png at 180×180 and links it from index.html', () => {
+    const bytes = read('icons/apple-touch-icon-180.png');
+
+    expect(bytes.subarray(1, 4).toString('ascii')).toBe('PNG');
+    expect(`${bytes.readUInt32BE(16)}x${bytes.readUInt32BE(20)}`).toBe('180x180');
+    expect(indexHtml).toContain(
+      '<link rel="apple-touch-icon" href="%BASE_URL%icons/apple-touch-icon-180.png" />',
+    );
+    // Not the 192 aliased in as an apple-touch-icon — that forces iOS to
+    // downscale a 192 to 180 and antialias the mark's integer-coordinate
+    // squares, which the generator wrote to need none.
+    expect(indexHtml).not.toContain('rel="apple-touch-icon" href="%BASE_URL%icons/icon-192.png"');
+  });
+
+  it('ships favicon-32.png at 32×32 and links it from index.html', () => {
+    const bytes = read('icons/favicon-32.png');
+
+    expect(bytes.subarray(1, 4).toString('ascii')).toBe('PNG');
+    expect(`${bytes.readUInt32BE(16)}x${bytes.readUInt32BE(20)}`).toBe('32x32');
+    expect(indexHtml).toContain(
+      '<link rel="icon" type="image/png" sizes="32x32" href="%BASE_URL%icons/favicon-32.png" />',
+    );
+  });
+
+  it('neither new icon is declared in the manifest icons array', () => {
+    const sources = manifest.icons.map((icon) => icon.src);
+    expect(sources).not.toContain('./icons/apple-touch-icon-180.png');
+    expect(sources).not.toContain('./icons/favicon-32.png');
+  });
+});
