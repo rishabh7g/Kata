@@ -7,6 +7,7 @@ import { ProgressProvider } from './ProgressContext';
 import { ProgressUnavailable } from './ProgressUnavailable';
 import { createCurriculum, createHttpContentSource } from '../curriculum';
 import { createProgress, type IProgress } from '../progress';
+import { StandaloneZoomLock } from '../pwa/StandaloneZoomLock';
 
 /**
  * Start Kata into `container`. Lives here rather than in main.tsx so the two
@@ -35,6 +36,7 @@ export async function startKata(
     console.error('Kata could not open its progress database', error);
     root.render(
       <StrictMode>
+        <StandaloneZoomLock />
         <ProgressUnavailable error={error} />
       </StrictMode>,
     );
@@ -52,6 +54,7 @@ export async function startKata(
 
   root.render(
     <StrictMode>
+      <StandaloneZoomLock />
       {/* Hash routing: GitHub Pages serves static files only, so a reloaded
           deep link has to resolve to /Kata/index.html. */}
       <CurriculumProvider curriculum={curriculum}>
