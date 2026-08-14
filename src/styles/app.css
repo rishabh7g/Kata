@@ -23,6 +23,10 @@
   /* The prototype's mono stack (design/DevGym.dc.html); tokens.json
      typeScale.app carries the code sizes, this carries the family once. */
   --font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  /* The house UI standard's body-text floor (#108): with zoom off once the
+     app is installed, no reading text may render below this. */
+  --text-body-min: 16px;
 }
 
 @media (min-width: 768px) {
@@ -167,17 +171,17 @@ html, body {
 }
 
 .app-notice p {
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .app-notice p:last-child {
   margin-bottom: 0;
 }
 
-/* The browser's own error text: caption size (11), mono, muted. */
+/* The browser's own error text: body-floor size (#108), mono, muted. */
 .app-notice-detail {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 16px;
 }
 
 /* The one action a notice may offer (#69's Try again) — ghost only, and
@@ -191,7 +195,7 @@ html, body {
 /* Inline file paths inside a notice read as data, not as prose. */
 .app-notice code {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 16px;
 }
 
 /* ── Curriculum screen (#10) — design/README.md § Screens › 1 ─────────────
@@ -229,7 +233,7 @@ html, body {
 
 .curriculum-intro {
   margin: 0 0 6px;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .curriculum-row {
@@ -271,7 +275,7 @@ a.curriculum-row:hover {
 
 .curriculum-row-desc {
   margin: 0;
-  font-size: 13px;
+  font-size: 16px;
   max-width: 62ch;
 }
 
@@ -282,9 +286,9 @@ a.curriculum-row:hover {
   gap: 6px;
 }
 
-/* tokens.json typeScale.app.caption: 11. */
+/* tokens.json typeScale.app.caption: raised to the 16px body-text floor (#108). */
 .curriculum-checkpoint-date {
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .curriculum-row-icon {
@@ -323,7 +327,7 @@ a.curriculum-row:hover {
 
 /* ── Progress backup (#29) — the quiet footer under the closing rule ──────
    Ghost controls only (design/styles.css .btn-ghost); the note and error
-   at tokens.json typeScale.app.caption (11px). */
+   at tokens.json typeScale.app.caption, raised to the 16px body-text floor (#108). */
 .curriculum-backup {
   margin-top: 14px;
   padding-bottom: 40px;
@@ -335,7 +339,7 @@ a.curriculum-row:hover {
 }
 
 .curriculum-backup-note {
-  font-size: 11px;
+  font-size: 16px;
   margin: 8px 0 0;
   max-width: 62ch;
 }
@@ -352,7 +356,7 @@ a.curriculum-row:hover {
 .curriculum-backup-summary {
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 14px;
+  font-size: 16px;
   margin: 0 0 10px;
 }
 
@@ -363,7 +367,7 @@ a.curriculum-row:hover {
 
 .curriculum-backup-error {
   color: var(--color-accent-text);
-  font-size: 11px;
+  font-size: 16px;
   margin: 10px 0 0;
   max-width: 62ch;
 }
@@ -449,7 +453,8 @@ a.curriculum-row:hover {
 
 /* The Concept Page label row (#30): the label + the pack's draft/edited/frozen note
    on one baseline, as the prototype lays it out (DevGym.dc.html § Module:
-   flex baseline, gap 12, note muted at 11px) and screens/02–03 show. */
+   flex baseline, gap 12, note muted at the 16px body-text floor (#108)) and
+   screens/02–03 show. */
 .module-concept-heading {
   display: flex;
   align-items: baseline;
@@ -461,9 +466,9 @@ a.curriculum-row:hover {
   margin: 0;
 }
 
-/* tokens.json typeScale.app.caption: 11. */
+/* tokens.json typeScale.app.caption: raised to the 16px body-text floor (#108). */
 .module-concept-note {
-  font-size: 11px;
+  font-size: 16px;
 }
 
 /* Section separators: the 2px .hr from styles.css at the prototype's 32px. */
@@ -472,10 +477,11 @@ a.curriculum-row:hover {
 }
 
 /* Pending-Module placeholder copy (#28): muted lines at tokens.json
-   typeScale.app.desc (13), capped at the prototype's 60ch. */
+   typeScale.app.desc, raised to the 16px body-text floor (#108), capped at
+   the prototype's 60ch. */
 .module-pending-copy {
   max-width: 60ch;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 /* Concept Page prose, capped at 66ch (design/README.md § Screens › 2). The
@@ -486,7 +492,7 @@ a.curriculum-row:hover {
 
 .module-concept code {
   font-family: var(--font-mono);
-  font-size: 0.9em;
+  font-size: 16px;
   background: var(--color-surface);
   padding: 1px 4px;
 }
@@ -528,12 +534,13 @@ a.curriculum-row:hover {
   color: var(--color-accent-text);
 }
 
-/* tokens.json typeScale.app.codeExamples: 13 / 1.65 mono. Long lines scroll
+/* tokens.json typeScale.app.codeExamples: raised to 16 / 1.65 mono, the
+   body-text floor (#108). Long lines scroll
    inside the cell — the page never scrolls horizontally. */
 .module-example-code {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.65;
   overflow-x: auto;
 }
@@ -579,9 +586,9 @@ a.curriculum-row:hover {
   font-size: 16px;
 }
 
-/* tokens.json typeScale.app.meta: 12, muted. */
+/* tokens.json typeScale.app.meta: raised to the 16px body-text floor (#108). */
 .module-exercise-smell {
-  font-size: 12px;
+  font-size: 16px;
   margin-top: 3px;
 }
 
@@ -641,17 +648,17 @@ a.curriculum-row:hover {
 }
 
 .module-gate-condition-title {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
 }
 
 .module-gate-condition-status {
-  font-size: 12px;
+  font-size: 16px;
 }
 
-/* tokens.json typeScale.app.meta: 12, muted. */
+/* tokens.json typeScale.app.meta: raised to the 16px body-text floor (#108). */
 .module-gate-note {
-  font-size: 12px;
+  font-size: 16px;
   margin: 14px 0 0;
 }
 
@@ -690,12 +697,12 @@ a.curriculum-row:hover {
 
 .module-gate-checkpoint {
   margin-top: 16px;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 /* Next-Module-unlocked line (or Module 5's closing line). */
 .module-gate-next {
-  font-size: 13px;
+  font-size: 16px;
   margin-top: 4px;
 }
 
@@ -791,13 +798,14 @@ a.curriculum-row:hover {
 .exercise-spec-value {
   padding: 10px 0;
   border-top: 1px solid var(--color-divider);
-  font-size: 14px;
+  font-size: 16px;
 }
 
-/* The Size budget value is mono 13px (design/README.md § Screens › 3). */
+/* The Size budget value is mono, at the 16px body-text floor (#108)
+   (design/README.md § Screens › 3). */
 .exercise-spec-value-mono {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 16px;
 }
 
 /* The section label + the Immutable accent tag on one line. */
@@ -808,15 +816,17 @@ a.curriculum-row:hover {
   margin-bottom: 8px;
 }
 
-/* The warning note: 12px muted, capped at 60ch (prototype § Exercise). */
+/* The warning note: body-floor size, muted, capped at 60ch (#108;
+   prototype § Exercise). */
 .exercise-interface-note {
-  font-size: 12px;
+  font-size: 16px;
   max-width: 60ch;
   margin: 0 0 12px;
 }
 
 /* The C# block, display-only: surface fill, 2px divider border, 16/18
-   padding (tokens.json typeScale.app.codeTargetInterface: 12.5 / 1.6 mono).
+   padding (tokens.json typeScale.app.codeTargetInterface: raised to 16 / 1.6
+   mono, the body-text floor (#108)).
    Long lines scroll inside the block — the page never scrolls sideways. */
 .exercise-interface-code {
   margin: 0;
@@ -824,7 +834,7 @@ a.curriculum-row:hover {
   border: 2px solid var(--color-divider);
   padding: 16px 18px;
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 16px;
   line-height: 1.6;
   overflow-x: auto;
 }
@@ -833,12 +843,12 @@ a.curriculum-row:hover {
    and underline), or the quiet disabled note while the brief still carries
    the null placeholder (#23). */
 .exercise-folder-link {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .exercise-folder-pending,
 .exercise-folder-note {
-  font-size: 12px;
+  font-size: 16px;
   max-width: 60ch;
   margin: 0;
 }
@@ -849,7 +859,7 @@ a.curriculum-row:hover {
 
 .exercise-folder-note code {
   font-family: var(--font-mono);
-  font-size: 0.95em;
+  font-size: 16px;
 }
 
 /* The right column: sticky at the shared aside offset (tokens.json
@@ -877,7 +887,7 @@ a.curriculum-row:hover {
 
 /* tokens.json typeScale.app.caption: 11. */
 .exercise-checklist-meta {
-  font-size: 11px;
+  font-size: 16px;
 }
 
 /* One check: minor 1px rule on top (tokens.json layout.rules.minor). */
@@ -887,7 +897,7 @@ a.curriculum-row:hover {
 }
 
 .exercise-checklist-prompt {
-  font-size: 14px;
+  font-size: 16px;
   margin-bottom: 10px;
   max-width: 62ch;
 }
@@ -906,7 +916,7 @@ a.curriculum-row:hover {
 }
 
 .exercise-checklist-note {
-  font-size: 11px;
+  font-size: 16px;
   margin: 8px 0 0;
 }
 
@@ -916,7 +926,8 @@ a.curriculum-row:hover {
   padding: 18px 20px;
 }
 
-/* Check + `Submitted · time` — 14px/800 (design/README.md § Screens › 3). */
+/* Check + `Submitted · time` — 16px/800, the body-text floor (#108;
+   design/README.md § Screens › 3). */
 .exercise-checklist-submitted-line {
   display: flex;
   align-items: center;
@@ -924,7 +935,7 @@ a.curriculum-row:hover {
   margin-bottom: 12px;
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 /* Question/answer rows: 1px rules, answers at 600 weight. */
@@ -937,18 +948,19 @@ a.curriculum-row:hover {
 }
 
 .exercise-checklist-row-question {
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .exercise-checklist-row-answer {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
 }
 
 /* ── Gate banner (#19) — design/README.md § Screens › 3 › Gate banner ─────
    Under the checklist panel once the gate passes: the accent field with
    bg-colored type (tokens.json semantics.passed), sized per the prototype
-   (§ Exercise): 18/20 padding, 16px/800 line, 13px next-Module line. */
+   (§ Exercise): 18/20 padding, 16px/800 line, 16px next-Module line, the
+   body-text floor (#108). */
 .exercise-gate-banner {
   background: var(--color-accent);
   color: var(--color-bg);
@@ -962,6 +974,6 @@ a.curriculum-row:hover {
 }
 
 .exercise-gate-banner-next {
-  font-size: 13px;
+  font-size: 16px;
   margin-top: 6px;
 }
