@@ -104,6 +104,29 @@ node scripts/draft-exercise.mjs path/to/brief.json --dry-run  # print the prompt
 - After review, `dotnet build tests/Exercise.Tests.csproj` inside the folder
   must pass; CI will compile every committed folder (#22).
 
+## Generating: `npm run icons` (#109, #110)
+
+Cuts the raster app icons into `public/icons/` from the brand mark and design
+tokens — no hand-drawn PNG, no second copy of the mark's geometry or hexes.
+
+```sh
+npm run icons
+```
+
+- Reads `design/assets/kata-mark.svg` (geometry) and `design/tokens.json`'s
+  `color.bg` (ground colour), and writes deterministic PNGs — squares on
+  integer coordinates need no antialiasing, so the bytes are identical every
+  run. A clean tree stays clean; re-running it is never a diff by itself.
+- **Generated, not built** (house UI standard): the icons are committed and
+  this script is the receipt. It does not run in `npm run build` — an icon
+  set regenerating every build is a binary diff nobody reads. Re-run it by
+  hand whenever the mark or the ground token changes, and commit whatever
+  comes out.
+- Prints one line per file: name, size, byte count, a short sha256.
+- `apple-touch-icon-180.png` and `favicon-32.png` sit outside the web app
+  manifest's own `icons` array — they're read by `index.html`'s `<link>`
+  tags instead (`src/pwa/manifest.test.ts` covers both).
+
 ## CI: exercise Test Suites must compile (#22)
 
 `build-exercises.sh` also runs in `.github/workflows/exercises.yml` — its own
