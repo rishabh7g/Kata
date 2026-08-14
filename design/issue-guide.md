@@ -13,6 +13,46 @@ Issues are the contract between this design package and the code. Keep them smal
 5. **Design changes flow doc-first.** If implementation pressure suggests changing a Target Interface or a screen, the issue's outcome is an edit to `docs/engineering.md` / this package — never code that drifts from the docs.
 6. **Verification grows with the product.** Every issue that adds a route, an asset, or a content file carries an acceptance criterion adding a matching check line to `scripts/smoke.sh` (the standing convention in `scripts/README.md`). Instruct verification through the terse-output scripts — one line on success, read the log only on FAIL.
 
+## UI copy ban list and the interaction-depth question (house UI standard, #115)
+
+The house UI standard requires every app to declare its own copy ban list on
+its issue template — "the list is per-app; having one is the rule" — and to
+carry one review question that cannot be checked mechanically. This section
+is the source; `.github/ISSUE_TEMPLATE/screen-or-flow.md` reproduces it
+verbatim rather than pointing back here, so the author never has to go find
+it. If the two ever disagree, this section is the one to trust and the
+template gets fixed to match.
+
+**Kata's copy ban list** — words and constructions this app does not ship:
+
+- *streak*, *daily goal*, *days left*, *% complete*, *XP*, *score* — Kata is
+  checkpoint-based and says so; none of these exist in its model.
+- *just*, *simply*, *easy* — reassurance words in instructional copy.
+- Any string implying the app judges the learner's code. Kata is read-only
+  and never runs anything.
+
+This is a **different list** from ground rule 1's vocabulary ban (*lesson,
+course, level, quiz, flashcard, grade, score*, plus `docs/ubiquitous-language.md`
+§ Removed terms): that one is Kata's domain vocabulary, checked against every
+issue. This one is UI writing style, checked against copy a screen renders.
+
+**The keeper test** (#113) for any new copy an issue adds: a string survives
+only if it (1) carries live data — a count, a date, a name; (2) is the only
+instruction on a step; or (3) guards a destructive action. Everything else is
+a read-once explainer and does not ship.
+
+**The interaction-depth review question**, asked on every issue that touches
+a screen:
+
+> Does this add a second way to reach the same content?
+
+The answer must be no. A detail screen's list row is a link to it, never a
+disclosure alongside one — two affordances to the same content is a decision
+the learner pays for on every visit (`design/README.md` and #115's own issue
+body carry the full rule). This one cannot be tested mechanically — no
+`aria-expanded`, no `<details>`, no `scripts/smoke.sh` line catches it — which
+is exactly why it is a standing review question rather than a one-off fix.
+
 ## Issue anatomy
 
 ```markdown
@@ -54,6 +94,8 @@ Labels in use: `screen:curriculum | screen:module | screen:exercise`, `area:fron
 - [ ] States covered are named (locked / fresh / in progress / passed / submitted / pending)
 - [ ] No value hard-coded in the issue that `tokens.json` already carries
 - [ ] Nothing asks for streaks, scores, timers, a code editor, or anything about the state of the learner's code (explicit non-goals)
+- [ ] No new copy in the issue uses a word from the UI copy ban list above, and any new copy passes the keeper test
+- [ ] If the issue touches a screen: answered "no" to "Does this add a second way to reach the same content?"
 
 ## Worked example
 
