@@ -146,7 +146,20 @@ const en = {
       pending:
         "This Exercise's folder is not committed yet — the GitHub link appears here once it is.",
       linkLabel: "Open this Exercise's folder on GitHub",
-      noteBefore: 'Clone or copy the folder, review its Test Suite before starting, and run',
+      // The only instruction on this step (#141) — the keeper test's second
+      // clause (design/issue-guide.md § UI copy ban list): nothing else on
+      // the screen tells the learner how to get the Test Suite running, and
+      // the two facts that decide whether it runs at all lived nowhere the
+      // learner could read them BEFORE cloning. The .NET SDK is theirs to
+      // install (Kata never runs anything, so a missing SDK is silence with
+      // no explanation on screen), and `dotnet test` only works from the
+      // Exercise folder's `tests/` directory — a fact that until now
+      // appeared solely in the cloned folder's own README, one step too
+      // late. Split around the one inline `<code>` the note carries;
+      // `tests/` stays prose so the shell keeps exactly one allowed literal
+      // (`src/shellPurity.test.ts` § ALLOWED_LITERALS).
+      noteBefore:
+        "Clone or copy the folder and review its Test Suite before starting. Running the Test Suite needs the .NET SDK installed on your own machine — from the Exercise folder's tests/ directory, run",
       noteAfter: 'in your own IDE.',
     },
   },
