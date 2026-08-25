@@ -130,7 +130,6 @@ html, body {
  * different things — this is the seam between them.
  */
 .module-section-label,
-.module-section-label-inline,
 .module-gate-poster-label,
 .exercise-section-label,
 .exercise-section-label-inline {
@@ -454,25 +453,12 @@ a.curriculum-row:hover {
   margin: 0 0 14px;
 }
 
-/* The Concept Page label row (#30): the label + the pack's draft/edited/frozen note
-   on one baseline, as the prototype lays it out (DevGym.dc.html § Module:
-   flex baseline, gap 12, note muted at the 16px body-text floor (#108)) and
-   screens/02–03 show. */
-.module-concept-heading {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.module-section-label-inline {
-  margin: 0;
-}
-
-/* tokens.json typeScale.app.caption: raised to the 16px body-text floor (#108). */
-.module-concept-note {
-  font-size: 16px;
-}
+/* The Concept Page label row (#30) — the label + the pack's
+   draft/edited/frozen note on one baseline — is gone with the note it
+   existed to carry (#139): the Concept Page label is now the same plain
+   `.module-section-label` every other section uses, so
+   `.module-concept-heading`, `.module-section-label-inline` and
+   `.module-concept-note` have no markup left to style. */
 
 /* Section separators: the 2px .hr from styles.css at the prototype's 32px. */
 .module-rule {

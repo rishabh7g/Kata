@@ -236,19 +236,65 @@ describe('Module screen', () => {
     ]);
   });
 
-  it('lifts the draft/edited/frozen note into the Concept Page label row (#30)', async () => {
+  // #139: the packs' `*LLM first draft · human-edited once · frozen*` line
+  // is authoring provenance, not learning content. It stays in the committed
+  // markdown and reaches no part of the screen — neither the label row it
+  // used to sit in (#30) nor, once that display went, the prose body.
+  it('renders no provenance note anywhere on an authored Module (#139)', async () => {
     const { container } = await renderAt('/modules/m01');
+    await screen.findByText('Concept Page');
 
-    // Beside the section label on one baseline (screens/02–03, § Module) —
-    // not as the first prose paragraph.
-    const note = await screen.findByText(
-      'LLM first draft · human-edited once · frozen',
-    );
-    expect(note).toHaveClass('module-concept-note');
-    expect(note.closest('.module-concept-heading')).toBeInTheDocument();
+    expect(container.textContent ?? '').not.toContain('LLM first draft');
+    expect(container.textContent ?? '').not.toContain('human-edited once');
+    expect(container.querySelector('.module-concept-note')).toBeNull();
+    expect(container.querySelector('.module-concept-heading')).toBeNull();
+
+    // The label is the same plain section label the other sections carry.
+    const label = screen.getByText('Concept Page');
+    expect(label).toHaveClass('module-section-label');
+    expect(label).not.toHaveClass('module-section-label-inline');
+
+    // The body still opens on the pack's own first paragraph, not on a
+    // blank where the stripped line was.
+    const paragraphs = [
+      ...(container.querySelectorAll('.module-concept p') ?? []),
+    ];
+    expect(paragraphs[0]?.textContent).toContain('Every module has a surface');
+  });
+
+  it('renders a pack with no provenance line in full (#139)', async () => {
+    // Nothing to strip: the first paragraph is prose and must survive, with
+    // the leading `# title` still dropped as always.
+    const plain: ModuleContent = {
+      ...content,
+      conceptPageMarkdown: [
+        '# Deep Modules & Information Hiding',
+        '',
+        'An opening paragraph with no note above it.',
+        '',
+        '## The trade every module makes',
+        '',
+        'A second paragraph.',
+      ].join('\n'),
+    };
+    const { container } = await renderAt('/modules/m01', [], undefined, {
+      loadIndex: async () => index,
+      loadModuleContent: async (id) => (id === 'm01' ? plain : null),
+    });
+    await screen.findByText('Concept Page');
+
+    const paragraphs = [...container.querySelectorAll('.module-concept p')];
+    expect(paragraphs.map((p) => p.textContent)).toEqual([
+      'An opening paragraph with no note above it.',
+      'A second paragraph.',
+    ]);
+    // The title is still stripped — once on the page, from the header h1.
     expect(
-      container.querySelector('.module-concept')?.textContent ?? '',
-    ).not.toContain('LLM first draft');
+      screen.getAllByText('Deep Modules & Information Hiding'),
+    ).toHaveLength(1);
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'The trade every module makes' }),
+    ).toBeInTheDocument();
   });
 
   it('renders every Model Example as a BEFORE/AFTER pair with its caption', async () => {
@@ -456,7 +502,7 @@ describe('Module screen', () => {
     // section (design/DevGym.dc.html § Module).
     expect(
       screen.getByText(
-        /Concept Page pending — drafted by the Generator once this Module unlocks; one human edit, then frozen\./,
+        /Concept Page not written yet — there is nothing to read in this Module\./,
       ),
     ).toBeInTheDocument();
     expect(
@@ -519,6 +565,25 @@ describe('Module screen', () => {
     expect(container.textContent ?? '').not.toMatch(
       /lesson|course|level|quiz|flashcard|grade|score/i,
     );
+  });
+
+  // #139: the pending copy used to name the Generator and narrate the
+  // authoring pipeline — a system term (docs/ubiquitous-language.md § System
+  // terms) the learner has never heard of and cannot act on.
+  it('names no part of the authoring pipeline on the pending screen (#139)', async () => {
+    const { container } = await renderAt('/modules/m02');
+    await screen.findByText('Exit Gate');
+
+    const text = container.textContent ?? '';
+    expect(text).not.toMatch(/generator|ICurriculum|IProgress|\bLLM\b|frozen/i);
+    expect(text).not.toMatch(
+      /streak|daily goal|days left|% complete|\bXP\b|\bjust\b|\bsimply\b|\beasy\b/i,
+    );
+    // The section is still filled, not blank, and the other two pending
+    // lines are untouched.
+    expect(
+      container.querySelectorAll('.module-pending-copy'),
+    ).toHaveLength(3);
   });
 
   it('falls back to the Curriculum for an unknown Module id', async () => {
@@ -809,7 +874,7 @@ describe('Module content that will not load (#69)', () => {
     await renderAt('/modules/m02');
 
     expect(
-      await screen.findByText(/Concept Page pending/),
+      await screen.findByText(/Concept Page not written yet/),
     ).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });

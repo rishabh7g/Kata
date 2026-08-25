@@ -29,7 +29,6 @@ const designCss = read('../../design/styles.css');
 const ALLOWED_LABEL_SELECTORS = new Set([
   // app.css — the shared label rule (#75) and every screen's kicker.
   '.module-section-label',
-  '.module-section-label-inline',
   '.module-gate-poster-label',
   '.exercise-section-label',
   '.exercise-section-label-inline',

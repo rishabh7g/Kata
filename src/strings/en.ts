@@ -91,8 +91,15 @@ const en = {
       exercises: 'Exercises',
     },
     pending: {
+      // What is missing, in the learner's terms (#139). The old line named
+      // the Generator and walked through drafting, one human edit and
+      // freezing — the authoring pipeline (docs/ubiquitous-language.md
+      // § System terms), which a learner has never heard of and cannot act
+      // on. This says only what is true on screen: the section is the
+      // pending Module's only Concept Page content, so without it the
+      // section renders blank (keeper test clause 2, design/issue-guide.md).
       conceptPage:
-        'Concept Page pending — drafted by the Generator once this Module unlocks; one human edit, then frozen.',
+        'Concept Page not written yet — there is nothing to read in this Module.',
       modelExamples: 'Model Examples arrive with the Concept Page.',
       exercises: 'No Exercises yet — the first is generated from an Exercise Spec.',
     },

@@ -160,12 +160,15 @@ export function ModuleScreen() {
 }
 
 /**
- * The Concept Page section. The label row carries the pack's
- * draft/edited/frozen note beside the section label on one baseline — the prototype's
- * layout (DevGym.dc.html § Module) and screens/02–03 — rather than as the
- * first prose paragraph (#30). The note itself still travels in the markdown
- * (an emphasis-only first line); it is lifted out here, and a pack without
- * one simply renders no note.
+ * The Concept Page section: the section label, then the pack's prose.
+ *
+ * The packs still open with the emphasis-only `*LLM first draft ·
+ * human-edited once · frozen*` line, and the label row used to carry it
+ * beside the label (#30). That line is authoring provenance, not learning
+ * content — it told the learner how the page was made, which is nothing they
+ * read the Module for — so it is no longer displayed (#139). It is still
+ * stripped, because a line that stops being lifted out would otherwise
+ * reappear as the first paragraph of the prose.
  */
 function ConceptSection({ module }: { module: ModuleDetail }) {
   const s = useStrings();
@@ -173,8 +176,8 @@ function ConceptSection({ module }: { module: ModuleDetail }) {
     return (
       <section>
         <h2 className="module-section-label">{s['module.sectionLabel.conceptPage']}</h2>
-        {/* The prototype's pending copy, verbatim (DevGym.dc.html § Module,
-            pending section). */}
+        {/* The pending copy: the prototype's block, reworded off the
+            authoring pipeline it used to describe (#139). */}
         <p className="text-muted module-pending-copy">
           {s['module.pending.conceptPage']}
         </p>
@@ -182,19 +185,10 @@ function ConceptSection({ module }: { module: ModuleDetail }) {
     );
   }
 
-  const { note, body } = splitConceptNote(
-    stripLeadingTitle(module.conceptPageMarkdown),
-  );
+  const body = stripConceptNote(stripLeadingTitle(module.conceptPageMarkdown));
   return (
     <section>
-      <div className="module-concept-heading">
-        <h2 className="module-section-label module-section-label-inline">
-          {s['module.sectionLabel.conceptPage']}
-        </h2>
-        {note !== null && (
-          <span className="text-muted module-concept-note">{note}</span>
-        )}
-      </div>
+      <h2 className="module-section-label">{s['module.sectionLabel.conceptPage']}</h2>
       <div className="module-concept">
         <Markdown source={body} />
       </div>
@@ -430,20 +424,21 @@ function stripLeadingTitle(markdown: string): string {
 }
 
 /**
- * Lifts the packs' `*LLM first draft · human-edited once · frozen*` line out
- * of the prose so the label row can carry it (#30). Only an emphasis-only
- * first paragraph counts — anything else stays in the body untouched.
+ * Drops the packs' `*LLM first draft · human-edited once · frozen*` line —
+ * an emphasis-only first paragraph — from the prose (#139). It is committed
+ * in the markdown source, where provenance belongs, and it is not content a
+ * learner reads, so nothing renders it: this used to split it out for the
+ * label row (#30) and now simply discards it.
+ *
+ * Stripping stays, rather than the whole function going away, because the
+ * packs are unchanged: without it that line would land in the body and read
+ * as the Concept Page's opening paragraph. Only an emphasis-only first
+ * paragraph counts — anything else stays in the body untouched, so a pack
+ * with no such line renders in full.
  */
-export function splitConceptNote(markdown: string): {
-  note: string | null;
-  body: string;
-} {
-  const match = /^\s*\*([^*\n]+)\*[^\S\n]*(?:\n|$)/.exec(markdown);
-  if (match === null) return { note: null, body: markdown };
-  return {
-    note: (match[1] ?? '').trim(),
-    body: markdown.slice(match[0].length),
-  };
+function stripConceptNote(markdown: string): string {
+  const match = /^\s*\*[^*\n]+\*[^\S\n]*(?:\n|$)/.exec(markdown);
+  return match === null ? markdown : markdown.slice(match[0].length);
 }
 
 /** '2026-06-12T…Z' → '12 Jun 2026' — as on the Curriculum rows (#10). */
