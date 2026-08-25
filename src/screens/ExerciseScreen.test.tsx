@@ -821,10 +821,12 @@ describe('Behavioral Checklist (#16)', () => {
     // IndexedDB, so nothing has to be submitted for it to be readable.
     expect(definition?.querySelector('a, button, details, [role]')).toBeNull();
     expect(definition?.textContent).not.toMatch(/\d/);
-    // The heading's own meta line is untouched (#138 owns that wording).
+    // The heading's own meta line is #138's wording, not this clause's.
     expect(
       aside?.querySelector('.exercise-checklist-meta')?.textContent,
-    ).toBe('Module 01 gate');
+    ).toBe(
+      'Module 01 Exit Gate — covers every Exercise in the Module, not the one on screen.',
+    );
   });
 
   it('drops the definition once the checklist is submitted, leaving the panel intact (#136)', async () => {
@@ -935,6 +937,79 @@ describe('Behavioral Checklist (#16)', () => {
     const rows = second.container.querySelectorAll('.exercise-checklist-row');
     expect(rows).toHaveLength(3);
     expect(second.container.querySelector('input[type="radio"]')).toBeNull();
+  });
+
+  // #138: the meta line beside the heading — whose gate this is and how far
+  // it reaches. Extended rather than joined by a fourth string, because the
+  // scope is the scope OF the live ordinal this line already carried.
+  const META =
+    'Module 01 Exit Gate — covers every Exercise in the Module, not the one on screen.';
+
+  it('names the owning Module and the gate\'s reach beside the heading (#138)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    const aside = container.querySelector('aside.exercise-aside');
+    const heading = aside?.querySelector('.exercise-checklist-heading');
+    const meta = heading?.querySelector('.exercise-checklist-meta');
+    // Beside the heading, not a footnote under the form.
+    expect(meta?.textContent).toBe(META);
+    // Zero-padded, always: "Module 01", never "Module 1".
+    expect(meta?.textContent).toContain('Module 01');
+    expect(meta?.textContent).not.toContain('Module 1 ');
+    // Static prose: no link back to the Module screen — the back link is
+    // already the one way there (the interaction-depth question).
+    expect(meta?.querySelector('a, button, details, [role]')).toBeNull();
+  });
+
+  it('shows the identical meta line on the same Module\'s other Exercise (#138)', async () => {
+    const first = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+    expect(
+      first.container.querySelector('.exercise-checklist-meta')?.textContent,
+    ).toBe(META);
+    first.unmount();
+
+    // The claim the line makes, proven: same Module, other Exercise, same
+    // gate — the panel is keyed by moduleId and stays that way.
+    const second = await renderAt('/modules/m01/exercises/m01-e2');
+    await screen.findByText('Behavioral Checklist');
+    expect(
+      second.container.querySelector('.exercise-checklist-meta')?.textContent,
+    ).toBe(META);
+  });
+
+  it("keeps the meta line on the submitted panel, on both of the Module's Exercises (#138)", async () => {
+    const first = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+    pickAnswer(first.container, 0, 'a');
+    pickAnswer(first.container, 1, 'a');
+    pickAnswer(first.container, 2, 'b');
+    fireEvent.click(submitButton());
+    await screen.findByText(/Submitted ·/);
+    // Submitting from e1 passed Module 01 outright — which is exactly what
+    // the line warned, so it still reads on the submitted panel.
+    expect(
+      first.container.querySelector('.exercise-checklist-meta')?.textContent,
+    ).toBe(META);
+    first.unmount();
+
+    const second = await renderAt('/modules/m01/exercises/m01-e2');
+    await screen.findByText(/Submitted ·/);
+    expect(
+      second.container.querySelector('.exercise-checklist-meta')?.textContent,
+    ).toBe(META);
+  });
+
+  it("reads the owning Module's ordinal, not the Exercise's (#138)", async () => {
+    const { container } = await renderAt('/modules/m02/exercises/m02-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    expect(
+      container.querySelector('.exercise-checklist-meta')?.textContent,
+    ).toBe(
+      'Module 02 Exit Gate — covers every Exercise in the Module, not the one on screen.',
+    );
   });
 });
 

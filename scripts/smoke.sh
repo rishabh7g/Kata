@@ -176,6 +176,9 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # of the panel, checked by its class for the same reason.
   has "$WORK/app.js" 'exercise-checklist-definition' 'the Behavioral Checklist definition (#136)'
   has "$WORK/app.js" 'Submit Behavioral Checklist' 'the checklist submit action (#16)'
+  # The gate scope line (#138): the meta line's class shipped with #16, so the
+  # clause that says the gate covers the whole Module is what proves it is live.
+  has "$WORK/app.js" 'covers every Exercise in the Module' 'the checklist gate scope line (#138)'
   # The self-report note (#137): the class shipped with #16, so the clause
   # that says the gate is self-reported is what proves this copy is live.
   has "$WORK/app.js" 'Submitting records the Checkpoint whatever you answer' 'the checklist self-report note (#137)'

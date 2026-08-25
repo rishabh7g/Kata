@@ -413,3 +413,119 @@ describe('the Behavioral Checklist note (#137)', () => {
     expect(container.querySelector('.exercise-checklist-note')).toBeNull();
   });
 });
+
+/**
+ * The panel's meta line (#138) — which Module's Exit Gate this is, and that
+ * it covers every Exercise in that Module rather than the Exercise the
+ * learner happens to be on.
+ *
+ * The panel is keyed by `moduleId` (deliberate), so submitting from `m01-e1`
+ * passes Module 01 outright and `m01-e2` may never be opened. The line is
+ * where that fact is said; the placement on the screen and the both-Exercises
+ * proof are in ExerciseScreen.test.tsx. This is the state matrix and the
+ * ordinal formatting at the component level.
+ */
+describe('the Behavioral Checklist gate scope line (#138)', () => {
+  const meta = (ordinal: string) =>
+    `Module ${ordinal} Exit Gate — covers every Exercise in the Module, not the one on screen.`;
+
+  /** The panel with whatever ordinal or question set a state needs. */
+  function renderWith(
+    progress: IProgress,
+    moduleOrdinal = 1,
+    questionSet: readonly ChecklistQuestion[] = questions,
+  ) {
+    return render(
+      <ProgressProvider progress={progress}>
+        <BehavioralChecklist
+          moduleId="m01"
+          moduleOrdinal={moduleOrdinal}
+          questions={questionSet}
+        />
+      </ProgressProvider>,
+    );
+  }
+
+  it('names the Module and the gate\'s reach in the form state', async () => {
+    const { container } = await renderChecklist();
+
+    const line = container.querySelector('.exercise-checklist-meta');
+    expect(line?.textContent).toBe(meta('01'));
+    // Beside the heading, inside the heading block.
+    expect(
+      container.querySelector('.exercise-checklist-heading .exercise-checklist-meta'),
+    ).not.toBeNull();
+  });
+
+  it('keeps the line on the submitted panel — the gate it scopes is passed, not gone', async () => {
+    const { container } = await renderChecklist();
+
+    for (const question of questions) {
+      const group = screen.getByRole('radiogroup', { name: question.prompt });
+      fireEvent.click(within(group).getAllByRole('radio')[0]!);
+    }
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Submit Behavioral Checklist' }),
+    );
+    await screen.findByText(/Submitted ·/);
+
+    expect(
+      container.querySelector('.exercise-checklist-meta')?.textContent,
+    ).toBe(meta('01'));
+  });
+
+  it('renders nothing at all while the stored state is still loading', async () => {
+    const progress = await createProgress();
+    const { container } = renderWith(progress);
+
+    expect(container.querySelector('.exercise-checklist-meta')).toBeNull();
+
+    await screen.findByRole('button', { name: 'Submit Behavioral Checklist' });
+    expect(
+      container.querySelector('.exercise-checklist-meta'),
+    ).not.toBeNull();
+  });
+
+  it('renders nothing for a pending Module — no questions, no gate to scope', async () => {
+    const progress = await createProgress();
+    const { container } = renderWith(progress, 1, []);
+
+    await Promise.resolve();
+    expect(container.textContent).toBe('');
+    expect(container.querySelector('.exercise-checklist-meta')).toBeNull();
+  });
+
+  it('zero-pads the ordinal — "Module 05", never "Module 5"', async () => {
+    const progress = await createProgress();
+    const { container } = renderWith(progress, 5);
+    await screen.findByRole('button', { name: 'Submit Behavioral Checklist' });
+
+    expect(
+      container.querySelector('.exercise-checklist-meta')?.textContent,
+    ).toBe(meta('05'));
+  });
+
+  it('says nothing about the learner\'s code, and carries no banned word', async () => {
+    const { container } = await renderChecklist();
+    const line = container.querySelector('.exercise-checklist-meta')
+      ?.textContent as string;
+
+    for (const banned of [
+      'streak',
+      'daily goal',
+      'days left',
+      '% complete',
+      'XP',
+      'score',
+      'just',
+      'simply',
+      'easy',
+    ]) {
+      expect(line.toLowerCase()).not.toContain(banned.toLowerCase());
+    }
+    // Its two siblings say what the checklist IS (#136) and what submitting
+    // does (#137); this one says only whose gate it is and how far it goes.
+    expect(line).not.toContain('self-assessed');
+    expect(line).not.toContain('Submitting records');
+  });
+});
