@@ -38,7 +38,8 @@ issue. This one is UI writing style, checked against copy a screen renders.
 
 **The keeper test** (#113) for any new copy an issue adds: a string survives
 only if it (1) carries live data — a count, a date, a name; (2) is the only
-instruction on a step; or (3) guards a destructive action. Everything else is
+instruction on a step; (3) guards a destructive action; or (4) it is the
+first-use definition of a term the UI then uses as a label. Everything else is
 a read-once explainer and does not ship.
 
 **The interaction-depth review question**, asked on every issue that touches
