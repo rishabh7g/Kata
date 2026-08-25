@@ -414,6 +414,43 @@ describe('Exercise screen', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('states the .NET SDK prerequisite and the tests/ working directory (#141)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e2');
+    await screen.findByText('Practice material');
+
+    const note = container.querySelector('.exercise-folder-note');
+    const text = note?.textContent ?? '';
+
+    // The two facts that decide whether the Test Suite runs at all, both
+    // readable BEFORE cloning.
+    expect(text).toContain('.NET SDK installed on your own machine');
+    expect(text).toContain("Exercise folder's tests/ directory");
+    // The instruction the note already carried survives the extension.
+    expect(text).toContain('Clone or copy the folder');
+    expect(text).toContain('review its Test Suite before starting');
+
+    // Still one inline <code>, still the command itself — no terminal, no
+    // copy control, no results area: Kata never runs anything.
+    const codes = note?.querySelectorAll('code') ?? [];
+    expect(codes).toHaveLength(1);
+    expect(codes[0]?.textContent).toBe('dotnet test');
+    expect(
+      note?.closest('section')?.querySelector('button, textarea'),
+    ).toBeFalsy();
+  });
+
+  it('keeps the prerequisite copy out of the pending state (#141)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Practice material');
+
+    // folderUrl === null renders the pending note ALONE — no link, no
+    // <code>, and none of the committed-folder instructions.
+    expect(screen.getByText(/folder is not committed yet/)).toBeInTheDocument();
+    expect(container.querySelector('.exercise-folder-note')).toBeNull();
+    expect(screen.queryByText(/\.NET SDK/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/tests\/ directory/)).not.toBeInTheDocument();
+  });
+
   it('returns to the owning Module via the back button', async () => {
     await renderAt('/modules/m01/exercises/m01-e1');
 

@@ -174,6 +174,10 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The Target Interface definition (#136): static copy above the display-only
   # C# block, so its class is the whole surface to check.
   has "$WORK/app.js" 'exercise-interface-definition' 'the Target Interface definition (#136)'
+  # The practice-material prerequisites (#141): the note's class shipped with
+  # #15, so the clause naming the .NET SDK is what proves the two facts a
+  # learner needs BEFORE cloning are live in the deployed pack.
+  has "$WORK/app.js" 'needs the .NET SDK installed on your own machine' 'the practice-material prerequisite note (#141)'
   # The Behavioral Checklist (#16): the form and its one primary action.
   has "$WORK/app.js" 'exercise-checklist-item' 'the Behavioral Checklist form (#16)'
   # The Behavioral Checklist definition (#136): static copy in the form state
