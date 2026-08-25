@@ -146,6 +146,9 @@ export const STRINGS_KEYS = [
   // the term the heading, the submit label and the Module gate's condition
   // row all use as a label.
   'checklist.definition',
+  // Which Module's Exit Gate this panel is, and that it covers every
+  // Exercise in that Module rather than the one on screen (#138) — the
+  // scope of the live ordinal it already carried.
   'checklist.meta',
   'checklist.submitLabel',
   'checklist.note',
@@ -256,7 +259,7 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
 
   'checklist.heading': [],
   'checklist.definition': [],
-  /** The owning Module's zero-padded ordinal. */
+  /** The owning Module's zero-padded ordinal — the gate's scope (#138). */
   'checklist.meta': ['{ordinal}'],
   'checklist.submitLabel': [],
   'checklist.note': [],

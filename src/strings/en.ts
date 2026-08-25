@@ -153,9 +153,24 @@ const en = {
     // self-assessed. One clause; #137 owns what a "No" answer means.
     definition:
       "The Behavioral Checklist is the Module's one Exit Gate condition, self-assessed.",
-    // Trimmed to the value (#113): "Module NN gate" carries live data; the
-    // rest was prose wrapped around it.
-    meta: 'Module {ordinal} gate',
+    // The line that says WHOSE gate this is (#138). It already carried live
+    // data — the owning Module's ordinal — which is clause (1) of the keeper
+    // test (design/issue-guide.md § UI copy ban list), and why the copy pass
+    // (#113) trimmed it to "Module NN gate" instead of deleting it.
+    //
+    // The scope clause rides on that same live datum rather than shipping a
+    // fourth string in one panel: the panel is keyed by `moduleId`, so both
+    // of a Module's Exercise screens render this identical line, and a
+    // learner reading it on `m01-e1` would otherwise take the gate for that
+    // Exercise's own. Submitting from either Exercise passes Module 01
+    // outright, so the ordinal without its scope is a half-told fact.
+    //
+    // Distinct from its two siblings and repeating neither: `definition`
+    // (#136) says what the Behavioral Checklist IS, `note` (#137) says what
+    // submitting does and what a "No" means, and this says which Module the
+    // Exit Gate belongs to and how far it reaches.
+    meta:
+      'Module {ordinal} Exit Gate — covers every Exercise in the Module, not the one on screen.',
     submitLabel: 'Submit Behavioral Checklist',
     // The only instruction on the step — the keeper test's second clause,
     // which is why the first sentence survived the copy pass (#113).
