@@ -157,6 +157,10 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The orientation block (#134): its container class ships in the bundle —
   # static copy, so the class is the whole surface to check.
   has "$WORK/app.js" 'curriculum-orientation' 'the Curriculum orientation block (#134)'
+  # The backup note's browser-only consequence (#142): `curriculum-backup-note`
+  # shipped with #29, so the new clause is what proves the deployed pack tells
+  # the learner what the exported file is for.
+  has "$WORK/app.js" 'only copy of your progress that exists outside this browser' 'the backup note browser-only clause (#142)'
   # The visible locked-row reason (#140): the string itself shipped before as
   # `.visually-hidden` text, so the class that puts it on screen is what
   # proves it is no longer clipped out of sight.

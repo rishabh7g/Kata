@@ -328,6 +328,10 @@ describe('Progress backup — the confirm is the dialog it claims to be', () => 
 });
 
 describe('Progress backup — copy', () => {
+  function noteText(): string {
+    return document.querySelector('.curriculum-backup-note')?.textContent ?? '';
+  }
+
   it('uses no banned terms (docs/ubiquitous-language.md § Banned)', async () => {
     await renderScreen();
 
@@ -336,4 +340,93 @@ describe('Progress backup — copy', () => {
     expect(text).not.toBe('');
     expect(text).not.toMatch(/lesson|course|level|quiz|flashcard|grade|score/i);
   });
+
+  // design/issue-guide.md § UI copy ban list (#115) — the writing-style list,
+  // asserted on the footer now that the note carries a second sentence (#142).
+  it('uses no word from the UI copy ban list (#115)', async () => {
+    await renderScreen();
+
+    const text = document.querySelector('.curriculum-backup')?.textContent ?? '';
+    expect(text).not.toMatch(
+      /streak|daily goal|days left|% complete|\bXP\b|\bjust\b|\bsimply\b|\beasy\b/i,
+    );
+  });
+
+  // #142: a no-accounts app that never says where progress lives costs the
+  // learner everything the first time they clear site data. The note names
+  // the file, says what the file is FOR, and still guards the import.
+  it('the idle note names the export file, why it matters, and what import does', async () => {
+    await renderScreen();
+
+    expect(noteText()).toBe(NOTE);
+  });
+
+  // The header's orientation block already states the fact on this same
+  // screen (curriculum.orientation.browserOnly, #134). The footer carries the
+  // consequence instead, so the screen says it once and acts on it once.
+  it('does not restate the header orientation line', async () => {
+    await renderScreen();
+
+    expect(
+      screen.getByText('Your progress is stored in this browser only.'),
+    ).toBeInTheDocument();
+    expect(noteText()).not.toMatch(/stored in this browser only/i);
+  });
+
+  // Empty IndexedDB and a full one read the same: the note carries no counts,
+  // only the confirm does.
+  it('reads the same with progress stored as with none', async () => {
+    await renderScreen(m01Passed);
+
+    expect(noteText()).toBe(NOTE);
+    expect(noteText()).not.toMatch(/\d/);
+  });
+
+  // Clause (3) guards the destructive action, and the guard is one question.
+  // The browser-only consequence is not repeated inside the confirm.
+  it('the confirm asks its one question and adds no second warning', async () => {
+    await renderScreen();
+
+    pickFile(serializeProgressState(m01Passed));
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(dialog.textContent).toBe(
+      '1 Checkpoint, 1 checklist — replace current progress?Replace progressCancel',
+    );
+    expect(noteText()).toMatch(/only copy of your progress/);
+  });
+
+  // The error states own the "nothing changed" reassurance; the note beside
+  // them keeps saying what the file is for, unchanged by the failure.
+  it('stays put through the invalid-file state', async () => {
+    await renderScreen();
+
+    pickFile('this is not json', 'garbage.json');
+
+    expect((await screen.findByRole('alert')).textContent).toMatch(
+      /Not a Kata progress file/,
+    );
+    expect(noteText()).toBe(NOTE);
+  });
+
+  it('stays put through a failed import', async () => {
+    const progress = await renderScreen();
+    vi.spyOn(progress, 'importState').mockRejectedValue(
+      new Error('quota exceeded'),
+    );
+
+    pickFile(serializeProgressState(m01Passed));
+    await screen.findByRole('alertdialog');
+    fireEvent.click(screen.getByRole('button', { name: 'Replace progress' }));
+
+    expect((await screen.findByRole('alert')).textContent).toBe(
+      'Import failed — quota exceeded. Current progress is unchanged.',
+    );
+    expect(noteText()).toBe(NOTE);
+  });
 });
+
+/** The footer's whole note, with {fileName} filled in — no counts, ever. */
+const NOTE =
+  'kata-progress.json is the only copy of your progress that exists outside this browser. ' +
+  "Import replaces current progress with a file's contents.";
