@@ -29,7 +29,8 @@ The exact slice: screen, states covered, data source (which Target Interface / I
 
 **The keeper test** for any new copy this issue adds: a string survives only
 if it (1) carries live data — a count, a date, a name; (2) is the only
-instruction on a step; or (3) guards a destructive action. Everything else is
+instruction on a step; (3) guards a destructive action; or (4) it is the
+first-use definition of a term the UI then uses as a label. Everything else is
 a read-once explainer and does not ship.
 
 ## Interaction depth — required review question
