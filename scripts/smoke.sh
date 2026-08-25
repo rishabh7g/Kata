@@ -157,6 +157,10 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The orientation block (#134): its container class ships in the bundle —
   # static copy, so the class is the whole surface to check.
   has "$WORK/app.js" 'curriculum-orientation' 'the Curriculum orientation block (#134)'
+  # The visible locked-row reason (#140): the string itself shipped before as
+  # `.visually-hidden` text, so the class that puts it on screen is what
+  # proves it is no longer clipped out of sight.
+  has "$WORK/app.js" 'curriculum-row-locked-reason' 'the visible locked-row reason (#140)'
   # The Module route is hash-routed, so it is this same 200 document; its
   # markup shipping in the bundle is what "the route serves the screen" means.
   has "$WORK/app.js" 'module-concept' 'the Module Concept Page container (#11)'

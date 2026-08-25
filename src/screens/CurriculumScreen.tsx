@@ -163,18 +163,26 @@ function StatusTag({
   module: ModuleSummary;
   inProgress: boolean;
 }) {
-  // Locked rows carry no visible tag (design/README.md § Screens › 1 row
-  // states) — the design says "locked" with 0.5 opacity, the lock icon and the
-  // `not-allowed` cursor, none of which a screen reader can see, so the row
-  // read as plain text identical in shape to an unlocked one (#74). The status
-  // column says it in words instead: clipped out of sight (`.visually-hidden`,
-  // #73), so the capture is untouched, and placed here so it is read where
-  // every other row's state is read. It also answers the question the visual
-  // cues answer — why activating the row does nothing.
+  // Locked rows carry no tag (design/README.md § Screens › 1 row states) — the
+  // design says "locked" with 0.5 opacity, the lock icon and the `not-allowed`
+  // cursor. None of those is a screen reader's to see, so #74 put the reason
+  // into the status column in words, and #73 clipped it out of sight
+  // (`.visually-hidden`) to leave the capture untouched.
+  //
+  // That left the explanation backwards: only assistive technology was told
+  // why the row is inert (#140). The text is now visible, in the same column
+  // and the same words. Fidelity to `screens/01-state.png` was the reason to
+  // hide it, and it loses to a first-time learner reading four dimmed rows
+  // with no stated reason — so the capture is the thing that is now out of
+  // date, and README.md § Screens › 1 records the change. It is exactly one
+  // node either way: visible text is announced, so there is no second,
+  // clipped copy to read twice.
   const s = useStrings();
   if (!module.unlocked) {
     return (
-      <span className="visually-hidden">{s['curriculum.row.locked']}</span>
+      <span className="curriculum-row-locked-reason">
+        {s['curriculum.row.locked']}
+      </span>
     );
   }
   if (module.checkpointAt !== null) {
