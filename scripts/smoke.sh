@@ -176,6 +176,9 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # of the panel, checked by its class for the same reason.
   has "$WORK/app.js" 'exercise-checklist-definition' 'the Behavioral Checklist definition (#136)'
   has "$WORK/app.js" 'Submit Behavioral Checklist' 'the checklist submit action (#16)'
+  # The self-report note (#137): the class shipped with #16, so the clause
+  # that says the gate is self-reported is what proves this copy is live.
+  has "$WORK/app.js" 'Submitting records the Checkpoint whatever you answer' 'the checklist self-report note (#137)'
   # The Exit Gate poster (#17): the passed-state accent field on the Module
   # screen — its container class and display line ship in this bundle.
   has "$WORK/app.js" 'module-gate-poster' 'the Exit Gate poster (#17)'

@@ -875,6 +875,50 @@ describe('Behavioral Checklist (#16)', () => {
     ).toBeNull();
   });
 
+  // #137: the note under the submit button — the only instruction on the
+  // step, extended to say the gate is a self-report. The wording and the
+  // panel-state matrix are pinned in BehavioralChecklist.test.tsx; this is
+  // the placement on the screen and the behaviour the note describes.
+  it('puts the self-report note under the submit button in the aside (#137)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    const aside = container.querySelector('aside.exercise-aside');
+    const note = aside?.querySelector('.exercise-checklist-note');
+    expect(note?.textContent).toBe(
+      'Answer all three checks to submit, and answer them honestly — this is a self-report on your own work. Submitting records the Checkpoint whatever you answer, so a "No" is a signal to go back to the code, not a blocker.',
+    );
+
+    // Last thing in the form, after the one primary action.
+    const submit = aside?.querySelector('.exercise-checklist-submit');
+    expect(note?.compareDocumentPosition(submit as Node)).toBe(
+      Node.DOCUMENT_POSITION_PRECEDING,
+    );
+    // Static prose: no link, no disclosure — no second way to anything.
+    expect(note?.querySelector('a, button, details, [role]')).toBeNull();
+  });
+
+  it('records the Checkpoint and unlocks Module 02 on three "No" answers (#137)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    // The second option in every pair — the note promises this passes, and
+    // the gate is submission alone (docs/design.md § Pedagogy).
+    pickAnswer(container, 0, 'b');
+    pickAnswer(container, 1, 'b');
+    pickAnswer(container, 2, 'b');
+    fireEvent.click(submitButton());
+
+    expect(
+      await screen.findByText('Exit Gate passed — Checkpoint recorded.'),
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector('.exercise-gate-banner')?.textContent,
+    ).toContain('Module 02 — Dependency Direction unlocked.');
+    // …and the note is gone with the form it instructed.
+    expect(container.querySelector('.exercise-checklist-note')).toBeNull();
+  });
+
   it("shows the same submitted state on the Module's other Exercise screen — per Module, not per Exercise", async () => {
     const first = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Behavioral Checklist');

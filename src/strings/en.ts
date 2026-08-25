@@ -157,9 +157,19 @@ const en = {
     // rest was prose wrapped around it.
     meta: 'Module {ordinal} gate',
     submitLabel: 'Submit Behavioral Checklist',
-    // Trimmed (#113): the first sentence is the only instruction on the
-    // step and survives; the second was an explainer.
-    note: 'Answer all three checks to submit.',
+    // The only instruction on the step — the keeper test's second clause,
+    // which is why the first sentence survived the copy pass (#113).
+    //
+    // Extended (#137) to close the app's biggest comprehension gap: three
+    // yes/no questions with a Submit button read as a test that can be
+    // failed, and no answer is read as a condition anywhere — submitting
+    // alone is the Exit Gate (docs/design.md § Pedagogy). So the note says
+    // what submitting does and what a "No" means; `checklist.definition`
+    // (#136) above the checks says what the checklist IS, and neither
+    // repeats the other. "back to the code" is the learner's own IDE:
+    // Kata never runs, reads or judges it.
+    note:
+      'Answer all three checks to submit, and answer them honestly — this is a self-report on your own work. Submitting records the Checkpoint whatever you answer, so a "No" is a signal to go back to the code, not a blocker.',
     submittedLine: 'Submitted · {time}',
   },
 
