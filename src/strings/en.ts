@@ -215,7 +215,18 @@ const en = {
     // Trimmed to the value (#113): {fileName} is live data, and "Import
     // replaces…" guards the destructive action; the framing sentence
     // around them ("Backup as a file: export downloads…") went.
-    note: "{fileName}. Import replaces current progress with a file's contents.",
+    //
+    // Extended (#142) with the reason Export exists at all. The header's
+    // orientation block already states the fact — "Your progress is stored
+    // in this browser only" (curriculum.orientation.browserOnly, #134) — on
+    // this same screen, so restating it here would be the third telling
+    // (notice.progressUnavailable.body1 is the second). What the footer adds
+    // is the consequence next to the button that acts on it: the file is the
+    // only copy that exists anywhere else. The confirm stays a single
+    // question; a warning read at the moment of replacing is later than the
+    // learner can use it.
+    note:
+      "{fileName} is the only copy of your progress that exists outside this browser. Import replaces current progress with a file's contents.",
     confirmDialogLabel: 'Confirm import',
     confirmSummary: '{checkpoints}, {checklists} — replace current progress?',
     confirmReplace: 'Replace progress',
