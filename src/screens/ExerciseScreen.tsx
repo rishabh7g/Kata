@@ -141,6 +141,7 @@ export function ExerciseScreen() {
               </h2>
               <span className="tag tag-accent">{s['exercise.targetInterface.immutableTag']}</span>
             </div>
+            <TargetInterfaceDefinition />
             <p className="text-muted exercise-interface-note">
               {s['exercise.targetInterface.note']}
             </p>
@@ -192,6 +193,30 @@ export function ExerciseScreen() {
         </aside>
       </div>
     </>
+  );
+}
+
+/**
+ * What a Target Interface is (#136) — one clause, under the section heading
+ * and above `exercise.targetInterface.note`.
+ *
+ * This is the first place the app defines a term three surfaces already use
+ * as a label: this section heading, the Spec grid's "Target Interface" row
+ * on the Module screen, and the accent `Immutable` tag right beside it. The
+ * existing note only says what wanting to change it means — it presumes the
+ * learner already knows what "it" is — so under clause (4) of the keeper
+ * test (design/issue-guide.md § UI copy ban list, #133) the definition
+ * belongs here, ahead of it. The note itself is unchanged, and stays.
+ *
+ * Above the `<pre>`, not inside it: the C# block is display-only and every
+ * character in it is the authored Target Interface, never Kata's prose.
+ */
+function TargetInterfaceDefinition() {
+  const s = useStrings();
+  return (
+    <p className="text-muted exercise-interface-definition">
+      {s['exercise.targetInterface.definition']}
+    </p>
   );
 }
 

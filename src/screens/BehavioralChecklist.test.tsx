@@ -3,6 +3,7 @@ import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ProgressProvider } from '../app/ProgressContext';
 import type { ChecklistQuestion } from '../curriculum';
+import type { IProgress } from '../progress';
 import { createProgress } from '../progress';
 import { BehavioralChecklist } from './BehavioralChecklist';
 
@@ -179,5 +180,86 @@ describe('Behavioral Checklist radio grouping (#72)', () => {
       [questions[1]!.prompt, 'Yes — nothing leaked into callers'],
       [questions[2]!.prompt, 'Yes — no caller changed'],
     ]);
+  });
+});
+
+/**
+ * The panel's own definition (#136) — one clause under the heading, and which
+ * panel states carry it. The Exercise screen's placement is covered in
+ * ExerciseScreen.test.tsx; this is the state matrix at the component level.
+ */
+describe('the Behavioral Checklist definition (#136)', () => {
+  const DEFINITION =
+    "The Behavioral Checklist is the Module's one Exit Gate condition, self-assessed.";
+
+  /** The panel with whatever question set a state needs, un-awaited. */
+  function renderWith(questionSet: readonly ChecklistQuestion[], progress: IProgress) {
+    return render(
+      <ProgressProvider progress={progress}>
+        <BehavioralChecklist
+          moduleId="m01"
+          moduleOrdinal={1}
+          questions={questionSet}
+        />
+      </ProgressProvider>,
+    );
+  }
+
+  it('states what the checklist is, once, in the form state', async () => {
+    const { container } = await renderChecklist();
+
+    const definitions = container.querySelectorAll(
+      '.exercise-checklist-definition',
+    );
+    expect(definitions).toHaveLength(1);
+    expect(definitions[0]?.textContent).toBe(DEFINITION);
+    // One clause: a single sentence, no second full stop.
+    expect(DEFINITION.match(/\./g)).toHaveLength(1);
+  });
+
+  it('renders nothing at all while the stored state is still loading', async () => {
+    const progress = await createProgress();
+    const { container } = renderWith(questions, progress);
+
+    // The load has not resolved yet: no panel, so no definition to flash
+    // before the state is known.
+    expect(container.textContent).toBe('');
+    expect(
+      container.querySelector('.exercise-checklist-definition'),
+    ).toBeNull();
+
+    await screen.findByRole('button', { name: 'Submit Behavioral Checklist' });
+    expect(
+      container.querySelector('.exercise-checklist-definition'),
+    ).not.toBeNull();
+  });
+
+  it('renders nothing for a pending Module — no questions, no definition', async () => {
+    const progress = await createProgress();
+    const { container } = renderWith([], progress);
+
+    await Promise.resolve();
+    expect(container.textContent).toBe('');
+    expect(
+      container.querySelector('.exercise-checklist-definition'),
+    ).toBeNull();
+  });
+
+  it('drops the definition on the submitted panel', async () => {
+    const { container } = await renderChecklist();
+
+    for (const question of questions) {
+      const group = screen.getByRole('radiogroup', { name: question.prompt });
+      fireEvent.click(within(group).getAllByRole('radio')[0]!);
+    }
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Submit Behavioral Checklist' }),
+    );
+    await screen.findByText(/Submitted ·/);
+
+    expect(
+      container.querySelector('.exercise-checklist-definition'),
+    ).toBeNull();
+    expect(container.textContent).not.toContain(DEFINITION);
   });
 });

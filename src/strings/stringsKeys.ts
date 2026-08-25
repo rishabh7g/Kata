@@ -129,6 +129,10 @@ export const STRINGS_KEYS = [
   'exercise.spec.sizeBudgetValue',
   'exercise.sectionLabel.targetInterface',
   'exercise.targetInterface.immutableTag',
+  // What a Target Interface is (#136) — the first-use definition of a term
+  // the section heading, the Spec grid and the `Immutable` tag all label,
+  // kept by the keeper test's fourth clause.
+  'exercise.targetInterface.definition',
   'exercise.targetInterface.note',
   'exercise.sectionLabel.practiceMaterial',
   'exercise.practiceMaterial.pending',
@@ -138,6 +142,10 @@ export const STRINGS_KEYS = [
 
   // Behavioral Checklist.
   'checklist.heading',
+  // What the Behavioral Checklist is (#136) — the first-use definition of
+  // the term the heading, the submit label and the Module gate's condition
+  // row all use as a label.
+  'checklist.definition',
   'checklist.meta',
   'checklist.submitLabel',
   'checklist.note',
@@ -238,6 +246,7 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'exercise.spec.sizeBudgetValue': ['{loc}'],
   'exercise.sectionLabel.targetInterface': [],
   'exercise.targetInterface.immutableTag': [],
+  'exercise.targetInterface.definition': [],
   'exercise.targetInterface.note': [],
   'exercise.sectionLabel.practiceMaterial': [],
   'exercise.practiceMaterial.pending': [],
@@ -246,6 +255,7 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'exercise.practiceMaterial.noteAfter': [],
 
   'checklist.heading': [],
+  'checklist.definition': [],
   /** The owning Module's zero-padded ordinal. */
   'checklist.meta': ['{ordinal}'],
   'checklist.submitLabel': [],
