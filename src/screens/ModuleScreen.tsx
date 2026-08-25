@@ -258,6 +258,12 @@ export function ExitGateAside({
       <aside className="module-aside">
         <div className="module-gate-panel">
           <h2 className="module-section-label">{s['gate.label']}</h2>
+          {/* The definitions ship here too (#135): four of the five packs are
+              pending today, so a pending Module is where most learners meet
+              the words "Exit Gate" and "Checkpoint" first, and the pending
+              note explains only what is missing, not what a gate is. The
+              note itself stays, below them, unchanged. */}
+          <GateDefinitions />
           <p className="text-muted module-gate-note-pending">
             {s['gate.pendingNote']}
           </p>
@@ -271,6 +277,7 @@ export function ExitGateAside({
     <aside className="module-aside">
       <div className="module-gate-panel">
         <h2 className="module-section-label">{s['gate.label']}</h2>
+        <GateDefinitions />
         <div className="module-gate-condition">
           {checklistSubmitted ? (
             <GateCheckIcon />
@@ -296,6 +303,38 @@ export function ExitGateAside({
             (#113). */}
       </div>
     </aside>
+  );
+}
+
+/**
+ * What an Exit Gate is, and what a Checkpoint is (#135) — one clause each,
+ * drawn from docs/ubiquitous-language.md and rendered under the `gate.label`
+ * heading of both un-passed panel states.
+ *
+ * These are the first place the app defines two words it then uses as labels
+ * — the nav's `Checkpoints n / 5`, the `Exit Gate passed` tag, the poster's
+ * `Checkpoint · date` — which is clause (4) of the keeper test
+ * (design/issue-guide.md § UI copy ban list, #133). Without it the copy pass
+ * (#113) would delete them again as read-once explainer.
+ *
+ * NOT on the passed poster: by then the learner has passed a gate and the
+ * poster is the record of it, so a definition there is copy read after it is
+ * needed. And not in the nav beside the count, where the word is first read:
+ * the nav is a fixed 52px single row of lockup + 12px uppercase chrome
+ * (design/README.md § Brand; `.app-nav-checkpoints` is allow-listed as
+ * furniture, not prose, in styles/text-floor.test.ts), and a 16px clause
+ * there either overflows the 375px phone band or turns the nav into a
+ * multi-row block on every screen. The gate panel is where both words do
+ * their work, and it renders with an empty IndexedDB — no Checkpoint has to
+ * exist for the definitions to be read.
+ */
+function GateDefinitions() {
+  const s = useStrings();
+  return (
+    <div className="module-gate-definitions text-muted">
+      <p className="module-gate-definition">{s['gate.definition']}</p>
+      <p className="module-gate-definition">{s['gate.checkpointDefinition']}</p>
+    </div>
   );
 }
 

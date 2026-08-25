@@ -99,6 +99,12 @@ export const STRINGS_KEYS = [
   // The Exit Gate — the poster (passed), the panel (not passed) and the
   // pending note, shared by the Module aside and the Exercise gate banner.
   'gate.label',
+  // The two definitions the panel carries (#135) — what an Exit Gate is and
+  // what a Checkpoint is, kept by the keeper test's fourth clause: the first
+  // use of two terms the UI then uses as labels (the nav's Checkpoint count,
+  // the `Exit Gate passed` tag, `Checkpoint · {date}`).
+  'gate.definition',
+  'gate.checkpointDefinition',
   'gate.passedLine',
   'gate.nextModuleLine',
   'gate.allModulesPassedLine',
@@ -208,6 +214,8 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'module.exercise.tagConstruct': [],
 
   'gate.label': [],
+  'gate.definition': [],
+  'gate.checkpointDefinition': [],
   'gate.passedLine': [],
   /** The Module that just unlocked. */
   'gate.nextModuleLine': ['{ordinal}', '{title}'],

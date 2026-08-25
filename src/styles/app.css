@@ -617,6 +617,24 @@ a.curriculum-row:hover {
   padding: 20px;
 }
 
+/* The two definitions (#135) — what an Exit Gate is, what a Checkpoint is —
+   between the panel's `Exit Gate` label and whatever follows it: the condition
+   row, or the pending note. Static prose at the 16px body-text floor (#108),
+   muted like every other explanatory line in the aside, and inside the panel's
+   existing 20px padding, so the aside's 350px column and its sticky offset are
+   untouched. The bottom margin is the gap to the condition row's own 1px top
+   rule (which brings its 12px padding with it). */
+.module-gate-definitions {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.module-gate-definition {
+  margin: 0;
+  font-size: 16px;
+}
+
 /* The single condition row: minor 1px rule on top, marker + text. */
 .module-gate-condition {
   display: flex;
