@@ -263,3 +263,153 @@ describe('the Behavioral Checklist definition (#136)', () => {
     expect(container.textContent).not.toContain(DEFINITION);
   });
 });
+
+/**
+ * What submitting does, and what a "No" means (#137) — the panel's note, and
+ * the behaviour it now describes.
+ *
+ * The note is the only instruction on the step (keeper test clause 2). It is
+ * also the only place the app says the gate is self-reported: no answer value
+ * is a condition anywhere, so "No" three times still passes. These tests pin
+ * the copy AND that behaviour together — if a later change ever made an
+ * answer block submission, the last two would fail and the note would be a
+ * lie.
+ */
+describe('the Behavioral Checklist note (#137)', () => {
+  const NOTE =
+    'Answer all three checks to submit, and answer them honestly — this is a self-report on your own work. Submitting records the Checkpoint whatever you answer, so a "No" is a signal to go back to the code, not a blocker.';
+
+  /** Picks the option at `optionIndex` in every check, in order. */
+  function answerAll(optionIndex: number) {
+    for (const question of questions) {
+      const group = screen.getByRole('radiogroup', { name: question.prompt });
+      fireEvent.click(within(group).getAllByRole('radio')[optionIndex]!);
+    }
+  }
+
+  it('says what submitting does and what a "No" means, under the submit button', async () => {
+    const { container } = await renderChecklist();
+
+    const notes = container.querySelectorAll('.exercise-checklist-note');
+    expect(notes).toHaveLength(1);
+    expect(notes[0]?.textContent).toBe(NOTE);
+
+    // Still the instruction it has always been …
+    expect(NOTE).toContain('Answer all three checks to submit');
+    // … plus the three things #137 adds: honest self-report, the Checkpoint
+    // is recorded whatever the answers are, and "No" sends you back to the
+    // code rather than blocking you.
+    expect(NOTE).toContain('answer them honestly');
+    expect(NOTE).toContain('self-report');
+    expect(NOTE).toContain('Submitting records the Checkpoint whatever you answer');
+    expect(NOTE).toContain('a "No" is a signal to go back to the code, not a blocker');
+
+    // Below the one primary action, so it is read with the decision to
+    // submit and not before the checks (#16's layout).
+    const submit = container.querySelector('.exercise-checklist-submit');
+    expect(notes[0]?.compareDocumentPosition(submit as Node)).toBe(
+      Node.DOCUMENT_POSITION_PRECEDING,
+    );
+    // Static prose: nothing focusable, no live data, so no second way to
+    // reach anything (the interaction-depth question).
+    expect(notes[0]?.querySelector('a, button, details, [role]')).toBeNull();
+    expect(notes[0]?.textContent).not.toMatch(/\d/);
+  });
+
+  it('does not restate the definition above the checks — the two say different things', async () => {
+    const { container } = await renderChecklist();
+
+    const definition = container.querySelector(
+      '.exercise-checklist-definition',
+    );
+    expect(definition?.textContent).toBe(
+      "The Behavioral Checklist is the Module's one Exit Gate condition, self-assessed.",
+    );
+    // The definition says what it IS; the note says what submitting does.
+    expect(NOTE).not.toContain('self-assessed');
+    expect(definition?.textContent).not.toContain('Submitting records');
+  });
+
+  it('uses no word from the UI copy ban list and never implies Kata judges the code', async () => {
+    const { container } = await renderChecklist();
+
+    const text = container.textContent ?? '';
+    expect(text).not.toMatch(
+      /streak|daily goal|days left|% complete|\bXP\b|\bjust\b|\bsimply\b|\beasy\b/i,
+    );
+    // Kata is read-only: it never runs, checks or grades anything.
+    expect(NOTE).not.toMatch(/\bwe\b|\bKata\b|check(s|ed|ing)? your code|grade|score|pass(es|ed)? you/i);
+  });
+
+  it('keeps submit disabled until all three pairs have an answer — unchanged', async () => {
+    await renderChecklist();
+
+    const submit = screen.getByRole('button', {
+      name: 'Submit Behavioral Checklist',
+    });
+    expect(submit).toBeDisabled();
+    // "No" everywhere — the answers never gate, but the count still does.
+    for (const [index, question] of questions.entries()) {
+      const group = screen.getByRole('radiogroup', { name: question.prompt });
+      fireEvent.click(within(group).getAllByRole('radio')[1]!);
+      if (index < questions.length - 1) {
+        expect(submit).toBeDisabled(); // 1 and 2 answered
+      } else {
+        expect(submit).toBeEnabled(); // all three answered
+      }
+    }
+  });
+
+  it('records the Checkpoint on three "No" answers, exactly as it does on three "Yes"', async () => {
+    const { progress } = await renderChecklist();
+    expect(await progress.getCheckpoint('m01')).toBeNull();
+
+    // "No" is the second option in every pair of this fixture.
+    answerAll(1);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Submit Behavioral Checklist' }),
+    );
+    await screen.findByText(/Submitted ·/);
+
+    // The gate is submission alone (docs/design.md § Pedagogy): the answers
+    // are stored, and none of them is read as a condition.
+    const checkpoint = await progress.getCheckpoint('m01');
+    expect(checkpoint).not.toBeNull();
+    expect(checkpoint?.moduleId).toBe('m01');
+    expect((await progress.getGateStatus('m01')).passed).toBe(true);
+    expect((await progress.getSubmittedChecklist('m01'))?.answers).toEqual({
+      q1: 'no',
+      q2: 'no',
+      q3: 'no',
+    });
+  });
+
+  it('drops the note on the submitted panel — the instruction is spent', async () => {
+    const { container } = await renderChecklist();
+
+    answerAll(1);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Submit Behavioral Checklist' }),
+    );
+    await screen.findByText(/Submitted ·/);
+
+    expect(container.querySelector('.exercise-checklist-note')).toBeNull();
+    expect(container.textContent).not.toContain(NOTE);
+    // The submitted panel itself is untouched: check + line, three rows.
+    const panel = container.querySelector('.exercise-checklist-panel');
+    expect(panel?.querySelectorAll('.exercise-checklist-row')).toHaveLength(3);
+  });
+
+  it('renders nothing for a pending Module — no questions, no note', async () => {
+    const progress = await createProgress();
+    const { container } = render(
+      <ProgressProvider progress={progress}>
+        <BehavioralChecklist moduleId="m01" moduleOrdinal={1} questions={[]} />
+      </ProgressProvider>,
+    );
+
+    await Promise.resolve();
+    expect(container.textContent).toBe('');
+    expect(container.querySelector('.exercise-checklist-note')).toBeNull();
+  });
+});
