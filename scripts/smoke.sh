@@ -196,6 +196,10 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The pending-Module placeholder (#28): its copy-block class ships in the
   # bundle — the state itself is fixture-driven (no live Module is pending).
   has "$WORK/app.js" 'module-pending-copy' 'the pending-Module placeholder (#28)'
+  # The reworded pending Concept Page line (#139): the class above shipped
+  # with #28, so the clause is what proves the Generator/pipeline wording is
+  # gone from the deployed pack.
+  has "$WORK/app.js" 'there is nothing to read in this Module' 'the pending Concept Page line (#139)'
   # Progress export/import (#29): the Curriculum backup footer and the
   # download's fixed file name ship in this bundle.
   has "$WORK/app.js" 'curriculum-backup' 'the progress backup footer (#29)'
