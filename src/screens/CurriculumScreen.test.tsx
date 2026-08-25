@@ -26,8 +26,8 @@ const index: ModuleIndex = {
   ],
 };
 
-// What a locked row says to an assistive technology (#74) — clipped out of
-// sight, so this string is the row's only lock state that is not a pixel.
+// What a locked row says (#74) — the row's only lock state that is not a
+// pixel, and since #140 it is on screen rather than clipped out of sight.
 const LOCKED_TEXT = "Locked — pass the previous Module's Exit Gate to unlock it.";
 
 const source: ContentSource = {
@@ -185,16 +185,19 @@ describe('Curriculum screen', () => {
     expect(beforeLoad).not.toMatch(/\d/);
   });
 
-  it('a locked row says it is locked in text, and stays inert (#74)', async () => {
+  it('a locked row says it is locked in visible text, and stays inert (#140)', async () => {
     const { container } = await renderScreen();
     await screen.findByText('01');
 
     // The lock state is text, in the status column, where every other row's
-    // state is read — not opacity, an aria-hidden icon and a cursor (#74).
+    // state is read — not opacity, an aria-hidden icon and a cursor (#74) —
+    // and it is on screen, not clipped away from everyone but a screen
+    // reader (#140).
     const notes = screen.getAllByText(LOCKED_TEXT);
     expect(notes).toHaveLength(4);
     for (const note of notes) {
-      expect(note).toHaveClass('visually-hidden');
+      expect(note).toHaveClass('curriculum-row-locked-reason');
+      expect(note).not.toHaveClass('visually-hidden');
       expect(note.closest('.curriculum-row-status')).not.toBeNull();
     }
 
@@ -211,6 +214,63 @@ describe('Curriculum screen', () => {
     const unlocked = container.querySelector('a.curriculum-row');
     expect(unlocked?.textContent).not.toMatch(/Locked/);
     expect(unlocked?.querySelector('.visually-hidden')).toBeNull();
+  });
+
+  // The whole point of #140: one copy of the reason per locked row, readable
+  // by eye and by screen reader — never a visible node plus a clipped one.
+  it('says the locked reason exactly once per row, with nothing clipped alongside it', async () => {
+    const { container } = await renderScreen();
+    await screen.findByText('01');
+
+    for (const row of container.querySelectorAll('.curriculum-row-locked')) {
+      // Nothing hidden from the accessibility tree, and nothing hidden from
+      // the eye: the one node carrying the reason is the same node for both.
+      expect(row.querySelectorAll('.visually-hidden')).toHaveLength(0);
+      expect(row.querySelector('[aria-hidden="true"]:not(svg)')).toBeNull();
+      expect(row.querySelectorAll('.curriculum-row-locked-reason')).toHaveLength(1);
+      // Once in the row's text, not twice.
+      const occurrences = (row.textContent ?? '').split(LOCKED_TEXT).length - 1;
+      expect(occurrences).toBe(1);
+    }
+
+    // Four locked rows, four copies screen-wide — the reason belongs to the
+    // row, not to the screen.
+    expect(screen.getAllByText(LOCKED_TEXT)).toHaveLength(4);
+  });
+
+  // The other three row states keep the tag they had — the visible reason is
+  // a locked-row-only addition (#140).
+  it('leaves Ready to start, In progress and passed rows tagless of any lock text', async () => {
+    const { container } = await renderScreen({
+      checkpoints: [{ moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' }],
+      drafts: [
+        { moduleId: 'm02', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
+      ],
+    });
+    await screen.findByText('In progress');
+
+    // Passed (01), in progress (02), and — once 03 is reachable — nothing
+    // else changes shape: only locked rows carry the reason.
+    expect(screen.getByText('Exit Gate passed')).toHaveClass('tag', 'tag-accent');
+    expect(screen.getByText('Checkpoint · 12 Jun 2026')).toBeInTheDocument();
+    expect(screen.getByText('In progress')).toHaveClass('tag', 'tag-outline');
+
+    for (const row of container.querySelectorAll('a.curriculum-row')) {
+      expect(row.querySelector('.curriculum-row-locked-reason')).toBeNull();
+      expect(row.textContent).not.toMatch(/Locked/);
+    }
+    // Modules 03–05 are still locked, and they are the only rows saying so.
+    expect(screen.getAllByText(LOCKED_TEXT)).toHaveLength(3);
+  });
+
+  it('a fresh Ready to start row carries the neutral tag and no lock text', async () => {
+    const { container } = await renderScreen();
+    const tag = await screen.findByText('Ready to start');
+
+    expect(tag).toHaveClass('tag', 'tag-neutral');
+    const unlockedRow = container.querySelector('a.curriculum-row');
+    expect(unlockedRow?.querySelector('.curriculum-row-locked-reason')).toBeNull();
+    expect(unlockedRow?.querySelector('.tag')).toBe(tag);
   });
 
   it('clicking a locked row does nothing', async () => {
