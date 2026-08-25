@@ -134,6 +134,57 @@ describe('Curriculum screen', () => {
     ]);
   });
 
+  // #134: the orientation block — three first-use definitions restored under
+  // the keeper test's fourth clause (design/issue-guide.md § UI copy ban list).
+  it('renders the orientation block between the title and the first Module row', async () => {
+    const { container } = await renderScreen();
+    await screen.findByText('01');
+
+    const lines = [
+      ...container.querySelectorAll('.curriculum-orientation-line'),
+    ].map((line) => line.textContent);
+    expect(lines).toEqual([
+      'A Module is one concept: read it, then do its Exercises.',
+      'You write and run the C# in your own IDE. Kata never runs or sees your code.',
+      'Your progress is stored in this browser only.',
+    ]);
+
+    // In the header, after the h1 — so it reads before the rows and, at
+    // <= 767px, stacks under the title through the header's own reflow.
+    const block = container.querySelector('.curriculum-orientation');
+    expect(block?.closest('.curriculum-header')).not.toBeNull();
+    const firstRow = container.querySelector('.curriculum-row');
+    expect(
+      block?.compareDocumentPosition(container.querySelector('h1') as Node),
+    ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
+    expect(block?.compareDocumentPosition(firstRow as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+
+    // Static text only: no second way into a Module (the interaction-depth
+    // question, design/issue-guide.md).
+    expect(block?.querySelector('a, button, details, [role]')).toBeNull();
+  });
+
+  it('renders the orientation block before the Modules load, and unchanged after', async () => {
+    // Empty progress, first paint: `modules` is still null, so no row exists
+    // yet — the header block is already there and carries no counts.
+    const { container } = await renderScreen();
+    expect(container.querySelector('.curriculum-row')).toBeNull();
+    const beforeLoad = container.querySelector(
+      '.curriculum-orientation',
+    )?.textContent;
+    expect(beforeLoad).toContain('A Module is one concept');
+
+    await screen.findByText('01');
+
+    expect(container.querySelector('.curriculum-orientation')?.textContent).toBe(
+      beforeLoad,
+    );
+    // No live data in it: no count, no date.
+    expect(beforeLoad).not.toMatch(/\d/);
+  });
+
   it('a locked row says it is locked in text, and stays inert (#74)', async () => {
     const { container } = await renderScreen();
     await screen.findByText('01');
@@ -239,5 +290,19 @@ describe('Curriculum screen', () => {
     const text = container.textContent ?? '';
     expect(text).not.toMatch(/lesson|course|level|quiz|flashcard|grade|score/i);
     expect(text).not.toMatch(/Green · |suites? green|\d+ \/ \d+ green/i);
+  });
+
+  // design/issue-guide.md § UI copy ban list (#115) — the writing-style list,
+  // separate from the domain vocabulary above. The orientation block (#134) is
+  // the first prose this screen has carried since the copy pass, so the screen
+  // asserts it here.
+  it('uses no word from the UI copy ban list (#115)', async () => {
+    const { container } = await renderScreen();
+    await screen.findByText('01');
+
+    const text = container.textContent ?? '';
+    expect(text).not.toMatch(
+      /streak|daily goal|days left|% complete|\bXP\b|\bjust\b|\bsimply\b|\beasy\b/i,
+    );
   });
 });

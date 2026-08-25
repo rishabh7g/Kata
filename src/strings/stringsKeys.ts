@@ -73,6 +73,13 @@ export const STRINGS_KEYS = [
   // after, and neither carried live data, instructed a step, or guarded a
   // destructive action.
   'curriculum.title',
+  // The orientation block (#134): what a Module is and the read-then-do
+  // order, where the C# gets written, and where progress lives. Restored
+  // under the keeper test's fourth clause — a first-use definition of a term
+  // the UI then uses as a label ("Module" heads every row below it).
+  'curriculum.orientation.module',
+  'curriculum.orientation.ownIde',
+  'curriculum.orientation.browserOnly',
   'curriculum.row.locked',
 
   // Module screen.
@@ -180,6 +187,9 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'gate.checkpointLine': ['{date}'],
 
   'curriculum.title': [],
+  'curriculum.orientation.module': [],
+  'curriculum.orientation.ownIde': [],
+  'curriculum.orientation.browserOnly': [],
   'curriculum.row.locked': [],
 
   /** The zero-padded ordinal — `Module {ordinal}` reads `Module 03`. */

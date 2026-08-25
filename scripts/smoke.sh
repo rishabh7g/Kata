@@ -154,6 +154,9 @@ elif get "$JS_URL" "$WORK/app.js"; then
   has "$WORK/app.js" 'Checkpoints' 'the Checkpoint count label'
   has "$WORK/app.js" 'curriculum-row' 'the Curriculum Module rows (#10)'
   has "$WORK/app.js" 'Ready to start' 'the fresh-Module status tag (#10)'
+  # The orientation block (#134): its container class ships in the bundle —
+  # static copy, so the class is the whole surface to check.
+  has "$WORK/app.js" 'curriculum-orientation' 'the Curriculum orientation block (#134)'
   # The Module route is hash-routed, so it is this same 200 document; its
   # markup shipping in the bundle is what "the route serves the screen" means.
   has "$WORK/app.js" 'module-concept' 'the Module Concept Page container (#11)'

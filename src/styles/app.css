@@ -221,6 +221,24 @@ html, body {
   max-width: 15ch;
 }
 
+/* The orientation block (#134) — three first-use definitions (what a Module
+   is and the read-then-do order, where the C# is written, where progress
+   lives) in the header's 340px muted column, the column the read-once intro
+   used to fill. Static text, no live data: it never varies with progress.
+   The phone-band `.curriculum-header` rule below already collapses that
+   column to `1fr`, so the block stacks under the title at <= 767px with no
+   new breakpoint and no page-level horizontal scroll. */
+.curriculum-orientation {
+  display: grid;
+  gap: 8px;
+}
+
+.curriculum-orientation-line {
+  margin: 0;
+  font-size: 16px;
+  max-width: 62ch;
+}
+
 .curriculum-row {
   display: grid;
   grid-template-columns: 104px 1fr 230px 36px;
