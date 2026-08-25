@@ -57,6 +57,15 @@ const en = {
 
   curriculum: {
     title: 'Learn design by producing code.',
+    // The orientation block (#134): three first-use definitions, each the
+    // first place the UI explains a word it then uses as a label — the
+    // keeper test's fourth clause (design/issue-guide.md).
+    orientation: {
+      module: 'A Module is one concept: read it, then do its Exercises.',
+      ownIde:
+        'You write and run the C# in your own IDE. Kata never runs or sees your code.',
+      browserOnly: 'Your progress is stored in this browser only.',
+    },
     row: {
       locked: "Locked — pass the previous Module's Exit Gate to unlock it.",
     },

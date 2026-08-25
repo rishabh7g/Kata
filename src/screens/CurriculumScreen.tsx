@@ -31,9 +31,28 @@ export function CurriculumScreen() {
     <>
       {/* The kicker ("Curriculum — fixed order, foundations down") and the
           intro ("Five Modules. Advance by passing each Exit Gate…") were
-          read-once explainer copy — deleted on the copy pass (#113). */}
+          read-once explainer copy — deleted on the copy pass (#113). What
+          came back in their place (#134) is the orientation block: three
+          first-use definitions, which the keeper test's fourth clause keeps
+          (design/issue-guide.md § UI copy ban list). It sits in the header's
+          340px muted column — the one the intro used to fill
+          (design/README.md § Screens › 1) — so it reads under the title at
+          phone widths through the header's existing reflow, and nothing
+          about the rows changes. Static text: no link, no disclosure, no
+          second route into a Module. */}
       <header className="curriculum-header">
         <h1 className="curriculum-title">{s['curriculum.title']}</h1>
+        <div className="curriculum-orientation text-muted">
+          <p className="curriculum-orientation-line">
+            {s['curriculum.orientation.module']}
+          </p>
+          <p className="curriculum-orientation-line">
+            {s['curriculum.orientation.ownIde']}
+          </p>
+          <p className="curriculum-orientation-line">
+            {s['curriculum.orientation.browserOnly']}
+          </p>
+        </div>
       </header>
       {modules !== null && (
         <>
