@@ -120,6 +120,18 @@ const en = {
     sectionLabel: {
       spec: 'Exercise Spec',
       targetInterface: 'Target Interface',
+      // Deliberately lower-case, unlike every label around it (#143). Title
+      // case is a signal in this app, not decoration: Concept Page, Model
+      // Examples, Exercises, Exercise Spec and Target Interface are all
+      // domain terms in docs/ubiquitous-language.md, and the capitals are
+      // what say "these words are used exactly". This section has no term of
+      // its own — what it hands over is an Exercise folder and its Test
+      // Suite, both already named — and the docs use the phrase as plain
+      // description wherever it appears (ubiquitous-language.md § Test Suite,
+      // docs/design.md § Pedagogy, design/README.md's "practice-material
+      // link"). Capitalising it would either invent a term for something
+      // that already has two names, or spend the signal on prose. It stays
+      // lower-case: a decision, not an oversight.
       practiceMaterial: 'Practice material',
     },
     spec: {
