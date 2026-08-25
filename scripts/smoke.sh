@@ -160,6 +160,9 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The Module route is hash-routed, so it is this same 200 document; its
   # markup shipping in the bundle is what "the route serves the screen" means.
   has "$WORK/app.js" 'module-concept' 'the Module Concept Page container (#11)'
+  # The Exit Gate / Checkpoint definitions (#135): static copy in the gate
+  # panel, so its container class is the whole surface to check.
+  has "$WORK/app.js" 'module-gate-definitions' 'the Exit Gate and Checkpoint definitions (#135)'
   has "$WORK/app.js" 'module-example-grid' 'the Model Examples grid (#11)'
   # The Exercise route (#15) is hash-routed too: the same 200 document, with
   # the Spec grid container shipping in this bundle.

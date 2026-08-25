@@ -492,6 +492,18 @@ describe('Module screen', () => {
       ),
     ).toBeInTheDocument();
 
+    // The definitions ship here too (#135) — four of five packs are pending,
+    // so this is where most learners meet the words first — and they sit
+    // above the pending note rather than replacing it.
+    const definitions = aside?.querySelector('.module-gate-definitions');
+    expect(definitions?.textContent).toContain('pass condition');
+    expect(definitions?.textContent).toContain('recorded passage');
+    expect(
+      definitions?.compareDocumentPosition(
+        aside?.querySelector('.module-gate-note-pending') as Node,
+      ),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+
     // A checklist that does not exist yet cannot be invited: no condition
     // row, no unmet square, no submitted/not-submitted status, no poster.
     expect(aside?.querySelector('.module-gate-condition')).toBeNull();
@@ -533,6 +545,63 @@ describe('Module screen', () => {
     expect(rows[0]?.textContent).toContain('Not yet submitted');
     expect(rows[0]?.querySelector('.module-gate-box')).toBeInTheDocument();
     expect(rows[0]?.querySelector('svg')).not.toBeInTheDocument();
+  });
+
+  // #135: the Exit Gate and Checkpoint definitions — the first place the app
+  // says what either word means, kept by the keeper test's fourth clause
+  // (design/issue-guide.md § UI copy ban list).
+  it('defines the Exit Gate and the Checkpoint above the condition row (#135)', async () => {
+    const { container } = await renderAt('/modules/m01');
+    await screen.findByText('Exit Gate');
+
+    const panel = container.querySelector('.module-gate-panel');
+    const lines = [
+      ...(panel?.querySelectorAll('.module-gate-definition') ?? []),
+    ].map((line) => line.textContent);
+    expect(lines).toEqual([
+      "The Exit Gate is this Module's pass condition — passing it unlocks the next Module.",
+      'A Checkpoint is a recorded passage through an Exit Gate, counted in the nav.',
+    ]);
+
+    // Under the `Exit Gate` heading and before the condition row — the panel
+    // reads definition first, state second.
+    const definitions = panel?.querySelector('.module-gate-definitions');
+    const heading = panel?.querySelector('h2');
+    const condition = panel?.querySelector('.module-gate-condition');
+    expect(definitions?.compareDocumentPosition(heading as Node)).toBe(
+      Node.DOCUMENT_POSITION_PRECEDING,
+    );
+    expect(definitions?.compareDocumentPosition(condition as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+
+    // The condition row is untouched: still exactly one, still unmet.
+    expect(panel?.querySelectorAll('.module-gate-condition')).toHaveLength(1);
+    expect(condition?.textContent).toContain('Behavioral Checklist submitted');
+    expect(condition?.textContent).toContain('Not yet submitted');
+
+    // Static text only — no link, no disclosure, so no second way to reach
+    // anything (the interaction-depth question, design/issue-guide.md).
+    expect(definitions?.querySelector('a, button, details, [role]')).toBeNull();
+    // No live data: the definitions read the same with an empty IndexedDB, so
+    // no Checkpoint has to exist anywhere for them to be readable.
+    expect(definitions?.textContent).not.toMatch(/\d/);
+  });
+
+  it('repeats neither definition on the passed poster (#135)', async () => {
+    const { container } = await renderAt(
+      '/modules/m01',
+      [],
+      await passedProgress(),
+    );
+    await screen.findByText('Passed.');
+
+    // The poster is the record of a gate already passed — the definitions
+    // would be copy read after it was needed.
+    expect(container.querySelector('.module-gate-definitions')).toBeNull();
+    const text = container.textContent ?? '';
+    expect(text).not.toContain('pass condition');
+    expect(text).not.toContain('recorded passage');
   });
 
   it('styles the met condition state (fixture: submitted but not passed)', () => {
@@ -634,6 +703,20 @@ describe('Module screen', () => {
 
     const text = container.textContent ?? '';
     expect(text).not.toMatch(/lesson|course|level|quiz|flashcard|grade|score/i);
+  });
+
+  // design/issue-guide.md § UI copy ban list (#115) — the writing-style list,
+  // separate from the domain vocabulary above. The gate definitions (#135)
+  // are the first prose this panel has carried since the copy pass, so the
+  // screen asserts against it here.
+  it('uses no word from the UI copy ban list (#115)', async () => {
+    const { container } = await renderAt('/modules/m01');
+    await screen.findByText('Exit Gate');
+
+    const text = container.textContent ?? '';
+    expect(text).not.toMatch(
+      /streak|daily goal|days left|% complete|\bXP\b|\bjust\b|\bsimply\b|\beasy\b/i,
+    );
   });
 });
 

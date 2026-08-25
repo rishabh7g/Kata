@@ -42,6 +42,17 @@ const en = {
   gate: {
     checkpointLine: 'Checkpoint · {date}',
     label: 'Exit Gate',
+    // The two definitions the gate panel carries (#135), each the first
+    // place the UI explains a word it then uses as a label — the keeper
+    // test's fourth clause (design/issue-guide.md § UI copy ban list).
+    // Wording from docs/ubiquitous-language.md: the Exit Gate is the
+    // Module's pass condition, a Checkpoint the recorded passage through
+    // one. One clause each; nothing about who judges the code (#137 owns
+    // the self-report wording).
+    definition:
+      "The Exit Gate is this Module's pass condition — passing it unlocks the next Module.",
+    checkpointDefinition:
+      'A Checkpoint is a recorded passage through an Exit Gate, counted in the nav.',
     passedLine: 'Passed.',
     nextModuleLine: 'Module {ordinal} — {title} unlocked.',
     allModulesPassedLine: 'All five Modules passed — the Curriculum is complete.',
