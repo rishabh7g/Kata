@@ -193,7 +193,9 @@ describe('Exercise screen', () => {
     await screen.findByText('Behavioral Checklist');
 
     // Four section labels at h2 — including the Behavioral Checklist's, which
-    // lives in the aside and is the same kind of section.
+    // lives in the aside and is the same kind of section. "Practice material"
+    // is lower-case on purpose and this assertion guards that: the other
+    // labels are domain terms, it is not (#143, src/strings/en.ts).
     expect(expectWellFormedOutline(container)).toEqual([
       'h1 Deepen a shallow document store',
       'h2 Exercise Spec',

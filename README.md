@@ -44,10 +44,18 @@ Every push to `main` runs the same steps in
 
 ## Status
 
-Design package complete. The app shell is live on GitHub Pages: nav lockup,
-Checkpoint count, and the design stylesheet with self-hosted Archivo. It is an
-installable PWA — the shell is precached, so it loads and renders offline.
-Screens next.
+All three screens are live on GitHub Pages. Curriculum lists the five Modules
+with the lock chain; Module carries its Concept Page, Model Examples and
+Exercises; Exercise shows the Exercise Spec, the immutable Target Interface, the
+link to the committed practice folder, and the Module's Behavioral Checklist.
+All five Modules are authored — a Concept Page, three Model Examples, and two
+Exercises whose folder and Test Suite are committed under `exercises/`.
+
+The progression loop closes: submitting a Module's Behavioral Checklist opens
+its Exit Gate — self-assessed, the sole condition — records a Checkpoint, and
+unlocks the next Module. Progress is kept in this browser's IndexedDB, and
+export/import moves it to a file and back. It is an installable PWA — the shell
+is precached, so it loads and renders offline.
 
 ## Naming
 
