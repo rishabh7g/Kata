@@ -123,6 +123,14 @@ const en = {
     },
     targetInterface: {
       immutableTag: 'Immutable',
+      // The first place the app says what a Target Interface IS (#136) —
+      // the keeper test's fourth clause (design/issue-guide.md § UI copy
+      // ban list, #133): the section heading, the Spec grid and the
+      // `Immutable` tag all label it before anything defines it. Wording
+      // from docs/ubiquitous-language.md; one clause, and the full term
+      // every time, never "interface" alone (issue-guide ground rule 1).
+      definition:
+        'The Target Interface is the boundary you must end up with — the Test Suite is written against it, and you may not change it.',
       // Trimmed (#113): the `Immutable` tag already says "don't touch it";
       // this keeps only the one instruction clause.
       note: 'Wanting to change it is a signal to record and discuss — not an allowed move.',
@@ -138,6 +146,13 @@ const en = {
 
   checklist: {
     heading: 'Behavioral Checklist',
+    // What the checklist IS, said once under its heading (#136) — the
+    // keeper test's fourth clause: the heading, the Module gate's condition
+    // row and the submit button all use the term as a label first. Wording
+    // from docs/ubiquitous-language.md: the Exit Gate's one condition,
+    // self-assessed. One clause; #137 owns what a "No" answer means.
+    definition:
+      "The Behavioral Checklist is the Module's one Exit Gate condition, self-assessed.",
     // Trimmed to the value (#113): "Module NN gate" carries live data; the
     // rest was prose wrapped around it.
     meta: 'Module {ordinal} gate',

@@ -325,6 +325,65 @@ describe('Exercise screen', () => {
     ).not.toBeInTheDocument();
   });
 
+  // #136: the Target Interface definition — the first place the app says
+  // what the term means, kept by clause (4) of the keeper test
+  // (design/issue-guide.md § UI copy ban list, #133).
+  it('defines the Target Interface under the heading, above the note (#136)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Target Interface');
+
+    const definition = container.querySelector(
+      '.exercise-interface-definition',
+    );
+    expect(definition?.textContent).toBe(
+      'The Target Interface is the boundary you must end up with — the Test Suite is written against it, and you may not change it.',
+    );
+
+    // Heading, then definition, then the existing note, then the code.
+    const heading = container.querySelector('.exercise-interface-heading');
+    const note = container.querySelector('.exercise-interface-note');
+    const code = container.querySelector('pre.exercise-interface-code');
+    expect(definition?.compareDocumentPosition(heading as Node)).toBe(
+      Node.DOCUMENT_POSITION_PRECEDING,
+    );
+    expect(definition?.compareDocumentPosition(note as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(definition?.compareDocumentPosition(code as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+
+    // The `Immutable` tag and the note are both untouched.
+    expect(screen.getByText('Immutable')).toHaveClass('tag-accent');
+    expect(note?.textContent).toBe(
+      'Wanting to change it is a signal to record and discuss — not an allowed move.',
+    );
+
+    // Static text only — no link, no disclosure, so no second way to reach
+    // anything (the interaction-depth question, design/issue-guide.md).
+    expect(definition?.querySelector('a, button, details, [role]')).toBeNull();
+    // Always the full term, never "interface" alone (ground rule 1).
+    expect(definition?.textContent).not.toMatch(/(?<!Target )\binterface\b/i);
+  });
+
+  it('leaves the Target Interface code display-only with the definition above it (#136)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Target Interface');
+
+    // The definition is prose beside the block, never inside it: the C# stays
+    // a <pre>, never a textarea, never editable.
+    const code = container.querySelector('.exercise-interface-code');
+    expect(code?.tagName).toBe('PRE');
+    expect(code?.textContent).toContain('public interface IDocumentStore');
+    expect(
+      code?.querySelector('.exercise-interface-definition'),
+    ).toBeNull();
+    expect(container.querySelector('textarea')).not.toBeInTheDocument();
+    expect(
+      container.querySelector('[contenteditable]'),
+    ).not.toBeInTheDocument();
+  });
+
   it('renders the disabled note while folderUrl is the null placeholder (#23 pending)', async () => {
     const { container } = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Practice material');
@@ -503,6 +562,21 @@ describe('Exercise screen', () => {
 
     const text = container.textContent ?? '';
     expect(text).not.toMatch(/lesson|course|level|quiz|flashcard|grade|score/i);
+  });
+
+  // design/issue-guide.md § UI copy ban list (#115) — the writing-style list,
+  // separate from the domain vocabulary above. The two definitions (#136) are
+  // the first prose this screen has gained since the copy pass, so it asserts
+  // against the list here.
+  it('uses no word from the UI copy ban list (#115)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Exercise Spec');
+    await screen.findByText('Behavioral Checklist');
+
+    const text = container.textContent ?? '';
+    expect(text).not.toMatch(
+      /streak|daily goal|days left|% complete|\bXP\b|\bjust\b|\bsimply\b|\beasy\b/i,
+    );
   });
 });
 
@@ -719,6 +793,86 @@ describe('Behavioral Checklist (#16)', () => {
     expect(
       screen.queryByText('Exit Gate passed — Checkpoint recorded.'),
     ).not.toBeInTheDocument();
+  });
+
+  // #136: the Behavioral Checklist definition — the first place the app says
+  // what the checklist is, kept by clause (4) of the keeper test.
+  it('defines the Behavioral Checklist above the radio pairs (#136)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+
+    const aside = container.querySelector('aside.exercise-aside');
+    const definition = aside?.querySelector('.exercise-checklist-definition');
+    expect(definition?.textContent).toBe(
+      "The Behavioral Checklist is the Module's one Exit Gate condition, self-assessed.",
+    );
+
+    // Under the heading block, above the first check.
+    const heading = aside?.querySelector('.exercise-checklist-heading');
+    const firstItem = aside?.querySelector('.exercise-checklist-item');
+    expect(definition?.compareDocumentPosition(heading as Node)).toBe(
+      Node.DOCUMENT_POSITION_PRECEDING,
+    );
+    expect(definition?.compareDocumentPosition(firstItem as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+
+    // Static text only, and no live data: it reads the same on an empty
+    // IndexedDB, so nothing has to be submitted for it to be readable.
+    expect(definition?.querySelector('a, button, details, [role]')).toBeNull();
+    expect(definition?.textContent).not.toMatch(/\d/);
+    // The heading's own meta line is untouched (#138 owns that wording).
+    expect(
+      aside?.querySelector('.exercise-checklist-meta')?.textContent,
+    ).toBe('Module 01 gate');
+  });
+
+  it('drops the definition once the checklist is submitted, leaving the panel intact (#136)', async () => {
+    const { container } = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+    pickAnswer(container, 0, 'a');
+    pickAnswer(container, 1, 'a');
+    pickAnswer(container, 2, 'b');
+    fireEvent.click(submitButton());
+    await screen.findByText(/Submitted ·/);
+
+    // By then the gate is passed and the panel is the record of it, so the
+    // definition would be copy read after it was needed — the same call #135
+    // made for the Exit Gate poster.
+    expect(
+      container.querySelector('.exercise-checklist-definition'),
+    ).toBeNull();
+    // …and the submitted panel is exactly what it was: check + line, rows.
+    const panel = container.querySelector('.exercise-checklist-panel');
+    expect(
+      panel?.querySelector('.exercise-checklist-submitted-line')?.textContent,
+    ).toMatch(/^Submitted · /);
+    expect(
+      panel?.querySelector('.exercise-checklist-submitted-line svg'),
+    ).not.toBeNull();
+    expect(panel?.querySelectorAll('.exercise-checklist-row')).toHaveLength(3);
+  });
+
+  it("shows the same definition state on the Module's other Exercise screen (#136)", async () => {
+    // Not submitted: both screens define the term …
+    const first = await renderAt('/modules/m01/exercises/m01-e1');
+    await screen.findByText('Behavioral Checklist');
+    expect(
+      first.container.querySelector('.exercise-checklist-definition'),
+    ).not.toBeNull();
+    pickAnswer(first.container, 0, 'a');
+    pickAnswer(first.container, 1, 'a');
+    pickAnswer(first.container, 2, 'b');
+    fireEvent.click(submitButton());
+    await screen.findByText(/Submitted ·/);
+    first.unmount();
+
+    // … and submitted is per Module, so the other screen drops it too.
+    const second = await renderAt('/modules/m01/exercises/m01-e2');
+    await screen.findByText(/Submitted ·/);
+    expect(
+      second.container.querySelector('.exercise-checklist-definition'),
+    ).toBeNull();
   });
 
   it("shows the same submitted state on the Module's other Exercise screen — per Module, not per Exercise", async () => {

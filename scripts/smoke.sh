@@ -167,8 +167,14 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The Exercise route (#15) is hash-routed too: the same 200 document, with
   # the Spec grid container shipping in this bundle.
   has "$WORK/app.js" 'exercise-spec-grid' 'the Exercise Spec grid (#15)'
+  # The Target Interface definition (#136): static copy above the display-only
+  # C# block, so its class is the whole surface to check.
+  has "$WORK/app.js" 'exercise-interface-definition' 'the Target Interface definition (#136)'
   # The Behavioral Checklist (#16): the form and its one primary action.
   has "$WORK/app.js" 'exercise-checklist-item' 'the Behavioral Checklist form (#16)'
+  # The Behavioral Checklist definition (#136): static copy in the form state
+  # of the panel, checked by its class for the same reason.
+  has "$WORK/app.js" 'exercise-checklist-definition' 'the Behavioral Checklist definition (#136)'
   has "$WORK/app.js" 'Submit Behavioral Checklist' 'the checklist submit action (#16)'
   # The Exit Gate poster (#17): the passed-state accent field on the Module
   # screen — its container class and display line ship in this bundle.

@@ -92,6 +92,12 @@ export function BehavioralChecklist({
           })}
         </span>
       </div>
+      {/* The definition rides with the form state only (#136): once the
+          checklist is submitted the panel is the record of a gate already
+          passed, so a definition there is copy read after it was needed —
+          the same call #135 made for the Exit Gate poster. Per Module, so
+          both of a Module's Exercise screens agree by construction. */}
+      {submitted === null && <ChecklistDefinition />}
       {submitted !== null ? (
         <SubmittedPanel
           submitted={submitted}
@@ -135,6 +141,33 @@ export function BehavioralChecklist({
         />
       )}
     </section>
+  );
+}
+
+/**
+ * What the Behavioral Checklist is (#136) — one clause, under the panel
+ * heading and above the three radio pairs.
+ *
+ * The first place the app defines a term it already uses as a label: this
+ * heading, the submit button, and the Module screen's gate condition row
+ * ("Behavioral Checklist submitted"). That is clause (4) of the keeper test
+ * (design/issue-guide.md § UI copy ban list, #133) — without it the copy
+ * pass (#113) would read it as a read-once explainer and delete it.
+ *
+ * Wording from docs/ubiquitous-language.md: the Exit Gate's one condition,
+ * self-assessed. What a "No" answer means is #137's, not this clause's.
+ *
+ * It renders only inside the form state, so the pending-Module (`null`) and
+ * loading (`submitted === undefined`) returns above are untouched: no
+ * definition flashes before the panel state is known, and a Module with no
+ * checklist still renders nothing at all.
+ */
+function ChecklistDefinition() {
+  const s = useStrings();
+  return (
+    <p className="text-muted exercise-checklist-definition">
+      {s['checklist.definition']}
+    </p>
   );
 }
 

@@ -836,6 +836,16 @@ a.curriculum-row:hover {
   margin-bottom: 8px;
 }
 
+/* What a Target Interface is (#136) — one clause between the section
+   heading and the warning note it makes readable. Same body-floor size,
+   muted tone and 60ch measure as that note, so the section keeps one column
+   of prose above the code block; no breakpoint or padding moves. */
+.exercise-interface-definition {
+  font-size: 16px;
+  max-width: 60ch;
+  margin: 0 0 8px;
+}
+
 /* The warning note: body-floor size, muted, capped at 60ch (#108;
    prototype § Exercise). */
 .exercise-interface-note {
@@ -908,6 +918,15 @@ a.curriculum-row:hover {
 /* tokens.json typeScale.app.caption: 11. */
 .exercise-checklist-meta {
   font-size: 16px;
+}
+
+/* What the Behavioral Checklist is (#136) — one clause under the panel
+   heading, above the first check. Body-floor size (#108), muted, and its
+   bottom margin is the gap to that check's own 1px top rule; the 400px aside
+   column and the heading's own 8px gap are untouched. */
+.exercise-checklist-definition {
+  font-size: 16px;
+  margin: 0 0 12px;
 }
 
 /* One check: minor 1px rule on top (tokens.json layout.rules.minor). */
