@@ -107,6 +107,31 @@ const source: ContentSource = {
   loadModuleContent: async (id) => (id === 'm01' ? content : null),
 };
 
+// An explain-only Module (#161): authored, complete, and carrying no
+// Exercises at all — the shape milestone L3's Agentic AI Modules ship in.
+// Exercises are 0..n; two-of-a-kind is a Software Design authoring
+// convention (docs/design.md § Module anatomy), not a schema rule.
+const explainOnlyContent: ModuleContent = {
+  ...content,
+  id: 'm03',
+  conceptPageMarkdown: '# Explain-only Module\n\n## Reading it is the whole Module\n\nNothing to clone.',
+  exercises: [],
+};
+
+const explainOnlyIndex: ModuleIndex = {
+  ...index,
+  modules: [
+    ...index.modules,
+    { id: 'm03', categoryId: 'software-design', ordinal: 3, title: 'Explain-only Module', description: 'A Module that only explains.', pending: false },
+  ],
+};
+
+const explainOnlySource: ContentSource = {
+  loadIndex: async () => explainOnlyIndex,
+  loadModuleContent: async (id) =>
+    id === 'm03' ? explainOnlyContent : id === 'm01' ? content : null,
+};
+
 beforeEach(() => {
   // A brand-new browser profile per test (#14's prescribed environment).
   globalThis.indexedDB = new IDBFactory();
@@ -445,6 +470,62 @@ describe('Module screen', () => {
     fireEvent.click(screen.getByText('Deepen a shallow document store'));
 
     expect(await screen.findByText('exercise probe')).toBeInTheDocument();
+  });
+
+  // ── Explain-only Module (#161): Exercises are 0..n, so a Module can be
+  // complete with none. It reads shorter — it does not report an absence.
+  it('renders no Exercises section at all for a Module with zero Exercises (#161)', async () => {
+    const { container } = await renderAt('/modules/m03', undefined, explainOnlySource);
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
+
+    // No heading, no empty-state placeholder, no cards: the word never
+    // appears on the screen, and the outline simply skips it.
+    expect(
+      screen.queryByRole('heading', { level: 2, name: 'Exercises' }),
+    ).toBeNull();
+    expect(container.querySelector('.module-pending-copy')).toBeNull();
+    expect(container.querySelector('.module-exercises')).toBeNull();
+    expect(container.querySelector('.module-exercise-card')).toBeNull();
+    expect(container.textContent ?? '').not.toMatch(/Exercise/i);
+
+    // What it does render: the Concept Page, the Model Examples, and the
+    // Self-Check — the Module is complete, only shorter.
+    expect(expectWellFormedOutline(container)).toEqual([
+      'h1 Explain-only Module',
+      'h2 Concept Page',
+      'h3 Reading it is the whole Module',
+      'h2 Model Examples',
+      'h2 Self-Check',
+    ]);
+    expect(container.querySelectorAll('.module-example')).toHaveLength(2);
+  });
+
+  it('drops the divider that led into the Exercises section too (#161)', async () => {
+    const { container } = await renderAt('/modules/m03', undefined, explainOnlySource);
+    await screen.findByRole('heading', { level: 2, name: 'Model Examples' });
+
+    // One rule only — between the Concept Page and the Model Examples. A
+    // second would hang under the last example, ruling off nothing.
+    expect(container.querySelectorAll('.module-rule')).toHaveLength(1);
+  });
+
+  it('exposes no navigable Exercise route from an explain-only Module (#161)', async () => {
+    const { container } = await renderAt('/modules/m03', undefined, explainOnlySource);
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
+
+    const links = [...container.querySelectorAll('a')];
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/']);
+  });
+
+  it('still autosaves the Self-Check of a Module with no Exercises (#161)', async () => {
+    const { progress } = await renderAt('/modules/m03', undefined, explainOnlySource);
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
+
+    fireEvent.click(screen.getAllByRole('radio')[0] as HTMLElement);
+
+    await waitFor(async () => {
+      expect(await progress.getSelfCheckAnswers('m03')).not.toBeNull();
+    });
   });
 
   // ── Pending Module (#28): Module 2 is open like every other Module, but

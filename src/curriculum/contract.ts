@@ -82,7 +82,7 @@ export interface ModuleContent {
   readonly id: ModuleId;
   readonly conceptPageMarkdown: string;
   readonly modelExamples: readonly ModelExample[]; // 2–3
-  readonly exercises: readonly ExerciseBrief[]; // >= 2: one refactor, one construct
+  readonly exercises: readonly ExerciseBrief[]; // 0..n; [] = explains only
   readonly checklistQuestions: readonly [
     ChecklistQuestion,
     ChecklistQuestion,

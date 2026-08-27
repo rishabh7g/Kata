@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "m09",
+  "conceptPageMarkdown": "# An explain-only Module\n\nIt teaches by reading alone: no Exercise folder to clone.",
+  "modelExamples": [
+    {
+      "before": "agent.Run(prompt, tools, memory, budget);",
+      "after": "agent.Run(prompt);",
+      "caption": "The wiring moved inside the agent."
+    },
+    {
+      "before": "if (result.Error != null) { }",
+      "after": "result.Match(onOk, onError);",
+      "caption": "The failure became part of the shape."
+    }
+  ],
+  "exercises": [],
+  "checklistQuestions": [
+    {
+      "id": "q1",
+      "prompt": "Can you name the one thing the agent hides?",
+      "options": [
+        { "value": "yes", "label": "Yes" },
+        { "value": "not-yet", "label": "Not yet" }
+      ]
+    },
+    {
+      "id": "q2",
+      "prompt": "Can you point at where the failure is handled?",
+      "options": [
+        { "value": "yes", "label": "Yes" },
+        { "value": "not-yet", "label": "Not yet" }
+      ]
+    },
+    {
+      "id": "q3",
+      "prompt": "Can you describe the surface in one sentence?",
+      "options": [
+        { "value": "yes", "label": "Yes" },
+        { "value": "not-yet", "label": "Not yet" }
+      ]
+    }
+  ]
+}

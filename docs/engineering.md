@@ -144,7 +144,7 @@ export interface ModuleContent {
   readonly id: ModuleId;
   readonly conceptPageMarkdown: string;
   readonly modelExamples: readonly ModelExample[]; // 2–3
-  readonly exercises: readonly ExerciseBrief[]; // >= 2: one refactor, one construct
+  readonly exercises: readonly ExerciseBrief[]; // 0..n; [] = explains only
   readonly checklistQuestions: readonly [
     ChecklistQuestion,
     ChecklistQuestion,
@@ -381,8 +381,14 @@ exit code, and it runs against the deployed index in `scripts/smoke.sh` too.
 | `id` | string | matches the file name and an index entry |
 | `conceptPageMarkdown` | string | non-empty markdown, ~1 page of prose |
 | `modelExamples` | array | 2–3 items, each `{ before, after, caption }`, all non-empty; each code side ≤ 40 lines, in the Category's language (an authoring rule, checked in review) |
-| `exercises` | array | ≥ 2 briefs, at least one `refactor` and one `construct` |
+| `exercises` | array | 0..n briefs — `[]` is valid and means the Module only explains |
 | `checklistQuestions` | array | **exactly 3**, each `{ id, prompt, options }` with **exactly 2** options `{ value, label }`; option values unique within a question; question ids unique within the Module |
+
+How many Exercises a Module carries is an **authoring convention, not a schema
+rule**: a Software Design Module ships two — one `refactor`, one `construct`
+(`docs/design.md` § Module anatomy) — while an explain-only Module ships `"exercises":
+[]` and simply reads shorter. The schema counts nothing, so neither shape is a
+content error.
 
 **Exercise brief** — each item of `exercises` requires `id` (`^m\d{2}-e\d+$`,
 unique app-wide, equal to its folder name), `type` (`refactor` | `construct`),

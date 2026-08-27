@@ -33,26 +33,9 @@
       "items": { "$ref": "#/$defs/modelExample" }
     },
     "exercises": {
-      "description": "≥ 2 Exercise briefs: at least one refactor and one construct.",
+      "description": "0..n Exercise briefs; [] is valid and means the Module only explains. How many a Module carries is an authoring convention (docs/design.md § Module anatomy: a Software Design Module ships one refactor and one construct), not a schema rule.",
       "type": "array",
-      "minItems": 2,
-      "items": { "$ref": "#/$defs/exerciseBrief" },
-      "allOf": [
-        {
-          "contains": {
-            "type": "object",
-            "properties": { "type": { "const": "refactor" } },
-            "required": ["type"]
-          }
-        },
-        {
-          "contains": {
-            "type": "object",
-            "properties": { "type": { "const": "construct" } },
-            "required": ["type"]
-          }
-        }
-      ]
+      "items": { "$ref": "#/$defs/exerciseBrief" }
     },
     "checklistQuestions": {
       "description": "Exactly 3 Self-Check questions, each a radio pair.",
