@@ -1,18 +1,12 @@
-import { useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { BackArrowIcon } from '../app/BackArrowIcon';
-import { LiveAnnouncement } from '../app/LiveAnnouncement';
 import { ModuleUnavailable } from '../app/ModuleUnavailable';
 import { useCurriculum } from '../app/CurriculumContext';
-import { useProgress } from '../app/ProgressContext';
 import { useDocumentTitle } from '../app/useDocumentTitle';
-import { useGateStatus } from '../app/useGateStatus';
 import { useModuleDetail } from '../app/useModuleDetail';
-import { useModuleSummaries } from '../app/useModuleSummaries';
 import type { ExerciseBrief } from '../curriculum';
 import { interpolate, useStrings } from '../strings/strings';
-import { BehavioralChecklist } from './BehavioralChecklist';
-import { nextModuleLine, ordinalLabel } from './ModuleScreen';
+import { ordinalLabel } from './ModuleScreen';
 
 /**
  * Exercise — the read surface for one brief: header, Exercise Spec grid,
@@ -25,15 +19,13 @@ import { nextModuleLine, ordinalLabel } from './ModuleScreen';
  * ids (docs/engineering.md § 4). Kata never runs code: nothing here reports
  * on the learner's work, and the Target Interface is strictly display-only.
  *
- * The aside column (tokens.json layout.exerciseGrid: 1fr 400px) carries the
- * Behavioral Checklist panel (#16) with the gate banner under it (#19) —
- * per Module, written only through IProgress.
+ * One column, and no state of any kind (#157): the Module's questions are its
+ * Self-Check, answered on the Module screen beside the prose, and the aside
+ * that used to hold them — with the gate banner under it — is gone. This
+ * screen writes nothing and reads nothing from IProgress.
  */
 export function ExerciseScreen() {
   const s = useStrings();
-  // The gate banner's display line — and the first half of what #73
-  // announces.
-  const GATE_PASSED_LINE = s['gate.exercisePassedLine'];
   const { id, exerciseId } = useParams();
   const curriculum = useCurriculum();
   const {
@@ -41,17 +33,6 @@ export function ExerciseScreen() {
     error: loadError,
     retry,
   } = useModuleDetail(curriculum, id ?? '');
-  // The banner's next-Module line names the following Module by title —
-  // the poster's text rule (#17), shared via nextModuleLine.
-  const modules = useModuleSummaries(curriculum);
-  // Live gate state from IProgress (#14); `refresh` re-reads it when the
-  // checklist submits on this screen, so the banner needs no reload (#19).
-  const { gate, refresh } = useGateStatus(useProgress(), id ?? '');
-  const navigate = useNavigate();
-  // Empty on every load, including a load of an already-submitted Module:
-  // a live region announces what arrives in it, and the gate banner that is
-  // simply *there* on load is not news (#73).
-  const [announcement, setAnnouncement] = useState('');
   // Looked up before the early returns because the title hook below has to be
   // called on every render — the guards that use it are unchanged.
   const exercise =
@@ -75,11 +56,8 @@ export function ExerciseScreen() {
       />
     );
   }
-  // Still loading: render nothing rather than a made-up placeholder — the
-  // gate state loads with the content so the aside never flashes stale.
-  if (module === undefined || modules === null || gate === undefined) {
-    return null;
-  }
+  // Still loading: render nothing rather than a made-up placeholder.
+  if (module === undefined) return null;
   // Unknown Module id: back to the Curriculum, never a dead end.
   if (module === null) return <Navigate to="/" replace />;
 
@@ -90,8 +68,6 @@ export function ExerciseScreen() {
   }
 
   const ordinal = ordinalLabel(module.ordinal);
-  const nextModule =
-    modules.find((summary) => summary.ordinal === module.ordinal + 1) ?? null;
 
   return (
     <>
@@ -113,85 +89,44 @@ export function ExerciseScreen() {
             : s['exercise.tagConstructType']}
         </span>
       </header>
-      <div className="exercise-body">
-        <div>
-          <section>
-            <h2 className="exercise-section-label">{s['exercise.sectionLabel.spec']}</h2>
-            {/* Exactly three rows (tokens.json layout.specGrid: 130px 1fr,
-                1px row rules). The captures' Workbench row is historical —
-                no folder is materialized for the learner (#3). */}
-            <div className="exercise-spec-grid">
-              <div className="exercise-spec-label">{s['exercise.spec.concept']}</div>
-              <div className="exercise-spec-value">{exercise.concept}</div>
-              <div className="exercise-spec-label">{s['exercise.spec.smell']}</div>
-              <div className="exercise-spec-value">{exercise.smell}</div>
-              <div className="exercise-spec-label">{s['exercise.spec.sizeBudget']}</div>
-              <div className="exercise-spec-value exercise-spec-value-mono">
-                {interpolate(s['exercise.spec.sizeBudgetValue'], {
-                  loc: exercise.sizeBudgetLoc,
-                })}
-              </div>
-            </div>
-          </section>
-          <div className="hr exercise-rule" />
-          <section>
-            <div className="exercise-interface-heading">
-              <h2 className="exercise-section-label exercise-section-label-inline">
-                {s['exercise.sectionLabel.targetInterface']}
-              </h2>
-              <span className="tag tag-accent">{s['exercise.targetInterface.immutableTag']}</span>
-            </div>
-            <TargetInterfaceDefinition />
-            <p className="text-muted exercise-interface-note">
-              {s['exercise.targetInterface.note']}
-            </p>
-            {/* Display-only C# (tokens.json typeScale.app.codeTargetInterface:
-                12.5 / 1.6 mono) — never a textarea, never editable. */}
-            <pre className="exercise-interface-code">
-              {exercise.targetInterfaceCode}
-            </pre>
-          </section>
-          <div className="hr exercise-rule" />
-          <PracticeMaterial exercise={exercise} />
+      <section>
+        <h2 className="exercise-section-label">{s['exercise.sectionLabel.spec']}</h2>
+        {/* Exactly three rows (tokens.json layout.specGrid: 130px 1fr,
+            1px row rules). The captures' Workbench row is historical —
+            no folder is materialized for the learner (#3). */}
+        <div className="exercise-spec-grid">
+          <div className="exercise-spec-label">{s['exercise.spec.concept']}</div>
+          <div className="exercise-spec-value">{exercise.concept}</div>
+          <div className="exercise-spec-label">{s['exercise.spec.smell']}</div>
+          <div className="exercise-spec-value">{exercise.smell}</div>
+          <div className="exercise-spec-label">{s['exercise.spec.sizeBudget']}</div>
+          <div className="exercise-spec-value exercise-spec-value-mono">
+            {interpolate(s['exercise.spec.sizeBudgetValue'], {
+              loc: exercise.sizeBudgetLoc,
+            })}
+          </div>
         </div>
-        {/* The 400px column: the Behavioral Checklist panel — the Module's
-            Exit Gate (#16) — with the gate banner under it once the gate
-            passes (#19). A submit on this screen re-reads the gate so the
-            banner appears in the same render, no reload. */}
-        <aside className="exercise-aside">
-          <BehavioralChecklist
-            moduleId={module.id}
-            moduleOrdinal={module.ordinal}
-            questions={module.checklistQuestions}
-            onSubmitted={() => {
-              refresh();
-              // What the banner below is about to say, said once, politely:
-              // focus lands on the submitted panel, so the banner appearing
-              // underneath it would otherwise pass in silence (#73).
-              setAnnouncement(
-                `${GATE_PASSED_LINE} ${nextModuleLine(s, nextModule)}`,
-              );
-              // Same route, new location key: the always-mounted nav re-reads
-              // its Checkpoint count in this render (useModuleSummaries keys
-              // off location.key, #18) — screens/06-state.png shows the count
-              // already moved while still on this screen (#30). The #29
-              // import confirm uses the same trick.
-              navigate('.', { replace: true });
-            }}
-          />
-          {gate.passed && gate.checkpointAt !== null && (
-            <div className="exercise-gate-banner">
-              <div className="exercise-gate-banner-title">
-                {GATE_PASSED_LINE}
-              </div>
-              <div className="exercise-gate-banner-next">
-                {nextModuleLine(s, nextModule)}
-              </div>
-            </div>
-          )}
-          <LiveAnnouncement message={announcement} />
-        </aside>
-      </div>
+      </section>
+      <div className="hr exercise-rule" />
+      <section>
+        <div className="exercise-interface-heading">
+          <h2 className="exercise-section-label exercise-section-label-inline">
+            {s['exercise.sectionLabel.targetInterface']}
+          </h2>
+          <span className="tag tag-accent">{s['exercise.targetInterface.immutableTag']}</span>
+        </div>
+        <TargetInterfaceDefinition />
+        <p className="text-muted exercise-interface-note">
+          {s['exercise.targetInterface.note']}
+        </p>
+        {/* Display-only C# (tokens.json typeScale.app.codeTargetInterface:
+            12.5 / 1.6 mono) — never a textarea, never editable. */}
+        <pre className="exercise-interface-code">
+          {exercise.targetInterfaceCode}
+        </pre>
+      </section>
+      <div className="hr exercise-rule" />
+      <PracticeMaterial exercise={exercise} />
     </>
   );
 }

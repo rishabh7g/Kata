@@ -1,8 +1,8 @@
 /**
  * Kata's one shipped pack today (#112). Authored nested, exactly the shape
  * `tools/strings-check.ts` and `src/strings/strings.ts` flatten on `.` —
- * `{"gate":{"condition":{"notSubmitted":…}}}` is read as
- * `gate.condition.notSubmitted`, matching `stringsKeys.ts`'s dot-paths.
+ * `{"module":{"sectionLabel":{"exercises":…}}}` is read as
+ * `module.sectionLabel.exercises`, matching `stringsKeys.ts`'s dot-paths.
  *
  * Adding a second pack (a future locale) is adding a sibling file in this
  * shape and pointing `src/strings/strings.ts` at it — no change to any
@@ -33,36 +33,8 @@ const en = {
   },
 
   status: {
-    gatePassed: 'Exit Gate passed',
     inProgress: 'In progress',
     readyToStart: 'Ready to start',
-  },
-
-  gate: {
-    checkpointLine: 'Checkpoint · {date}',
-    label: 'Exit Gate',
-    // The two definitions the gate panel carries (#135), each the first
-    // place the UI explains a word it then uses as a label — the keeper
-    // test's fourth clause (design/issue-guide.md § UI copy ban list).
-    // Wording from docs/ubiquitous-language.md: the Exit Gate is the
-    // Module's pass condition, a Checkpoint the recorded passage through
-    // one. One clause each; nothing about who judges the code (#137 owns
-    // the self-report wording).
-    definition:
-      "The Exit Gate is this Module's pass condition — passing it unlocks the next Module.",
-    checkpointDefinition:
-      'A Checkpoint is a recorded passage through an Exit Gate, counted in the nav.',
-    passedLine: 'Passed.',
-    nextModuleLine: 'Module {ordinal} — {title} unlocked.',
-    allModulesPassedLine: 'All five Modules passed — the Curriculum is complete.',
-    pendingNote:
-      'The Behavioral Checklist arrives with the Concept Page — nothing to submit yet.',
-    condition: {
-      title: 'Behavioral Checklist submitted',
-      submitted: 'Submitted',
-      notSubmitted: 'Not yet submitted',
-    },
-    exercisePassedLine: 'Exit Gate passed — Checkpoint recorded.',
   },
 
   curriculum: {
@@ -107,6 +79,18 @@ const en = {
       tagRefactor: 'Refactor',
       tagConstruct: 'Construct',
     },
+  },
+
+  selfCheck: {
+    heading: 'Self-Check',
+    // What a Self-Check is (#157) — the keeper test's fourth clause
+    // (design/issue-guide.md § UI copy ban list): the heading above it uses
+    // the term as a label, and nothing else on the screen says the questions
+    // are optional or that an answer is kept rather than sent. Wording from
+    // docs/ubiquitous-language.md § Self-Check; one clause, and no state
+    // language — answering changes nothing but the answer.
+    definition:
+      "The Self-Check is this Module's optional questions — answer them as you read, and each answer is saved in this browser as you pick it.",
   },
 
   exercise: {
@@ -170,50 +154,6 @@ const en = {
         "Clone or copy the folder and review its Test Suite before starting. Running the Test Suite needs the .NET SDK installed on your own machine — from the Exercise folder's tests/ directory, run",
       noteAfter: 'in your own IDE.',
     },
-  },
-
-  checklist: {
-    heading: 'Behavioral Checklist',
-    // What the checklist IS, said once under its heading (#136) — the
-    // keeper test's fourth clause: the heading, the Module gate's condition
-    // row and the submit button all use the term as a label first. Wording
-    // from docs/ubiquitous-language.md: the Exit Gate's one condition,
-    // self-assessed. One clause; #137 owns what a "No" answer means.
-    definition:
-      "The Behavioral Checklist is the Module's one Exit Gate condition, self-assessed.",
-    // The line that says WHOSE gate this is (#138). It already carried live
-    // data — the owning Module's ordinal — which is clause (1) of the keeper
-    // test (design/issue-guide.md § UI copy ban list), and why the copy pass
-    // (#113) trimmed it to "Module NN gate" instead of deleting it.
-    //
-    // The scope clause rides on that same live datum rather than shipping a
-    // fourth string in one panel: the panel is keyed by `moduleId`, so both
-    // of a Module's Exercise screens render this identical line, and a
-    // learner reading it on `m01-e1` would otherwise take the gate for that
-    // Exercise's own. Submitting from either Exercise passes Module 01
-    // outright, so the ordinal without its scope is a half-told fact.
-    //
-    // Distinct from its two siblings and repeating neither: `definition`
-    // (#136) says what the Behavioral Checklist IS, `note` (#137) says what
-    // submitting does and what a "No" means, and this says which Module the
-    // Exit Gate belongs to and how far it reaches.
-    meta:
-      'Module {ordinal} Exit Gate — covers every Exercise in the Module, not the one on screen.',
-    submitLabel: 'Submit Behavioral Checklist',
-    // The only instruction on the step — the keeper test's second clause,
-    // which is why the first sentence survived the copy pass (#113).
-    //
-    // Extended (#137) to close the app's biggest comprehension gap: three
-    // yes/no questions with a Submit button read as a test that can be
-    // failed, and no answer is read as a condition anywhere — submitting
-    // alone is the Exit Gate (docs/design.md § Pedagogy). So the note says
-    // what submitting does and what a "No" means; `checklist.definition`
-    // (#136) above the checks says what the checklist IS, and neither
-    // repeats the other. "back to the code" is the learner's own IDE:
-    // Kata never runs, reads or judges it.
-    note:
-      'Answer all three checks to submit, and answer them honestly — this is a self-report on your own work. Submitting records the Checkpoint whatever you answer, so a "No" is a signal to go back to the code, not a blocker.',
-    submittedLine: 'Submitted · {time}',
   },
 
   backup: {

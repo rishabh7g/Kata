@@ -182,9 +182,12 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The Module route is hash-routed, so it is this same 200 document; its
   # markup shipping in the bundle is what "the route serves the screen" means.
   has "$WORK/app.js" 'module-concept' 'the Module Concept Page container (#11)'
-  # The Exit Gate / Checkpoint definitions (#135): static copy in the gate
-  # panel, so its container class is the whole surface to check.
-  has "$WORK/app.js" 'module-gate-definitions' 'the Exit Gate and Checkpoint definitions (#135)'
+  # The Module's Self-Check (#157): the questions ride in the Module aside
+  # now, so their item class is what proves the panel ships.
+  has "$WORK/app.js" 'self-check-item' 'the Module Self-Check questions (#157)'
+  # Its one clause of prose — static copy, checked by its class for the same
+  # reason the other definitions are.
+  has "$WORK/app.js" 'self-check-definition' 'the Self-Check definition (#157)'
   has "$WORK/app.js" 'module-example-grid' 'the Model Examples grid (#11)'
   # The Exercise route (#15) is hash-routed too: the same 200 document, with
   # the Spec grid container shipping in this bundle.
@@ -196,28 +199,15 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # #15, so the clause naming the .NET SDK is what proves the two facts a
   # learner needs BEFORE cloning are live in the deployed pack.
   has "$WORK/app.js" 'needs the .NET SDK installed on your own machine' 'the practice-material prerequisite note (#141)'
-  # The Behavioral Checklist (#16): the form and its one primary action.
-  has "$WORK/app.js" 'exercise-checklist-item' 'the Behavioral Checklist form (#16)'
-  # The Behavioral Checklist definition (#136): static copy in the form state
-  # of the panel, checked by its class for the same reason.
-  has "$WORK/app.js" 'exercise-checklist-definition' 'the Behavioral Checklist definition (#136)'
-  has "$WORK/app.js" 'Submit Behavioral Checklist' 'the checklist submit action (#16)'
-  # The gate scope line (#138): the meta line's class shipped with #16, so the
-  # clause that says the gate covers the whole Module is what proves it is live.
-  has "$WORK/app.js" 'covers every Exercise in the Module' 'the checklist gate scope line (#138)'
-  # The self-report note (#137): the class shipped with #16, so the clause
-  # that says the gate is self-reported is what proves this copy is live.
-  has "$WORK/app.js" 'Submitting records the Checkpoint whatever you answer' 'the checklist self-report note (#137)'
-  # The Exit Gate poster (#17): the passed-state accent field on the Module
-  # screen — its container class and display line ship in this bundle.
-  has "$WORK/app.js" 'module-gate-poster' 'the Exit Gate poster (#17)'
-  has "$WORK/app.js" 'Passed.' 'the poster display line (#17)'
-  # The Exercise gate banner (#19): the accent block under the checklist —
-  # its container class and display line ship in this bundle.
-  has "$WORK/app.js" 'exercise-gate-banner' 'the Exercise gate banner (#19)'
-  has "$WORK/app.js" 'Exit Gate passed — Checkpoint recorded.' 'the banner display line (#19)'
-  # The unlock cascade (#18): the draft-state tag ships in the bundle. The
-  # live count and lock chain themselves are exercised by the app tests.
+  # Nothing is submitted and nothing is passed (#157): the submit action, the
+  # gate panels, the poster and the Exercise banner all left the pack, so
+  # their absence is what proves the deployed build is the un-gated one.
+  lacks "$WORK/app.js" 'Submit Behavioral Checklist' 'the removed checklist submit action (#157)'
+  lacks "$WORK/app.js" 'module-gate-poster' 'the removed Exit Gate poster (#157)'
+  lacks "$WORK/app.js" 'exercise-gate-banner' 'the removed Exercise gate banner (#157)'
+  lacks "$WORK/app.js" 'Exit Gate passed' 'the removed passed status copy (#157)'
+  # The Curriculum row's draft tag (#18) still ships — the reader's own saved
+  # answers, the one thing a row still says.
   has "$WORK/app.js" 'In progress' 'the draft In progress tag (#18)'
   # The pending-Module placeholder (#28): its copy-block class ships in the
   # bundle — the state itself is fixture-driven (no live Module is pending).
