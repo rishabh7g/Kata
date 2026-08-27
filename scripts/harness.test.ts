@@ -103,6 +103,7 @@ describe('validate-content.mjs', () => {
  */
 describe('content schema + Module index (#7)', () => {
   const INDEX_SCHEMA = 'schemas/module-index.schema.json';
+  const CONTENT_SCHEMA = 'schemas/module-content.schema.json';
 
   it('rejects a module entry missing ordinal, title, or description', () => {
     const result = validate(INDEX_SCHEMA, `${FIXTURES}/invalid-index/missing-fields.json`);
@@ -123,6 +124,18 @@ describe('content schema + Module index (#7)', () => {
     expect(result.status).toBe(3);
     expect(result.stdout).toContain('unknown-category.json');
     expect(result.stdout).toContain('must name a Category this index declares');
+  });
+
+  it('accepts a Module content pack with no Exercises at all (#161)', () => {
+    // Exercises are 0..n: an explain-only Module authors `"exercises": []`
+    // and is a complete Module. How many a Module carries is an authoring
+    // convention (docs/design.md § Module anatomy — a Software Design Module
+    // ships one refactor and one construct), not a schema rule.
+    const result = validate(CONTENT_SCHEMA, `${FIXTURES}/explain-only`);
+
+    expect(result.status).toBe(0);
+    expect(result.lines).toHaveLength(1);
+    expect(result.lines[0]).toContain('CONTENT ok (1 file)');
   });
 
   it('lists all five Modules, in Curriculum order, titles verbatim, all five authored', () => {

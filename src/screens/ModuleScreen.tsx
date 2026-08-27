@@ -20,6 +20,10 @@ import { SelfCheck } from './SelfCheck';
  * carries no status tag and the aside no gate panel, because a Library never
  * measures the reader (#155, #156).
  *
+ * A Module carries 0..n Exercises (#161). With none, the whole Exercises
+ * section is absent — no heading and no empty-state line — so an explain-only
+ * Module simply reads shorter.
+ *
  * A pending Module (content pack not authored yet) renders the placeholder
  * state instead (#28): the prototype's muted copy blocks for Concept Page /
  * Model Examples / Exercises, and no navigable Exercise cards. It carries no
@@ -102,27 +106,7 @@ export function ModuleScreen() {
               ))
             )}
           </section>
-          <div className="hr module-rule" />
-          <section>
-            <h2 className="module-section-label">{s['module.sectionLabel.exercises']}</h2>
-            {module.exercises.length === 0 ? (
-              // Zero briefs → the prototype's pending line: no cards, so a
-              // pending Module exposes no navigable Exercise routes.
-              <p className="text-muted module-pending-copy">
-                {s['module.pending.exercises']}
-              </p>
-            ) : (
-              <div className="module-exercises">
-                {module.exercises.map((exercise) => (
-                  <ExerciseCard
-                    key={exercise.id}
-                    moduleId={module.id}
-                    exercise={exercise}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
+          <ExercisesSection module={module} />
         </div>
         {/* The Self-Check rides in the aside beside the prose it asks
             about (#157). A Module with no questions renders no aside — there
@@ -174,6 +158,52 @@ function ConceptSection({ module }: { module: ModuleDetail }) {
         <Markdown source={body} />
       </div>
     </section>
+  );
+}
+
+/**
+ * The Exercises section — and its leading rule — or nothing at all.
+ *
+ * Exercises are 0..n per Module (#161): how many a Module carries is an
+ * authoring convention (docs/design.md § Module anatomy — a Software Design
+ * Module ships one refactor and one construct), not a schema rule. An
+ * explain-only Module authors `"exercises": []` and gets no heading, no
+ * empty-state line, and no divider above one: it simply reads shorter,
+ * ending on its Model Examples. A section label over nothing would be the
+ * screen telling the reader something is missing when nothing is.
+ *
+ * A pending Module is the one empty case that still speaks (#28): its pack
+ * is not authored yet, so it keeps the prototype's placeholder line beside
+ * the Concept Page and Model Examples ones — an absence with a reason.
+ */
+function ExercisesSection({ module }: { module: ModuleDetail }) {
+  const s = useStrings();
+  if (module.exercises.length === 0 && !module.pending) return null;
+  return (
+    <>
+      <div className="hr module-rule" />
+      <section>
+        <h2 className="module-section-label">{s['module.sectionLabel.exercises']}</h2>
+        {module.exercises.length === 0 ? (
+          // Pending: the prototype's line, so the unauthored pack reads as
+          // not-yet rather than blank. No cards, so a pending Module exposes
+          // no navigable Exercise routes.
+          <p className="text-muted module-pending-copy">
+            {s['module.pending.exercises']}
+          </p>
+        ) : (
+          <div className="module-exercises">
+            {module.exercises.map((exercise) => (
+              <ExerciseCard
+                key={exercise.id}
+                moduleId={module.id}
+                exercise={exercise}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </>
   );
 }
 
