@@ -141,14 +141,21 @@ function checkPlaceholders(value: string, key: StringsKey, packLabel: string): s
 
 /**
  * Every pack file in `src/strings/` — anything that is not the canonical
- * list itself, the runtime loader, or a test. Adding a locale is adding a
- * file here; nothing else changes for this script to pick it up.
+ * list itself, the runtime loader, a lookup table, or a test. Adding a locale
+ * is adding a file here; nothing else changes for this script to pick it up.
+ *
+ * `language.ts` is on the exclusion list for the same reason the first two
+ * are: it is not a pack. It maps a `CategoryLanguage` onto the canonical key
+ * that names it (#163) — keys, not copy — so read as a pack it would be a
+ * pack missing every key there is.
  */
+const NOT_A_PACK: readonly string[] = ['stringskeys.ts', 'strings.ts', 'language.ts'];
+
 function packFiles(): string[] {
   const dir = new URL('../src/strings/', import.meta.url);
   return readdirSync(dir)
     .filter((file) => /^[a-z]+\.ts$/.test(file))
-    .filter((file) => !['stringskeys.ts', 'strings.ts'].includes(file.toLowerCase()))
+    .filter((file) => !NOT_A_PACK.includes(file.toLowerCase()))
     .sort();
 }
 

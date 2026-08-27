@@ -47,9 +47,10 @@ Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everyth
 **The tab names the screen (#77).** `document.title` is `<screen> · Kata`, set by `useDocumentTitle` from the screen's own data: Curriculum plain `Kata`, Module `Module 03 — Testing at Boundaries + TDD loop · Kata`, Exercise `m01-e2 Build a recent-values cache behind a two-method surface · Kata`. While a screen's content is still loading it is plain `Kata` — never the previous screen's name — and the title is how a screen-reader user learns that a hash route changed at all.
 
 ### 1. Curriculum (`screens/01-state.png`)
-- **Purpose:** the Library's index — every Module in reading order, all of them open. Data: `ICurriculum.getModules()`.
+- **Purpose:** the Library's index — every Category in order, each with its Modules in reading order, all of them open. Data: `ICurriculum.getCategories()` for the headings, `ICurriculum.getModules()` for the rows.
 - **Header:** kicker (13px uppercase `--color-accent-text`) + 54px title, with a 340px muted intro column aligned to the baseline (grid `1fr 340px`, gap 48).
-- **Rows:** one per Module. Grid `104px 1fr 230px 36px`, gap 24, padding-block 24, 2px top rule per row + closing 2px rule after the last. Cells: ordinal (30px/800), title (22px, marked up `h2` — one level under the page `h1`) over one-line description (16px muted, the body-text floor #108), status column (tag), trailing icon.
+- **Category headings (#163):** the rows group under their Category, in Category-ordinal order, rows within in Module-ordinal order. The heading block is the Category's title (32px, marked up `h2` — one level under the page `h1`), the Category's language beside it in the neutral tag (`C#` / `Python`, shown **once** per Category and never on a row), and its one-line description under both (16px muted). A heading is a **label, not a route**: no link, no filter, no collapse, and no Category screen — Kata is still three screens, and the row stays the only way into a Module. A Category whose Modules are all `pending` renders exactly like any other.
+- **Rows:** one per Module. Grid `104px 1fr 230px 36px`, gap 24, padding-block 24, 2px top rule per row + closing 2px rule after the last. Cells: ordinal (30px/800), title (22px, marked up `h3` — one level under its Category's `h2`) over one-line description (16px muted, the body-text floor #108), status column (tag), trailing icon.
 - **Row states:** every row is a link (#156) — pointer cursor, hover tint (4% ink), arrow-right icon, always. The inert state is gone with the lock chain: no 0.5 opacity, no `not-allowed` cursor, no lock icon and no reason to give, because reading is never blocked. The row's one tag is about the reader's own Self-Check answers: in progress → outline tag · fresh → neutral `Ready to start` tag. (Historical: the row once had a locked state whose reason lived in the status column, `.visually-hidden` at first (#73, #74) and on screen from #140, plus an `Exit Gate passed` tag with a Checkpoint date. `screens/01-state.png` still shows them.)
 
 ### 2. Module (`screens/02` passed · `screens/03` in progress)
@@ -79,7 +80,8 @@ The screen is exactly four things: **header, Exercise Spec grid (Concept / Smell
 
 ## State management
 Screen-local state maps 1:1 onto the **two** Target Interfaces (`docs/engineering.md` § 2), both async, absence always `null`:
-- `ICurriculum.getModules()` — Curriculum rows, ordinal order. Id, ordinal, title, description, pending: the authored index entry and nothing about the reader (#158).
+- `ICurriculum.getCategories()` — the Curriculum's Category headings, ordinal order: id, ordinal, title, description, language, exactly as authored.
+- `ICurriculum.getModules()` — Curriculum rows, Category ordinal then Module ordinal. Id, categoryId, language, ordinal, title, description, pending: the authored index entry and nothing about the reader (#158).
 - `ICurriculum.getModule(id)` — Concept Page, Model Examples, Exercise briefs, and the three checklist questions.
 - `IProgress` — the Self-Check answers, one record per Module, and nothing else: `saveSelfCheckAnswers` / `getSelfCheckAnswers` plus `exportState` / `importState` for the backup file (#159). The gated-course model's records went with the `kata` database it kept them in; the app opens `kata-v2` and deletes the old one on the first load.
 

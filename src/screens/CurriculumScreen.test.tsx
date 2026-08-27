@@ -35,6 +35,29 @@ const source: ContentSource = {
   loadModuleContent: async () => null,
 };
 
+// Two Categories, the second one entirely unwritten — the exact shape L3
+// lands (#165: the Agentic AI Category, six pending Modules). Authored
+// second-shelf-first and out of ordinal order inside each shelf, so both
+// orders have to come from the data.
+const twoCategories: ModuleIndex = {
+  schemaVersion: 2,
+  categories: [
+    { id: 'agentic-ai', ordinal: 2, title: 'Agentic AI', description: 'Build agents in Python.', language: 'python' },
+    { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+  ],
+  modules: [
+    { id: 'm07', categoryId: 'agentic-ai', ordinal: 2, title: 'Tools', description: 'Give the agent hands.', pending: true },
+    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules & Information Hiding', description: 'Hide the most complexity behind the smallest surface.', pending: false },
+    { id: 'm06', categoryId: 'agentic-ai', ordinal: 1, title: 'Prompts', description: 'Say what you want.', pending: true },
+    { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point dependencies at stable abstractions.', pending: true },
+  ],
+};
+
+const twoCategorySource: ContentSource = {
+  loadIndex: async () => twoCategories,
+  loadModuleContent: async () => null,
+};
+
 beforeEach(() => {
   // A brand-new browser profile per test (#14's prescribed environment).
   globalThis.indexedDB = new IDBFactory();
@@ -45,10 +68,14 @@ beforeEach(() => {
 // screen reads Self-Check answers through — the two no longer touch (#158).
 async function renderScreen({
   answers = [],
-}: { answers?: readonly ModuleSelfCheck[] } = {}) {
+  content = source,
+}: {
+  answers?: readonly ModuleSelfCheck[];
+  content?: ContentSource;
+} = {}) {
   const progress = await createProgress();
   await progress.importState({ schemaVersion: 2, selfCheckAnswers: answers });
-  const curriculum = createCurriculum(source);
+  const curriculum = createCurriculum(content);
   return render(
     <CurriculumProvider curriculum={curriculum}>
       <ProgressProvider progress={progress}>
@@ -75,8 +102,8 @@ describe('Curriculum screen', () => {
       (row) => row.querySelector('.curriculum-row-ordinal')?.textContent,
     );
     expect(ordinals).toEqual(['01', '02', '03', '04', '05']);
-    // Module titles are h2 — one level under the page h1 (#75).
-    const titles = screen.getAllByRole('heading', { level: 2 });
+    // Module titles are h3 — one level under their Category's h2 (#163).
+    const titles = screen.getAllByRole('heading', { level: 3 });
     expect(titles.map((h) => h.textContent)).toEqual([
       'Deep Modules & Information Hiding',
       'Dependency Direction',
@@ -115,21 +142,122 @@ describe('Curriculum screen', () => {
     expect(screen.getAllByText('Ready to start')).toHaveLength(5);
   });
 
-  it('has one h1 and no skipped heading levels (#75)', async () => {
+  it('has one h1 and no skipped heading levels (#75, #163)', async () => {
     const { container } = await renderScreen();
     await screen.findByText('01');
 
-    // The page h1, then a Module title one level under it. The rows read at
-    // 22px, which is h3's size in the design system — the level is the
-    // outline's, not the type scale's.
+    // The page h1, the Category one level under it, then its Modules one
+    // level under the Category. The rows read at 22px, which is h3's size in
+    // the design system — the level is the outline's, not the type scale's.
     expect(expectWellFormedOutline(container)).toEqual([
       'h1 Learn design by producing code.',
-      'h2 Deep Modules & Information Hiding',
-      'h2 Dependency Direction',
-      'h2 Testing at Boundaries + TDD loop',
-      'h2 Naming & Ubiquitous Language',
-      'h2 Error Design',
+      'h2 Software Design',
+      'h3 Deep Modules & Information Hiding',
+      'h3 Dependency Direction',
+      'h3 Testing at Boundaries + TDD loop',
+      'h3 Naming & Ubiquitous Language',
+      'h3 Error Design',
     ]);
+  });
+
+  // ── Category headings (#163) ───────────────────────────────────────────
+
+  it('groups the five rows under one Category heading', async () => {
+    const { container } = await renderScreen();
+    await screen.findByText('01');
+
+    const sections = [...container.querySelectorAll('.curriculum-category')];
+    expect(sections).toHaveLength(1);
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading.textContent).toBe('Software Design');
+    expect(
+      sections[0]?.querySelector('.curriculum-category-desc')?.textContent,
+    ).toBe('Design fundamentals in C#.');
+    // Every row sits inside that one section, in ordinal order.
+    expect(sections[0]?.querySelectorAll('.curriculum-row')).toHaveLength(5);
+  });
+
+  it('names the Category language once, and never on a row', async () => {
+    const { container } = await renderScreen();
+    await screen.findByText('01');
+
+    expect(screen.getAllByText('C#')).toHaveLength(1);
+    expect(
+      container.querySelectorAll('.curriculum-category-language'),
+    ).toHaveLength(1);
+    for (const row of container.querySelectorAll('.curriculum-row')) {
+      expect(row.textContent).not.toContain('C#');
+    }
+  });
+
+  // The standing review question (design/issue-guide.md): does this add a
+  // second way to reach the same content? No — a heading is a label.
+  it('makes the heading a label, not a second way into a Module', async () => {
+    const { container } = await renderScreen();
+    await screen.findByText('01');
+
+    for (const header of container.querySelectorAll(
+      '.curriculum-category-header',
+    )) {
+      expect(header.querySelector('a, button, details, [role]')).toBeNull();
+    }
+    // Five rows, five links: the Category added no route of its own.
+    expect(screen.getAllByRole('link')).toHaveLength(5);
+  });
+
+  it('reads Category by Category, in Category-ordinal then Module-ordinal order', async () => {
+    const { container } = await renderScreen({ content: twoCategorySource });
+    await screen.findByText('Agentic AI');
+
+    expect(
+      screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent),
+    ).toEqual(['Software Design', 'Agentic AI']);
+    const sections = [...container.querySelectorAll('.curriculum-category')];
+    expect(
+      sections.map((section) =>
+        [...section.querySelectorAll('.curriculum-row')].map((row) =>
+          row.getAttribute('href'),
+        ),
+      ),
+    ).toEqual([
+      ['/modules/m01', '/modules/m02'],
+      ['/modules/m06', '/modules/m07'],
+    ]);
+    // One language per Category, each shown once at its heading.
+    expect(
+      sections.map(
+        (section) =>
+          section.querySelector('.curriculum-category-language')?.textContent,
+      ),
+    ).toEqual(['C#', 'Python']);
+  });
+
+  // What L3 ships next (#165): a Category whose Modules are ALL pending.
+  // Nothing in the Library hides it — heading, description, language and its
+  // rows, every one of them a link like any other.
+  it('renders a Category whose Modules are all pending', async () => {
+    await renderScreen({ content: twoCategorySource });
+    const heading = await screen.findByText('Agentic AI');
+
+    const section = heading.closest('.curriculum-category');
+    expect(section?.querySelector('.curriculum-category-desc')?.textContent).toBe(
+      'Build agents in Python.',
+    );
+    expect(
+      section?.querySelector('.curriculum-category-language')?.textContent,
+    ).toBe('Python');
+    const rows = [...(section?.querySelectorAll('.curriculum-row') ?? [])];
+    expect(rows.map((row) => row.textContent)).toEqual([
+      expect.stringContaining('Prompts'),
+      expect.stringContaining('Tools'),
+    ]);
+    // Pending is a fact about the content pack, never about the reader: the
+    // rows are links, with the same neutral tag every unanswered row carries.
+    expect(rows.map((row) => row.tagName)).toEqual(['A', 'A']);
+    for (const row of rows) {
+      expect(row).not.toHaveAttribute('aria-disabled');
+      expect(row.querySelector('.tag')).toHaveClass('tag-neutral');
+    }
   });
 
   // #134: the orientation block — three first-use definitions restored under

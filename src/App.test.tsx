@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { App } from './App';
 import { CurriculumProvider } from './app/CurriculumContext';
 import { ProgressProvider } from './app/ProgressContext';
-import type { ICurriculum, ModuleSummary } from './curriculum';
+import type { Category, ICurriculum, ModuleSummary } from './curriculum';
 import { createProgress } from './progress';
 
 // A minimal ICurriculum: the shell renders no data of its own since the nav
@@ -20,7 +20,14 @@ const summaries: readonly ModuleSummary[] = [
   { id: 'm05', categoryId: 'software-design', language: 'csharp', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.', pending: true },
 ];
 
+// The one Category those Modules are filed under — the Curriculum groups its
+// rows under its heading (#163).
+const categories: readonly Category[] = [
+  { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+];
+
 const curriculum: ICurriculum = {
+  getCategories: async () => categories,
   getModules: async () => summaries,
   getModule: async () => null,
 };

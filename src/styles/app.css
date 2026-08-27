@@ -229,6 +229,34 @@ html, body {
   max-width: 62ch;
 }
 
+/* Category headings (#163) — the shelves the rows group under
+   (docs/ubiquitous-language.md § Category). A heading, never a route: no
+   link, no disclosure, no filter, so the row below it stays the one way into
+   a Module. Title at tokens.json typeScale.base.h2 (32), the one-line
+   description in the muted body role, and the Category's language ONCE, in
+   the neutral tag the design system already ships (design/styles.css .tag) —
+   no new token for either. The description takes the full row of the flex
+   line so title and language sit side by side above it. */
+.curriculum-category-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  padding: 40px 8px 12px;
+}
+
+.curriculum-category-title {
+  font-size: 32px;
+  margin: 0;
+}
+
+.curriculum-category-desc {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 16px;
+  max-width: 62ch;
+}
+
 .curriculum-row {
   display: grid;
   grid-template-columns: 104px 1fr 230px 36px;

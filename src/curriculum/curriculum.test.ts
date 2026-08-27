@@ -65,6 +65,84 @@ function memorySource(overrides?: Partial<ContentSource>): ContentSource {
   };
 }
 
+// ── getCategories: the shelves the Curriculum groups its rows under ───────
+
+describe('getCategories', () => {
+  it('returns every Category exactly as authored', async () => {
+    const curriculum = createCurriculum(memorySource());
+
+    const categories = await curriculum.getCategories();
+
+    expect(categories).toEqual([
+      {
+        id: 'software-design',
+        ordinal: 1,
+        title: 'Software Design',
+        description: 'Design fundamentals in C#.',
+        language: 'csharp',
+      },
+    ]);
+  });
+
+  it('sorts by ordinal ascending, not file order (#163)', async () => {
+    // Authored second-shelf-first, so file order and ordinal order disagree.
+    const curriculum = createCurriculum({
+      loadIndex: async () => ({
+        schemaVersion: 2,
+        categories: [
+          { id: 'agentic-ai', ordinal: 2, title: 'Agentic AI', description: 'Agents in Python.', language: 'python' },
+          { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+        ],
+        modules: [],
+      }),
+      loadModuleContent: async () => null,
+    });
+
+    const categories = await curriculum.getCategories();
+
+    expect(categories.map((c) => c.id)).toEqual(['software-design', 'agentic-ai']);
+    expect(categories.map((c) => c.language)).toEqual(['csharp', 'python']);
+  });
+
+  it('returns a Category whose Modules are all pending, like any other', async () => {
+    // The Library never hides a shelf that has not been written yet (#165):
+    // pending is a fact about the content pack, not about the reader.
+    const curriculum = createCurriculum({
+      loadIndex: async () => ({
+        schemaVersion: 2,
+        categories: [
+          { id: 'agentic-ai', ordinal: 1, title: 'Agentic AI', description: 'Agents in Python.', language: 'python' },
+        ],
+        modules: [
+          { id: 'm06', categoryId: 'agentic-ai', ordinal: 1, title: 'Prompts', description: 'Say what you want.', pending: true },
+        ],
+      }),
+      loadModuleContent: async () => null,
+    });
+
+    expect((await curriculum.getCategories()).map((c) => c.title)).toEqual([
+      'Agentic AI',
+    ]);
+  });
+
+  it('reads the same cached index the Modules come from', async () => {
+    let loads = 0;
+    const curriculum = createCurriculum({
+      loadIndex: async () => {
+        loads += 1;
+        return index;
+      },
+      loadModuleContent: async () => null,
+    });
+
+    await curriculum.getCategories();
+    await curriculum.getModules();
+    await curriculum.getCategories();
+
+    expect(loads).toBe(1);
+  });
+});
+
 // ── getModules: ordering and the shape of a summary ───────────────────────
 
 describe('getModules ordering', () => {

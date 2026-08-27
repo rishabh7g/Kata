@@ -23,16 +23,24 @@ interface PlacedModule {
   readonly category: Category;
 }
 
+/** One load of the committed index, in the order everything reads it: the
+ *  Categories by their own ordinal, and every placed Module by Category
+ *  ordinal then Module ordinal. */
+interface LoadedIndex {
+  readonly categories: readonly Category[];
+  readonly modules: readonly PlacedModule[];
+}
+
 export function createCurriculum(content: ContentSource): ICurriculum {
-  // Content is committed and immutable per deploy, so both methods may cache
+  // Content is committed and immutable per deploy, so every method may cache
   // it in memory — the only state this function holds.
-  let indexPromise: Promise<readonly PlacedModule[]> | null = null;
+  let indexPromise: Promise<LoadedIndex> | null = null;
   const contentCache = new Map<ModuleId, ModuleContent>();
 
-  function orderedEntries(): Promise<readonly PlacedModule[]> {
+  function loadedIndex(): Promise<LoadedIndex> {
     indexPromise ??= content
       .loadIndex()
-      .then((index) => {
+      .then((index): LoadedIndex => {
         const categories = new Map<CategoryId, Category>(
           index.categories.map((category) => [category.id, category]),
         );
@@ -47,10 +55,17 @@ export function createCurriculum(content: ContentSource): ICurriculum {
         }
         // Category ordinal first, then the Module's ordinal within it: the
         // Curriculum reads shelf by shelf, in the order the data gives.
-        return placed.sort(
+        placed.sort(
           (a, b) =>
             a.category.ordinal - b.category.ordinal || a.entry.ordinal - b.entry.ordinal,
         );
+        // The shelves themselves, in their own ordinal order — what the
+        // Curriculum's Category headings read (#163). Sorted here, from a
+        // copy, so no caller depends on the authored file order either.
+        const shelves = [...index.categories].sort(
+          (a, b) => a.ordinal - b.ordinal,
+        );
+        return { categories: shelves, modules: placed };
       })
       .catch((error: unknown) => {
         // A failed load is not an answer worth caching: drop it so the next
@@ -87,14 +102,22 @@ export function createCurriculum(content: ContentSource): ICurriculum {
   }
 
   return {
+    async getCategories(): Promise<readonly Category[]> {
+      // Exactly as authored, in ordinal order — the Curriculum's headings
+      // (#163). A Category is a label over its rows: nothing here is a route
+      // and nothing here reads the reader.
+      const { categories } = await loadedIndex();
+      return categories;
+    },
+
     async getModules(): Promise<readonly ModuleSummary[]> {
-      const entries = await orderedEntries();
-      return entries.map(summarize);
+      const { modules } = await loadedIndex();
+      return modules.map(summarize);
     },
 
     async getModule(id: ModuleId): Promise<ModuleDetail | null> {
-      const entries = await orderedEntries();
-      const placed = entries.find((p) => p.entry.id === id);
+      const { modules } = await loadedIndex();
+      const placed = modules.find((p) => p.entry.id === id);
       // Unknown id: null — never throw, never invent a Module.
       if (placed === undefined) return null;
 
