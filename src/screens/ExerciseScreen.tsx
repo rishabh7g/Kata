@@ -4,7 +4,8 @@ import { ModuleUnavailable } from '../app/ModuleUnavailable';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useDocumentTitle } from '../app/useDocumentTitle';
 import { useModuleDetail } from '../app/useModuleDetail';
-import type { ExerciseBrief } from '../curriculum';
+import type { CategoryLanguage, ExerciseBrief } from '../curriculum';
+import { LANGUAGE_LABEL_KEY, LANGUAGE_TEST_COMMAND } from '../strings/language';
 import { interpolate, useStrings } from '../strings/strings';
 import { ordinalLabel } from './ModuleScreen';
 
@@ -126,7 +127,7 @@ export function ExerciseScreen() {
         </pre>
       </section>
       <div className="hr exercise-rule" />
-      <PracticeMaterial exercise={exercise} />
+      <PracticeMaterial exercise={exercise} language={module.language} />
     </>
   );
 }
@@ -161,8 +162,22 @@ function TargetInterfaceDefinition() {
  * carries the `null` placeholder (until #23 commits the folders), it renders
  * a quiet disabled note instead of a dead link. No terminal, no command to
  * copy, no results area — Kata never runs anything.
+ *
+ * The note follows the Module's Category language (#164): a brief is
+ * practised in the one language its Category is written in, so the toolchain
+ * the learner installs and the command they run are the Category's, not a
+ * hardcoded C# pair. Both come from `src/strings/language.ts` — the same
+ * `Record<CategoryLanguage, …>` file the Curriculum's heading reads — so a
+ * third language fails `tsc` there instead of silently printing the wrong
+ * command here.
  */
-function PracticeMaterial({ exercise }: { exercise: ExerciseBrief }) {
+function PracticeMaterial({
+  exercise,
+  language,
+}: {
+  exercise: ExerciseBrief;
+  language: CategoryLanguage;
+}) {
   const s = useStrings();
   return (
     <section>
@@ -182,7 +197,10 @@ function PracticeMaterial({ exercise }: { exercise: ExerciseBrief }) {
             {s['exercise.practiceMaterial.linkLabel']}
           </a>
           <p className="text-muted exercise-folder-note">
-            {s['exercise.practiceMaterial.noteBefore']} <code>dotnet test</code>{' '}
+            {interpolate(s['exercise.practiceMaterial.noteBefore'], {
+              language: s[LANGUAGE_LABEL_KEY[language]],
+            })}{' '}
+            <code>{LANGUAGE_TEST_COMMAND[language]}</code>{' '}
             {s['exercise.practiceMaterial.noteAfter']}
           </p>
         </>

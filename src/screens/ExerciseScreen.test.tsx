@@ -12,6 +12,7 @@ import { App } from '../App';
 import { CurriculumProvider } from '../app/CurriculumContext';
 import { ProgressProvider } from '../app/ProgressContext';
 import type {
+  CategoryLanguage,
   ContentSource,
   ExerciseBrief,
   ModuleContent,
@@ -116,6 +117,23 @@ const source: ContentSource = {
   loadIndex: async () => index,
   loadModuleContent: async (id) => contentById[id] ?? null,
 };
+
+/**
+ * The same Modules under a Category authored in another language (#164) —
+ * the ONLY difference is the Category's `language`, so a practice-note test
+ * that renders both sources is comparing exactly the thing that changed.
+ * Python Categories are authored in milestone L3; the fixture proves the
+ * screen is ready for them before any content exists.
+ */
+function sourceForLanguage(language: CategoryLanguage): ContentSource {
+  return {
+    loadIndex: async () => ({
+      ...index,
+      categories: index.categories.map((category) => ({ ...category, language })),
+    }),
+    loadModuleContent: async (id) => contentById[id] ?? null,
+  };
+}
 
 beforeEach(() => {
   // A brand-new browser profile per test; within one test, a new
@@ -396,7 +414,7 @@ describe('Exercise screen', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('states the .NET SDK prerequisite and the tests/ working directory (#141)', async () => {
+  it('states the toolchain prerequisite and the tests/ working directory (#141)', async () => {
     const { container } = await renderAt('/modules/m01/exercises/m01-e2');
     await screen.findByText('Practice material');
 
@@ -405,7 +423,7 @@ describe('Exercise screen', () => {
 
     // The two facts that decide whether the Test Suite runs at all, both
     // readable BEFORE cloning.
-    expect(text).toContain('.NET SDK installed on your own machine');
+    expect(text).toContain('C# toolchain installed on your own machine');
     expect(text).toContain("Exercise folder's tests/ directory");
     // The instruction the note already carried survives the extension.
     expect(text).toContain('Clone or copy the folder');
@@ -421,6 +439,55 @@ describe('Exercise screen', () => {
     ).toBeFalsy();
   });
 
+  // The same brief, the same note, the only difference being the language its
+  // Category is authored in (#164). Two fixtures rather than one asserted
+  // twice: "csharp says dotnet test" alone would still pass with the command
+  // hardcoded, which is exactly the bug this closes.
+  it.each([
+    { language: 'csharp' as const, toolchain: 'C#', command: 'dotnet test' },
+    { language: 'python' as const, toolchain: 'Python', command: 'pytest' },
+  ])(
+    'names the $toolchain toolchain and runs $command under a $language Category (#164)',
+    async ({ language, toolchain, command }) => {
+      const { container } = await renderAt(
+        '/modules/m01/exercises/m01-e2',
+        undefined,
+        undefined,
+        sourceForLanguage(language),
+      );
+      await screen.findByText('Practice material');
+
+      const note = container.querySelector('.exercise-folder-note');
+      const codes = note?.querySelectorAll('code') ?? [];
+
+      // One sentence, one inline <code> — the shape is the same in both
+      // languages; only the two substituted tokens move.
+      expect(codes).toHaveLength(1);
+      expect(codes[0]?.textContent).toBe(command);
+      expect(note?.textContent).toContain(
+        `${toolchain} toolchain installed on your own machine`,
+      );
+      // No unsubstituted placeholder ever reaches the reader.
+      expect(note?.textContent).not.toContain('{language}');
+    },
+  );
+
+  it('never names the other language\'s toolchain or command (#164)', async () => {
+    const { container } = await renderAt(
+      '/modules/m01/exercises/m01-e2',
+      undefined,
+      undefined,
+      sourceForLanguage('python'),
+    );
+    await screen.findByText('Practice material');
+
+    const text = container.querySelector('.exercise-folder-note')?.textContent ?? '';
+
+    expect(text).not.toContain('dotnet');
+    expect(text).not.toContain('C#');
+    expect(text).toContain('pytest in your own IDE.');
+  });
+
   it('keeps the prerequisite copy out of the pending state (#141)', async () => {
     const { container } = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Practice material');
@@ -429,7 +496,7 @@ describe('Exercise screen', () => {
     // <code>, and none of the committed-folder instructions.
     expect(screen.getByText(/folder is not committed yet/)).toBeInTheDocument();
     expect(container.querySelector('.exercise-folder-note')).toBeNull();
-    expect(screen.queryByText(/\.NET SDK/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/toolchain/)).not.toBeInTheDocument();
     expect(screen.queryByText(/tests\/ directory/)).not.toBeInTheDocument();
   });
 

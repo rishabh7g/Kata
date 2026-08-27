@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import type { CategoryLanguage } from '../curriculum';
-import { LANGUAGE_LABEL_KEY } from './language';
+import { LANGUAGE_LABEL_KEY, LANGUAGE_TEST_COMMAND } from './language';
 import { STRINGS_KEYS } from './stringsKeys.ts';
 import { useStrings } from './strings';
 
@@ -31,5 +31,22 @@ describe('the Category language labels (#163)', () => {
 
     expect(s[LANGUAGE_LABEL_KEY.csharp]).toBe('C#');
     expect(s[LANGUAGE_LABEL_KEY.python]).toBe('Python');
+  });
+});
+
+describe('the Category language test commands (#164)', () => {
+  it('names every language in CategoryLanguage', () => {
+    expect(Object.keys(LANGUAGE_TEST_COMMAND).sort()).toEqual([...LANGUAGES].sort());
+  });
+
+  it('is the command the learner types, verbatim', () => {
+    expect(LANGUAGE_TEST_COMMAND.csharp).toBe('dotnet test');
+    expect(LANGUAGE_TEST_COMMAND.python).toBe('pytest');
+  });
+
+  it('carries a real command for every language, never an empty token', () => {
+    for (const language of LANGUAGES) {
+      expect(LANGUAGE_TEST_COMMAND[language].trim()).not.toBe('');
+    }
   });
 });

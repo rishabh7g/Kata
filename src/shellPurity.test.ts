@@ -102,17 +102,21 @@ function textNodesBetweenTags(source: string): string[] {
 const COPY_ATTR = /\b(aria-label|title)=(?:"([^"]*)"|'([^']*)')/g;
 
 /**
- * Two tokens that are shape-matches but are not copy: the product name
- * (kept out of the strings pack deliberately, `stringsKeys.ts`'s own header
- * comment explains why — a product name is not translatable prose) and the
- * one literal CLI command name Kata ever prints (`ExerciseScreen.tsx`'s
- * practice-material note), a technical token rather than a sentence.
+ * The one token that is a shape-match but is not copy: the product name,
+ * kept out of the strings pack deliberately (`stringsKeys.ts`'s own header
+ * comment explains why — a product name is not translatable prose).
+ *
+ * `dotnet test` was the second entry until #164. The practice-material note
+ * now reads its command from `LANGUAGE_TEST_COMMAND` by Category language,
+ * so it renders as an expression child and no literal command is left in the
+ * shell to exempt — an exemption that stopped earning its place is deleted,
+ * not kept "just in case".
  *
  * The list stays exactly this long by policy, same as `~/dev/shidi`'s own
  * one-entry `ALLOWED`: an exemption nobody had to argue for is how a guard
  * rots, so the next one is another conscious edit in another diff.
  */
-const ALLOWED_LITERALS: ReadonlySet<string> = new Set(['Kata', 'dotnet test']);
+const ALLOWED_LITERALS: ReadonlySet<string> = new Set(['Kata']);
 
 /** Pure punctuation, digits or whitespace — never copy on its own. */
 const PUNCTUATION_ONLY = /^[\s\d.,:/·•\-—()%]*$/;
@@ -211,9 +215,17 @@ describe('the scanner itself', () => {
     expect(scanSource('src/Planted.tsx', '<span> · </span>')).toEqual([]);
   });
 
-  it('leaves the two allow-listed literals alone', () => {
+  it('leaves the one allow-listed literal alone', () => {
     expect(scanSource('src/Planted.tsx', '<span>Kata</span>')).toEqual([]);
-    expect(scanSource('src/Planted.tsx', '<code>dotnet test</code>')).toEqual([]);
+  });
+
+  it('no longer exempts a literal test command — it comes from the language table now (#164)', () => {
+    expect(scanSource('src/Planted.tsx', '<code>dotnet test</code>')).toEqual([
+      { file: 'src/Planted.tsx', text: 'dotnet test' },
+    ]);
+    expect(
+      scanSource('src/Planted.tsx', '<code>{LANGUAGE_TEST_COMMAND[language]}</code>'),
+    ).toEqual([]);
   });
 
   it('leaves a decorative aria-hidden icon attribute alone — not a copy attr', () => {

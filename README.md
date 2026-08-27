@@ -48,7 +48,8 @@ Every push to `main` runs the same steps in
 All three screens are live on GitHub Pages. Curriculum lists the Modules under
 their Category heading, all of them open to read; Module carries its Concept Page, Model Examples, Self-Check
 and Exercises; Exercise shows the Exercise Spec, the immutable Target Interface,
-and the link to the committed practice folder. All five Software Design Modules
+and the link to the committed practice folder, whose note names the toolchain
+and the command for its Category's language (`dotnet test`, `pytest`). All five Software Design Modules
 are authored — a Concept Page, three Model Examples, and two Exercises whose
 folder and Test Suite are committed under `exercises/`.
 
