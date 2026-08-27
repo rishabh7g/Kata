@@ -188,6 +188,10 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # Its one clause of prose — static copy, checked by its class for the same
   # reason the other definitions are.
   has "$WORK/app.js" 'self-check-definition' 'the Self-Check definition (#157)'
+  # The explanation revealed after a pick (#162): its slot class is the whole
+  # reveal surface, so the class shipping is what proves the deployed panel can
+  # reveal one. The text itself is content, checked in the content step.
+  has "$WORK/app.js" 'self-check-explanation' 'the Self-Check explanation slot (#162)'
   has "$WORK/app.js" 'module-example-grid' 'the Model Examples grid (#11)'
   # The Exercise route (#15) is hash-routed too: the same 200 document, with
   # the Spec grid container shipping in this bundle.

@@ -40,7 +40,8 @@
         { "value": "one-sentence", "label": "Yes, in one sentence" },
         { "value": "two-sentences", "label": "It takes two" },
         { "value": "paragraph", "label": "It takes a paragraph" },
-        { "value": "not-yet", "label": "Not yet" }
+        { "value": "not-yet", "label": "Not yet" },
+        { "value": "no-idea", "label": "No idea yet" }
       ],
       "explanation": "How long that sentence has to be is a reading on how much the surface asks a caller to hold. Longer is not worse here — it is a measurement you can take again after a change."
     }

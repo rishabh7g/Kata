@@ -4,7 +4,7 @@
 // since #158 the only one: an in-memory ContentSource.
 import { describe, expect, it } from 'vitest';
 import type {
-  ChecklistQuestion,
+  SelfCheckQuestion,
   ContentSource,
   ModuleContent,
   ModuleId,
@@ -30,7 +30,7 @@ const index: ModuleIndex = {
   ],
 };
 
-const questions: readonly [ChecklistQuestion, ChecklistQuestion, ChecklistQuestion] = [
+const questions: readonly [SelfCheckQuestion, SelfCheckQuestion, SelfCheckQuestion] = [
   { id: 'q1', prompt: 'Count the pass-throughs?', options: [{ value: '0', label: '0' }, { value: '1+', label: '1 or more' }] },
   { id: 'q2', prompt: 'Any required call order?', options: [{ value: 'no', label: 'No' }, { value: 'yes', label: 'Yes' }] },
   { id: 'q3', prompt: 'Grep found duplicates?', options: [{ value: 'no', label: 'No' }, { value: 'yes', label: 'Yes' }] },
@@ -49,7 +49,7 @@ function contentFor(id: ModuleId): ModuleContent {
       { id: `${id}-e1`, type: 'refactor', title: 'Refactor', concept: 'depth', smell: 'leak', targetInterfaceCode: 'interface I {}', sizeBudgetLoc: 120, folderUrl: null },
       { id: `${id}-e2`, type: 'construct', title: 'Construct', concept: 'depth', smell: 'none', targetInterfaceCode: 'interface J {}', sizeBudgetLoc: 200, folderUrl: null },
     ],
-    checklistQuestions: questions,
+    selfCheckQuestions: questions,
   };
 }
 
@@ -168,7 +168,7 @@ describe('getModule', () => {
     expect(detail?.conceptPageMarkdown).toBe('# Module m01');
     expect(detail?.modelExamples).toHaveLength(2);
     expect(detail?.exercises.map((e) => e.type)).toEqual(['refactor', 'construct']);
-    expect(detail?.checklistQuestions).toHaveLength(3);
+    expect(detail?.selfCheckQuestions).toHaveLength(3);
     expect(detail?.pending).toBe(false);
   });
 
@@ -187,7 +187,7 @@ describe('getModule', () => {
     expect(detail?.conceptPageMarkdown).toBe('');
     expect(detail?.modelExamples).toEqual([]);
     expect(detail?.exercises).toEqual([]);
-    expect(detail?.checklistQuestions).toEqual([]);
+    expect(detail?.selfCheckQuestions).toEqual([]);
   });
 
   it('falls back to the pending shape when a non-pending Module has no content file', async () => {

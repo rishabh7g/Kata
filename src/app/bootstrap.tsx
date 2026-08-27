@@ -25,7 +25,7 @@ export async function startKata(
   const root = createRoot(container);
 
   // The one real IProgress (#14): the `kata` IndexedDB database. The
-  // checklist (#16) writes through this seam and nothing else.
+  // Self-Check (#157) writes through this seam and nothing else.
   let progress: IProgress;
   try {
     progress = await createProgress();

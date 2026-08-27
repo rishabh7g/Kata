@@ -136,6 +136,45 @@ function danglingCategoryErrors(data) {
     .filter((line) => line !== null);
 }
 
+/**
+ * The two Module-content rules draft 2020-12 cannot state (docs/engineering.md
+ * § 3): question ids unique within the Module, option values unique within a
+ * question. `uniqueItems` compares whole objects, so two options differing
+ * only in label slip past it — and a duplicate value makes one radio
+ * unreachable, because a pick is stored by value and restored by matching it.
+ * Checked here for the same reason the dangling categoryId is: same gate
+ * locally, in CI, and against the DEPLOYED content in scripts/smoke.sh.
+ */
+function duplicateSelfCheckErrors(data) {
+  const questions = data?.selfCheckQuestions;
+  if (!Array.isArray(questions)) return [];
+  const errors = [];
+  const seenIds = new Set();
+  questions.forEach((question, position) => {
+    const at = `/selfCheckQuestions/${position}`;
+    if (seenIds.has(question?.id)) {
+      errors.push(`  ${at}/id: must be unique within the Module (${question?.id})`);
+    }
+    seenIds.add(question?.id);
+    if (!Array.isArray(question?.options)) return;
+    const seenValues = new Set();
+    question.options.forEach((option, index) => {
+      if (seenValues.has(option?.value)) {
+        errors.push(
+          `  ${at}/options/${index}/value: must be unique within the question (${option?.value})`,
+        );
+      }
+      seenValues.add(option?.value);
+    });
+  });
+  return errors;
+}
+
+/** Everything the schema itself cannot say, for one already-valid document. */
+function structuralErrors(data) {
+  return [...danglingCategoryErrors(data), ...duplicateSelfCheckErrors(data)];
+}
+
 /** Validates one schema/content pair, collecting failures rather than exiting. */
 function validatePair(schemaPath, contentPath, failures) {
   note(`schema ${show(schemaPath)}`);
@@ -160,14 +199,14 @@ function validatePair(schemaPath, contentPath, failures) {
       continue;
     }
     if (validate(data)) {
-      const dangling = danglingCategoryErrors(data);
-      if (dangling.length === 0) {
+      const structural = structuralErrors(data);
+      if (structural.length === 0) {
         note(`  ok   ${show(file)}`);
         continue;
       }
       note(`  FAIL ${show(file)}`);
-      for (const line of dangling) note(`  ${line}`);
-      failures.push({ file: show(file), errors: dangling });
+      for (const line of structural) note(`  ${line}`);
+      failures.push({ file: show(file), errors: structural });
       continue;
     }
     const errors = formatErrors(validate.errors);

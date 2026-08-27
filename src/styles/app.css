@@ -594,11 +594,27 @@ a.curriculum-row:hover {
   max-width: 62ch;
 }
 
-/* The radio pair; wraps rather than clipping the longer m01 labels. */
+/* The 2–4 radio options; wrap rather than clipping the longer m01 labels. */
 .self-check-options {
   display: flex;
   gap: 10px 24px;
   flex-wrap: wrap;
+}
+
+/* The explanation revealed once an option is picked (#162) — muted, at the
+   16px body-text floor (#108), and reading as an aside to the question rather
+   than a verdict on the pick: no colour, no icon, no state of its own. */
+.self-check-explanation {
+  font-size: 16px;
+  margin: 10px 0 0;
+  max-width: 62ch;
+}
+
+/* Before a pick the slot is empty. It stays in the DOM — a live region must
+   exist before its content changes to be announced — and an empty block is
+   already zero-height, so only its margin has to go. */
+.self-check-explanation:empty {
+  margin: 0;
 }
 
 /* ── Exercise screen (#15) — design/README.md § Screens › 3 ───────────────

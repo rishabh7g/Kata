@@ -41,7 +41,7 @@
       "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m01/m01-e2"
     }
   ],
-  "checklistQuestions": [
+  "selfCheckQuestions": [
     {
       "id": "q1",
       "prompt": "Count everything a caller must know to use your module: public members, parameters, config values, and any required call order. Is the count 3 or fewer?",

@@ -41,7 +41,7 @@
       "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m04/m04-e2"
     }
   ],
-  "checklistQuestions": [
+  "selfCheckQuestions": [
     {
       "id": "q1",
       "prompt": "Grep your solution for Manager, Helper, Util, Handler, Process, Data, Info, temp, flag, item, and obj. Outside the Target Interface file, is the hit count zero?",

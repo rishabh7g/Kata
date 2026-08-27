@@ -38,7 +38,7 @@
       "prompt": "Can you describe the surface in one sentence?",
       "options": [
         { "value": "one-sentence", "label": "Yes, in one sentence" },
-        { "value": "two-sentences", "label": "It takes two" },
+        { "value": "one-sentence", "label": "It takes two" },
         { "value": "paragraph", "label": "It takes a paragraph" },
         { "value": "not-yet", "label": "Not yet" }
       ],

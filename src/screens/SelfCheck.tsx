@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useProgress } from '../app/ProgressContext';
-import type { ChecklistQuestion } from '../curriculum';
+import type { SelfCheckQuestion } from '../curriculum';
 import type { SelfCheckAnswers } from '../progress';
 import { useStrings } from '../strings/strings';
 
@@ -21,13 +21,18 @@ import { useStrings } from '../strings/strings';
  * Every write still goes through IProgress: picking an option autosaves the
  * Module's answers (`saveSelfCheckAnswers`), and the picks restore from them
  * on the next visit — the only data Kata persists at all (#159).
+ *
+ * A question may carry an authored `explanation` (#162). Picking any option
+ * reveals it, and it is the SAME text whichever option was picked: it teaches
+ * what the question was pointing at and never marks the pick right or wrong,
+ * because Kata judges nothing. A question without one reveals nothing.
  */
 export function SelfCheck({
   moduleId,
   questions,
 }: {
   moduleId: string;
-  questions: readonly ChecklistQuestion[];
+  questions: readonly SelfCheckQuestion[];
 }) {
   const s = useStrings();
   const progress = useProgress();
@@ -70,11 +75,19 @@ export function SelfCheck({
         {s['selfCheck.definition']}
       </p>
       {questions.map((question) => {
-        // The prompt is the pair's label, not loose text beside it (#72):
+        // The prompt is the group's label, not loose text beside it (#72):
         // `role="radiogroup"` + `aria-labelledby` names the group after the
-        // question, so focusing either option announces the question,
-        // "group", and "1 of 2".
+        // question, so focusing any option announces the question, "group",
+        // and its position among the question's 2–4 options (#162).
         const promptId = `self-check-${moduleId}-${question.id}-prompt`;
+        // The explanation slot exists from first render whenever the question
+        // authored one, empty until a pick fills it: a live region has to be
+        // in the DOM BEFORE its content changes to be announced at all. That
+        // also makes `aria-describedby` a stable reference. A question with no
+        // explanation gets no slot, no id, and no description.
+        const explanationId = `self-check-${moduleId}-${question.id}-explanation`;
+        const hasExplanation = question.explanation !== undefined;
+        const answer = picks[question.id];
         return (
           <div className="self-check-item" key={question.id}>
             <div className="self-check-prompt" id={promptId}>
@@ -84,6 +97,7 @@ export function SelfCheck({
               className="self-check-options"
               role="radiogroup"
               aria-labelledby={promptId}
+              aria-describedby={hasExplanation ? explanationId : undefined}
             >
               {question.options.map((option) => (
                 <label className="radio" key={option.value}>
@@ -91,7 +105,7 @@ export function SelfCheck({
                     type="radio"
                     name={`self-check-${moduleId}-${question.id}`}
                     value={option.value}
-                    checked={picks[question.id] === option.value}
+                    checked={answer === option.value}
                     onChange={() => {
                       const next = { ...picks, [question.id]: option.value };
                       setPicks(next);
@@ -113,6 +127,15 @@ export function SelfCheck({
                 </label>
               ))}
             </div>
+            {hasExplanation && (
+              <p
+                className="text-muted self-check-explanation"
+                id={explanationId}
+                aria-live="polite"
+              >
+                {answer === undefined ? '' : question.explanation}
+              </p>
+            )}
           </div>
         );
       })}

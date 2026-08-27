@@ -57,7 +57,9 @@ This section is the contract. Its code block is normative TypeScript: paste it
 verbatim into a `.ts` file and it compiles under `strict`. Both Target Interfaces
 are fully asynchronous, because both of their backing stores (HTTP-fetched JSON
 and IndexedDB) are. Absence is always `null`, never `undefined`, so every value
-survives a JSON round-trip unchanged.
+survives a JSON round-trip unchanged. The one exception is an authored field
+that may simply not be written (`explanation?`): its key is absent from the JSON
+altogether rather than present and empty, which round-trips unchanged too.
 
 The code block below is written as TypeScript `interface` declarations. In prose
 a boundary is always a **Target Interface**, and C# code the learner receives is
@@ -76,7 +78,7 @@ export type CategoryId = string;
 export type ExerciseId = string;
 
 /** Self-Check question id, unique within its Module: 'q1' … 'q3'. */
-export type ChecklistQuestionId = string;
+export type SelfCheckQuestionId = string;
 
 /** ISO-8601 instant in UTC, e.g. '2026-08-12T09:41:00.000Z'. */
 export type IsoDateTime = string;
@@ -128,15 +130,20 @@ export interface ExerciseBrief {
   readonly folderUrl: string | null; // GitHub folder link; null until committed
 }
 
-export interface ChecklistOption {
+export interface SelfCheckOption {
   readonly value: string; // the stored answer value
   readonly label: string; // what the radio shows
 }
 
-export interface ChecklistQuestion {
-  readonly id: ChecklistQuestionId;
+export interface SelfCheckQuestion {
+  readonly id: SelfCheckQuestionId;
   readonly prompt: string; // behaviorally answerable — countable or doable
-  readonly options: readonly [ChecklistOption, ChecklistOption]; // a radio pair
+  readonly options: readonly SelfCheckOption[]; // 2–4 radios
+  /** Revealed once any option is picked, and the SAME text whichever one was:
+   *  it teaches, it never marks an answer right or wrong. 1–3 sentences in the
+   *  novice voice (docs/design.md § Editorial standard). Absent = the question
+   *  reveals nothing at all. */
+  readonly explanation?: string;
 }
 
 export interface ModuleContent {
@@ -145,10 +152,10 @@ export interface ModuleContent {
   readonly conceptPageMarkdown: string;
   readonly modelExamples: readonly ModelExample[]; // 2–3
   readonly exercises: readonly ExerciseBrief[]; // 0..n; [] = explains only
-  readonly checklistQuestions: readonly [
-    ChecklistQuestion,
-    ChecklistQuestion,
-    ChecklistQuestion,
+  readonly selfCheckQuestions: readonly [
+    SelfCheckQuestion,
+    SelfCheckQuestion,
+    SelfCheckQuestion,
   ]; // exactly 3
 }
 
@@ -157,7 +164,7 @@ export interface ModuleContent {
 /** A Module's Self-Check picks: one option value per question id. Always
  *  partial — none, some, or all three answered are equally normal. */
 export type SelfCheckAnswers = Readonly<
-  Partial<Record<ChecklistQuestionId, string>>
+  Partial<Record<SelfCheckQuestionId, string>>
 >;
 
 /** One Module's stored Self-Check answers; at most one record per Module. */
@@ -189,7 +196,7 @@ export interface ModuleDetail extends ModuleSummary {
   readonly conceptPageMarkdown: string; // '' when pending
   readonly modelExamples: readonly ModelExample[]; // [] when pending
   readonly exercises: readonly ExerciseBrief[]; // [] when pending
-  readonly checklistQuestions: readonly ChecklistQuestion[]; // [] when pending, else 3
+  readonly selfCheckQuestions: readonly SelfCheckQuestion[]; // [] when pending, else 3
 }
 
 // ── Seams ────────────────────────────────────────────────────────────────
@@ -302,7 +309,7 @@ Rules, in the order a reviewer should check them:
 | Screen | Reads |
 |---|---|
 | Curriculum | `ICurriculum.getModules()` for the rows, in ordinal order; `IProgress.getSelfCheckAnswers` for the `In progress` tag |
-| Module | `ICurriculum.getModule(id)` for Concept Page, Model Examples, Exercise cards; its `checklistQuestions` for the Self-Check, whose picks are `IProgress.getSelfCheckAnswers(id)` |
+| Module | `ICurriculum.getModule(id)` for Concept Page, Model Examples, Exercise cards; its `selfCheckQuestions` for the Self-Check, whose picks are `IProgress.getSelfCheckAnswers(id)` |
 | Exercise | the brief from `ICurriculum.getModule(moduleId)`; no `IProgress` read at all |
 
 Two consequences worth stating:
@@ -382,7 +389,7 @@ exit code, and it runs against the deployed index in `scripts/smoke.sh` too.
 | `conceptPageMarkdown` | string | non-empty markdown, ~1 page of prose |
 | `modelExamples` | array | 2–3 items, each `{ before, after, caption }`, all non-empty; each code side ≤ 40 lines, in the Category's language (an authoring rule, checked in review) |
 | `exercises` | array | 0..n briefs — `[]` is valid and means the Module only explains |
-| `checklistQuestions` | array | **exactly 3**, each `{ id, prompt, options }` with **exactly 2** options `{ value, label }`; option values unique within a question; question ids unique within the Module |
+| `selfCheckQuestions` | array | **exactly 3**, each `{ id, prompt, options }` plus an optional `explanation`, with **2–4** options `{ value, label }`; option values unique within a question; question ids unique within the Module |
 
 How many Exercises a Module carries is an **authoring convention, not a schema
 rule**: a Software Design Module ships two — one `refactor`, one `construct`
@@ -402,9 +409,18 @@ instead of a dead link while it is `null`).
 Both schemas set `"additionalProperties": false`, so a stray field is an error
 rather than silently ignored data. Content is validated by
 `scripts/validate-content.mjs` locally and in CI **before** the build, so
-invalid content can never deploy. Checklist prompts must be behaviorally
+invalid content can never deploy. Self-Check prompts must be behaviorally
 answerable — countable or doable — per `docs/design.md` § Pedagogy, and no
 content text may use a banned term from `docs/ubiquitous-language.md`.
+
+A question's `explanation` is optional and additive: authored, it is revealed
+once the reader picks any option, and it is the **same text whichever option
+was picked**. It teaches what the question was pointing at; it never says which
+option was right, because nothing in Kata is right or wrong. Written to
+`docs/design.md` § Editorial standard, 1–3 sentences. Question ids unique within
+a Module and option values unique within a question are the two rules draft
+2020-12 cannot state, so `scripts/validate-content.mjs` checks them beside the
+schema — same gate, same exit code, same run against the deployed content.
 
 ---
 
