@@ -176,8 +176,8 @@ describe('Exercise screen', () => {
     const { container } = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Practice material');
 
-    // Three section labels at h2 — the aside's fourth went with the
-    // Behavioral Checklist (#157). "Practice material" is lower-case on
+    // Three section labels at h2 — the aside's fourth went with the gated
+    // model's questions (#157). "Practice material" is lower-case on
     // purpose and this assertion guards that: the other labels are domain
     // terms, it is not (#143, src/strings/en.ts).
     expect(expectWellFormedOutline(container)).toEqual([
@@ -573,9 +573,9 @@ describe('Exercise screen', () => {
   // it. There is no state this screen can be in that renders either.
   it('renders no gate banner and no aside in any state', async () => {
     const progress = await createProgress();
-    // The strongest state the old screen had: every question answered, and a
-    // Checkpoint recorded for this Module.
-    await progress.saveChecklistDraft('m01', { q1: 'a', q2: 'a', q3: 'a' });
+    // The strongest state the old screen had: every question answered for
+    // this Module.
+    await progress.saveSelfCheckAnswers('m01', { q1: 'a', q2: 'a', q3: 'a' });
 
     const { container } = await renderAt(
       '/modules/m01/exercises/m01-e1',

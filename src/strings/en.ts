@@ -13,9 +13,9 @@ const en = {
     progressUnavailable: {
       title: 'Kata cannot open its progress database',
       body1:
-        "Kata keeps your Checkpoints and Behavioral Checklist answers in this browser and nowhere else, and this browser will not let it open that storage. Site data is blocked for {origin}, or this window is a private or hardened mode that blocks it.",
+        'Kata keeps your Self-Check answers in this browser and nowhere else, and this browser will not let it open that storage. Site data is blocked for {origin}, or this window is a private or hardened mode that blocks it.',
       body2:
-        'Allow site data for {origin} and reload the page. Checkpoints already recorded are untouched — they are still in the browser that recorded them.',
+        'Allow site data for {origin} and reload the page. Answers already saved are untouched — they are still in the browser that saved them.',
     },
     moduleUnavailable: {
       title: "This Module's content is not available",
@@ -23,7 +23,7 @@ const en = {
       body1After:
         ', fetched the moment you open it, and that request failed. A Module is stored for offline use as it is read — so one you have not opened online yet is not available offline.',
       body2:
-        'Reconnect and try again. Nothing is lost: your Checkpoints and Behavioral Checklist answers live in this browser, not in the file that failed to load.',
+        'Reconnect and try again. Nothing is lost: your Self-Check answers live in this browser, not in the file that failed to load.',
       retry: 'Try again',
     },
   },
@@ -176,12 +176,11 @@ const en = {
     note:
       "{fileName} is the only copy of your progress that exists outside this browser. Import replaces current progress with a file's contents.",
     confirmDialogLabel: 'Confirm import',
-    confirmSummary: '{checkpoints}, {checklists} — replace current progress?',
+    confirmSummary: '{selfChecks} — replace current progress?',
     confirmReplace: 'Replace progress',
     confirmCancel: 'Cancel',
-    checkpointNoun: 'Checkpoint',
-    checklistNoun: 'checklist',
-    importReplacedAnnouncement: 'Progress replaced — {checkpoints}, {checklists} imported.',
+    selfCheckNoun: 'Self-Check',
+    importReplacedAnnouncement: 'Progress replaced — {selfChecks} imported.',
     importParseError: 'Not a Kata progress file — {reason}. Current progress is unchanged.',
     importFailedError: 'Import failed — {reason}. Current progress is unchanged.',
   },

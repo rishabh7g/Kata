@@ -1,8 +1,9 @@
 /**
  * The app's one polite announcer: an always-mounted, visually hidden live
  * region a screen sets when something changes off the learner's cursor
- * (#73 — submitting the Behavioral Checklist flips the panel and reveals the
- * gate banner, neither of which a screen reader would otherwise mention).
+ * (#73 — a confirmed progress import replaces what is stored while focus
+ * sits on a button that looks untouched, which a screen reader would
+ * otherwise never mention).
  *
  * Mount it empty and set `message` in response to the change, never from the
  * data a plain page load already carries: a live region announces what

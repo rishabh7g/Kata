@@ -13,9 +13,9 @@ import { CurriculumScreen } from './CurriculumScreen';
 // The backup footer lives on the Curriculum screen, so the fixture is the
 // same full wiring as CurriculumScreen.test.tsx: real createProgress over
 // fake-indexeddb, real createCurriculum over an in-memory index — the import
-// must visibly move the rows, not just the stores. Since #156 the rows show
-// one thing about the reader, the outline `In progress` tag over a saved
-// Self-Check draft, so that tag is what a landed import is read by.
+// must visibly move the rows, not just the store. Since #156 the rows show
+// one thing about the reader, the outline `In progress` tag over saved
+// Self-Check answers, so that tag is what a landed import is read by.
 const index: ModuleIndex = {
   schemaVersion: 1,
   modules: [
@@ -32,24 +32,18 @@ const source: ContentSource = {
   loadModuleContent: async () => null,
 };
 
-// A backup of a reader partway through — the issue's round-trip fixture. It
-// still carries the two record types the old model wrote, because a real
-// backup file from that model does and an import of one must round-trip
-// losslessly; the draft is the part the rows render (#156).
+// A backup of a reader partway through — the issue's round-trip fixture. A
+// v2 file holds one thing: the reader's Self-Check answers, per Module
+// (#159), and those answers are what the rows render (#156).
 const savedProgress: ProgressState = {
-  schemaVersion: 1,
-  checkpoints: [{ moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' }],
-  submittedChecklists: [
-    {
-      moduleId: 'm01',
-      answers: { q1: 'yes', q2: 'no', q3: 'yes' },
-      submittedAt: '2026-06-12T09:41:00.000Z',
-    },
-  ],
-  checklistDrafts: [
+  schemaVersion: 2,
+  selfCheckAnswers: [
     { moduleId: 'm02', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
   ],
 };
+
+/** The fresh-profile export, the "changed nothing" comparison value. */
+const EMPTY: ProgressState = { schemaVersion: 2, selfCheckAnswers: [] };
 
 beforeEach(() => {
   globalThis.indexedDB = new IDBFactory();
@@ -123,15 +117,10 @@ describe('Progress backup — import', () => {
 
     // The confirm step always appears before any overwrite.
     const summary = await screen.findByText(
-      '1 Checkpoint, 1 checklist — replace current progress?',
+      '1 Self-Check — replace current progress?',
     );
     expect(summary).toBeInTheDocument();
-    expect(await progress.exportState()).toEqual({
-      schemaVersion: 1,
-      checkpoints: [],
-      submittedChecklists: [],
-      checklistDrafts: [],
-    });
+    expect(await progress.exportState()).toEqual(EMPTY);
 
     fireEvent.click(screen.getByRole('button', { name: 'Replace progress' }));
 
@@ -139,7 +128,7 @@ describe('Progress backup — import', () => {
     await waitFor(async () => {
       expect(await progress.exportState()).toEqual(savedProgress);
     });
-    // …and visible without a reload: row 02 picks up the imported draft's
+    // …and visible without a reload: row 02 picks up the imported answers'
     // outline tag. Every row was a link before the import and still is — the
     // Library never opens or closes one (#156).
     expect(await screen.findByText('In progress')).toBeInTheDocument();
@@ -157,14 +146,7 @@ describe('Progress backup — import', () => {
     const progress = await renderScreen(savedProgress);
     const before = await progress.exportState();
 
-    pickFile(
-      serializeProgressState({
-        schemaVersion: 1,
-        checkpoints: [],
-        submittedChecklists: [],
-        checklistDrafts: [],
-      }),
-    );
+    pickFile(serializeProgressState(EMPTY));
     fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
 
     expect(
@@ -196,37 +178,48 @@ describe('Progress backup — import', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toMatch(/Not a Kata progress file/);
-    expect(await progress.exportState()).toEqual({
-      schemaVersion: 1,
-      checkpoints: [],
-      submittedChecklists: [],
-      checklistDrafts: [],
-    });
+    expect(await progress.exportState()).toEqual(EMPTY);
   });
 
-  // #76: this file used to import, and the row then read `Checkpoint ·
-  // Invalid Date`. The parse names the bad field, and nothing is written.
-  it('an unparseable Checkpoint date is rejected before the confirm', async () => {
-    const progress = await renderScreen();
+  // The gated model's export (#159): the same file name, a shape the Library
+  // has no store for. The unknown-schemaVersion path rejects it like any
+  // other foreign JSON, and nothing is written.
+  it('a v1 file is rejected with the schema-version reason', async () => {
+    const progress = await renderScreen(savedProgress);
+    const before = await progress.exportState();
 
     pickFile(
-      '{"schemaVersion":1,"checkpoints":[{"moduleId":"m01","passedAt":"banana"}],"submittedChecklists":[],"checklistDrafts":[]}',
+      '{"schemaVersion":1,"checkpoints":[],"submittedChecklists":[],"checklistDrafts":[]}',
     );
 
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toBe(
-      "Not a Kata progress file — checkpoints[0]: 'passedAt' is not an ISO date. Current progress is unchanged.",
+      'Not a Kata progress file — unknown schemaVersion 1 (expected 2). Current progress is unchanged.',
+    );
+    expect(
+      screen.queryByText(/replace current progress\?/),
+    ).not.toBeInTheDocument();
+    expect(await progress.exportState()).toEqual(before);
+  });
+
+  // #76: this file used to import, and the row then read an `Invalid Date`.
+  // The parse names the bad field, and nothing is written.
+  it('an unparseable saved-at date is rejected before the confirm', async () => {
+    const progress = await renderScreen();
+
+    pickFile(
+      '{"schemaVersion":2,"selfCheckAnswers":[{"moduleId":"m01","answers":{},"savedAt":"banana"}]}',
+    );
+
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toBe(
+      "Not a Kata progress file — selfCheckAnswers[0]: 'savedAt' is not an ISO date. Current progress is unchanged.",
     );
     expect(
       screen.queryByText(/replace current progress\?/),
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/Invalid Date/)).not.toBeInTheDocument();
-    expect(await progress.exportState()).toEqual({
-      schemaVersion: 1,
-      checkpoints: [],
-      submittedChecklists: [],
-      checklistDrafts: [],
-    });
+    expect(await progress.exportState()).toEqual(EMPTY);
   });
 
   it('a rejected pick clears once a valid file is picked after it', async () => {
@@ -236,7 +229,7 @@ describe('Progress backup — import', () => {
     await screen.findByRole('alert');
 
     pickFile(serializeProgressState(savedProgress));
-    await screen.findByText('1 Checkpoint, 1 checklist — replace current progress?');
+    await screen.findByText('1 Self-Check — replace current progress?');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
@@ -265,7 +258,7 @@ describe('Progress backup — the confirm is the dialog it claims to be', () => 
     // The question being asked is read out with the dialog's own name.
     const describedBy = dialog.getAttribute('aria-describedby');
     expect(document.getElementById(describedBy ?? '')?.textContent).toBe(
-      '1 Checkpoint, 1 checklist — replace current progress?',
+      '1 Self-Check — replace current progress?',
     );
   });
 
@@ -329,7 +322,7 @@ describe('Progress backup — the confirm is the dialog it claims to be', () => 
     // region is what says the replace happened (#73's announcer).
     await waitFor(() => expect(importButton()).toHaveFocus());
     expect(screen.getByRole('status').textContent).toBe(
-      'Progress replaced — 1 Checkpoint, 1 checklist imported.',
+      'Progress replaced — 1 Self-Check imported.',
     );
   });
 
@@ -404,7 +397,7 @@ describe('Progress backup — copy', () => {
 
     const dialog = await screen.findByRole('alertdialog');
     expect(dialog.textContent).toBe(
-      '1 Checkpoint, 1 checklist — replace current progress?Replace progressCancel',
+      '1 Self-Check — replace current progress?Replace progressCancel',
     );
     expect(noteText()).toMatch(/only copy of your progress/);
   });

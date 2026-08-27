@@ -7,8 +7,8 @@ import type { IProgress } from '../progress';
  * (src/app/bootstrap.tsx) provides the real IProgress (IndexedDB, #14) — and
  * when it cannot open, no app at all (#68); tests provide one over
  * fake-indexeddb.
- * Screens never construct their own: Checkpoint integrity is IProgress's job,
- * rendering is theirs.
+ * Screens never construct their own: owning what is stored is IProgress's
+ * job, rendering is theirs.
  */
 const ProgressContext = createContext<IProgress | null>(null);
 

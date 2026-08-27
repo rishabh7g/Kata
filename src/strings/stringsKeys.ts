@@ -53,22 +53,20 @@ export const STRINGS_KEYS = [
   'notice.moduleUnavailable.retry',
 
   // The back link every drill-down screen offers to the Curriculum. The nav's
-  // live Checkpoint count went with the lock chain (#156): the Library never
-  // measures the reader, so permanent chrome has nothing to count.
+  // live tally went with the lock chain (#156): the Library never measures
+  // the reader, so permanent chrome has nothing to count.
   'shell.backToCurriculum',
 
-  // The Curriculum row tags — the only status vocabulary left. `gatePassed`
-  // and the Checkpoint date line went with the Module header tag (#157):
-  // both named a removed term, and the Library measures no reader.
+  // The Curriculum row tags — the only status vocabulary left. The Module
+  // header tag and its date line went with it (#157): both named a removed
+  // term, and the Library measures no reader.
   'status.inProgress',
   'status.readyToStart',
 
-  // Curriculum screen. `curriculum.kicker` ("Curriculum — fixed order,
-  // foundations down") and `curriculum.intro` ("Five Modules. Advance by
-  // passing each Exit Gate…") were removed on the read-once copy pass
-  // (#113) — both were pure explainer, read once and skimmed past forever
-  // after, and neither carried live data, instructed a step, or guarded a
-  // destructive action.
+  // Curriculum screen. `curriculum.kicker` and `curriculum.intro` were
+  // removed on the read-once copy pass (#113) — both were pure explainer,
+  // read once and skimmed past forever after, and neither carried live data,
+  // instructed a step, or guarded a destructive action.
   'curriculum.title',
   // The orientation block (#134): what a Module is and the read-then-do
   // order, where the C# gets written, and where progress lives. Restored
@@ -97,11 +95,9 @@ export const STRINGS_KEYS = [
 
   // The Module's Self-Check (#157) — its heading and the one clause that
   // says what a Self-Check is, kept by the keeper test's fourth clause. The
-  // whole `gate.*` block went with the Exit Gate: no poster, no condition
-  // row, no pending note and no banner, because nothing is passed. So did
-  // `checklist.submitLabel` / `checklist.submittedLine` / `checklist.meta`
-  // and the self-report note — there is no submission to label, time or
-  // scope.
+  // whole `gate.*` and `checklist.*` blocks went with the gated model: no
+  // poster, no condition row, no pending note, no banner, and nothing to
+  // label, time or scope, because nothing is sent and nothing is passed.
   'selfCheck.heading',
   'selfCheck.definition',
 
@@ -136,8 +132,7 @@ export const STRINGS_KEYS = [
   'backup.confirmSummary',
   'backup.confirmReplace',
   'backup.confirmCancel',
-  'backup.checkpointNoun',
-  'backup.checklistNoun',
+  'backup.selfCheckNoun',
   'backup.importReplacedAnnouncement',
   'backup.importParseError',
   'backup.importFailedError',
@@ -220,13 +215,12 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   /** The fixed backup file name (`kata-progress.json`). */
   'backup.note': ['{fileName}'],
   'backup.confirmDialogLabel': [],
-  /** Two already-pluralized counts: "3 Checkpoints", "1 checklist". */
-  'backup.confirmSummary': ['{checkpoints}', '{checklists}'],
+  /** One already-pluralized count: "3 Self-Checks", "1 Self-Check". */
+  'backup.confirmSummary': ['{selfChecks}'],
   'backup.confirmReplace': [],
   'backup.confirmCancel': [],
-  'backup.checkpointNoun': [],
-  'backup.checklistNoun': [],
-  'backup.importReplacedAnnouncement': ['{checkpoints}', '{checklists}'],
+  'backup.selfCheckNoun': [],
+  'backup.importReplacedAnnouncement': ['{selfChecks}'],
   /** The parse/validation failure reason, from the thrown error. */
   'backup.importParseError': ['{reason}'],
   'backup.importFailedError': ['{reason}'],

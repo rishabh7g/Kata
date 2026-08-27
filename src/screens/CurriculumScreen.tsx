@@ -24,7 +24,7 @@ import { ProgressBackup } from './ProgressBackup';
  */
 export function CurriculumScreen() {
   const modules = useModuleSummaries(useCurriculum());
-  const draftModuleIds = useDraftModuleIds(useProgress(), modules);
+  const answeredModuleIds = useAnsweredModuleIds(useProgress(), modules);
   // The home screen is the app itself: the tab reads plain `Kata` (#77).
   useDocumentTitle(null);
   const s = useStrings();
@@ -61,7 +61,7 @@ export function CurriculumScreen() {
             <ModuleRow
               key={module.id}
               module={module}
-              inProgress={draftModuleIds.has(module.id)}
+              inProgress={answeredModuleIds.has(module.id)}
             />
           ))}
           {/* The closing 2px rule after the last row (tokens.json layout.rules). */}
@@ -75,7 +75,7 @@ export function CurriculumScreen() {
 }
 
 /**
- * The Modules carrying a saved Self-Check draft (IProgress autosave,
+ * The Modules carrying saved Self-Check answers (IProgress autosave,
  * docs/engineering.md § 2) — the rows that show the outline `In progress`
  * tag.
  *
@@ -83,11 +83,13 @@ export function CurriculumScreen() {
  * reads the reader's own answers and nothing else, so a browser still
  * holding data from the old model renders exactly what an empty one does.
  */
-function useDraftModuleIds(
+function useAnsweredModuleIds(
   progress: IProgress,
   modules: readonly ModuleSummary[] | null,
 ): ReadonlySet<ModuleId> {
-  const [draftIds, setDraftIds] = useState<ReadonlySet<ModuleId>>(new Set());
+  const [answeredIds, setAnsweredIds] = useState<ReadonlySet<ModuleId>>(
+    new Set(),
+  );
 
   useEffect(() => {
     if (modules === null) return;
@@ -95,25 +97,25 @@ function useDraftModuleIds(
     Promise.all(
       modules.map(async (module) => ({
         id: module.id,
-        draft: await progress.getChecklistDraft(module.id),
+        answers: await progress.getSelfCheckAnswers(module.id),
       })),
     )
       .then((results) => {
         if (cancelled) return;
-        setDraftIds(
-          new Set(results.filter((r) => r.draft !== null).map((r) => r.id)),
+        setAnsweredIds(
+          new Set(results.filter((r) => r.answers !== null).map((r) => r.id)),
         );
       })
       .catch((error: unknown) => {
-        // No draft state, no tag — the row falls back to `Ready to start`.
-        console.error('Failed to read Self-Check drafts', error);
+        // Nothing read, no tag — the row falls back to `Ready to start`.
+        console.error('Failed to read the stored Self-Check answers', error);
       });
     return () => {
       cancelled = true;
     };
   }, [progress, modules]);
 
-  return draftIds;
+  return answeredIds;
 }
 
 /**

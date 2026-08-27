@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -6,7 +6,7 @@ import { CurriculumProvider } from '../app/CurriculumContext';
 import { ProgressProvider } from '../app/ProgressContext';
 import type { ContentSource, ModuleIndex } from '../curriculum';
 import { createCurriculum } from '../curriculum';
-import type { Checkpoint, ChecklistDraft } from '../progress';
+import type { ModuleSelfCheck } from '../progress';
 import { createProgress } from '../progress';
 import { expectWellFormedOutline } from '../test/headings';
 import { CurriculumScreen } from './CurriculumScreen';
@@ -39,21 +39,12 @@ beforeEach(() => {
 
 // The full wiring from main.tsx (#18): ICurriculum over an in-memory
 // ContentSource, side by side with the real IProgress over fake-indexeddb the
-// screen reads drafts through — the two no longer touch (#158).
+// screen reads Self-Check answers through — the two no longer touch (#158).
 async function renderScreen({
-  checkpoints = [],
-  drafts = [],
-}: {
-  checkpoints?: readonly Checkpoint[];
-  drafts?: readonly ChecklistDraft[];
-} = {}) {
+  answers = [],
+}: { answers?: readonly ModuleSelfCheck[] } = {}) {
   const progress = await createProgress();
-  await progress.importState({
-    schemaVersion: 1,
-    checkpoints,
-    submittedChecklists: [],
-    checklistDrafts: drafts,
-  });
+  await progress.importState({ schemaVersion: 2, selfCheckAnswers: answers });
   const curriculum = createCurriculum(source);
   return render(
     <CurriculumProvider curriculum={curriculum}>
@@ -189,29 +180,30 @@ describe('Curriculum screen', () => {
     expect(beforeLoad).not.toMatch(/\d/);
   });
 
-  // The acceptance criterion of #156: a browser still holding data from the
-  // old model renders exactly what an empty one does. The Checkpoints below
-  // are legacy rows in IndexedDB — the screen reads none of them.
-  it('renders identically whether or not legacy Checkpoint data exists', async () => {
+  // The acceptance criterion of #156, now that the gated model's records are
+  // a database of their own (#159): a browser still holding one renders
+  // exactly what a fresh one does, and the database itself is gone after the
+  // first load.
+  it('renders identically for a browser holding the abandoned database', async () => {
     const empty = await renderScreen();
     await screen.findByText('01');
     const emptyHtml = empty.container.innerHTML;
     empty.unmount();
     globalThis.indexedDB = new IDBFactory();
+    await seedAbandonedDatabase();
 
-    const legacy = await renderScreen({
-      checkpoints: [
-        { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
-        { moduleId: 'm02', passedAt: '2026-06-20T09:41:00.000Z' },
-      ],
-    });
+    const legacy = await renderScreen();
     await screen.findByText('01');
 
     expect(legacy.container.innerHTML).toBe(emptyHtml);
-    // Nothing the old model recorded reaches the screen: no passed tag, no
+    // Nothing the old model recorded reaches the screen: no tag it wrote, no
     // date, no count of any kind.
     const text = legacy.container.textContent ?? '';
-    expect(text).not.toMatch(/passed|Checkpoint|Jun 2026/i);
+    expect(text).not.toMatch(/passed|Jun 2026/i);
+    await waitFor(async () => {
+      const names = (await indexedDB.databases()).map((d) => d.name);
+      expect(names).toEqual(['kata-v2']);
+    });
   });
 
   it('a fresh row carries the neutral tag and one arrow', async () => {
@@ -243,9 +235,9 @@ describe('Curriculum screen', () => {
     expect(screen.getByText('module screen probe')).toBeInTheDocument();
   });
 
-  it('a saved Self-Check draft shows the outline In progress tag (#18)', async () => {
+  it('saved Self-Check answers show the outline In progress tag (#18)', async () => {
     await renderScreen({
-      drafts: [
+      answers: [
         { moduleId: 'm02', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
       ],
     });
@@ -256,11 +248,11 @@ describe('Curriculum screen', () => {
     expect(screen.getAllByText('Ready to start')).toHaveLength(4);
   });
 
-  // Drafts are read for every Module, whatever its position in the order
+  // Answers are read for every Module, whatever its position in the order
   // (#156) — a reader who answered Module 5's Self-Check first sees it said.
   it('shows the In progress tag on any Module, in any order', async () => {
     await renderScreen({
-      drafts: [
+      answers: [
         { moduleId: 'm05', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
       ],
     });
@@ -294,8 +286,7 @@ describe('Curriculum screen', () => {
   // dropped when reading stopped being something to earn (#156).
   it('uses no removed term anywhere on the screen', async () => {
     const { container } = await renderScreen({
-      checkpoints: [{ moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' }],
-      drafts: [
+      answers: [
         { moduleId: 'm02', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
       ],
     });
@@ -321,3 +312,21 @@ describe('Curriculum screen', () => {
     );
   });
 });
+
+/**
+ * A browser left over from the gated model: the `kata` database with one of
+ * its stores in it. Opening IProgress deletes it (docs/engineering.md § 4).
+ */
+async function seedAbandonedDatabase(): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const request = indexedDB.open('kata', 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore('checkpoints', { keyPath: 'moduleId' });
+    };
+    request.onsuccess = () => {
+      request.result.close();
+      resolve();
+    };
+    request.onerror = () => reject(request.error);
+  });
+}

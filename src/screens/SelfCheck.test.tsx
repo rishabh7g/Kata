@@ -105,7 +105,7 @@ describe('the Self-Check panel (#157)', () => {
     expect(definition?.querySelector('a, button, details, [role]')).toBeNull();
   });
 
-  it('autosaves a pick immediately — no button, and the draft holds the answer', async () => {
+  it('autosaves a pick immediately — no button, and the store holds the answer', async () => {
     const { progress } = await renderSelfCheck();
 
     fireEvent.click(
@@ -114,13 +114,13 @@ describe('the Self-Check panel (#157)', () => {
       ).getAllByRole('radio')[1]!,
     );
 
-    const draft = await progress.getChecklistDraft('m01');
-    expect(draft?.answers).toEqual({ q2: 'no' });
+    const stored = await progress.getSelfCheckAnswers('m01');
+    expect(stored?.answers).toEqual({ q2: 'no' });
   });
 
   it('restores the stored answers on a revisit, leaving the rest unanswered', async () => {
     const progress = await createProgress();
-    await progress.saveChecklistDraft('m01', { q1: 'yes', q3: 'no' });
+    await progress.saveSelfCheckAnswers('m01', { q1: 'yes', q3: 'no' });
 
     await renderSelfCheck(progress);
 
@@ -146,7 +146,7 @@ describe('the Self-Check panel (#157)', () => {
     fireEvent.click(within(group).getAllByRole('radio')[1]!);
 
     expect(within(group).getAllByRole('radio')[1]!).toBeChecked();
-    expect((await progress.getChecklistDraft('m01'))?.answers).toEqual({
+    expect((await progress.getSelfCheckAnswers('m01'))?.answers).toEqual({
       q1: 'no',
     });
   });
@@ -154,7 +154,7 @@ describe('the Self-Check panel (#157)', () => {
   it('renders nothing at all while the stored answers are still loading', () => {
     const pending: IProgress = {
       ...({} as IProgress),
-      getChecklistDraft: () => new Promise(() => {}),
+      getSelfCheckAnswers: () => new Promise(() => {}),
     };
     const { container } = renderWith(questions, pending);
 
@@ -184,8 +184,8 @@ describe('the Self-Check panel (#157)', () => {
 });
 
 /**
- * The radio grouping (#72) — kept exactly as the Behavioral Checklist had it:
- * the questions are the same three, and an option is never announced alone.
+ * The radio grouping (#72) — kept exactly as the gated model had it: the
+ * questions are the same three, and an option is never announced alone.
  */
 describe('Self-Check radio grouping (#72)', () => {
   it('names each question its own group, so an option is never announced alone', async () => {

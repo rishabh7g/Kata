@@ -5,15 +5,11 @@
 // IProgress `interface` in code stays character-identical to the doc without
 // a second copy that could drift. If the doc changes, re-copy there.
 export type {
-  ChecklistAnswers,
-  ChecklistDraft,
   ChecklistQuestionId,
-  Checkpoint,
-  GateStatus,
   IProgress,
   IsoDateTime,
   ModuleId,
-  PartialChecklistAnswers,
+  ModuleSelfCheck,
   ProgressState,
-  SubmittedChecklist,
+  SelfCheckAnswers,
 } from '../curriculum/contract';

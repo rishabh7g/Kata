@@ -3,17 +3,18 @@
 Kata is a **read-only, offline-capable PWA served as static files from GitHub
 Pages out of this repo**. There is no backend, no database server, no runtime
 LLM call, and no code execution: the app reads authored content that is
-committed to the repo and records the learner's own Checkpoints in the browser.
+committed to the repo and records the reader's own Self-Check answers in the
+browser.
 The learner practises C# in their own IDE, against material this repo hands
 them. Terms per `ubiquitous-language.md`.
 
 Everything the app does is behind **two Target Interfaces** — `ICurriculum`
-(read the authored content) and `IProgress` (own the learner's progression).
-Everything else is React rendering on top of them.
+(read the authored content) and `IProgress` (own the reader's Self-Check
+answers). Everything else is React rendering on top of them.
 
-Depth check applied to our own design: 2 Target Interfaces, 11 methods,
-hiding content fetching and caching, the lock-chain derivation, IndexedDB, and
-the Exit Gate logic. A screen needs to know none of that.
+Depth check applied to our own design: 2 Target Interfaces, 6 methods, hiding
+content fetching and caching, IndexedDB, and the backup file's shape. A screen
+needs to know none of that.
 
 ---
 
@@ -71,7 +72,7 @@ export type ModuleId = string;
 /** Exercise id, unique app-wide, equal to its repo folder name: 'm01-e1'. */
 export type ExerciseId = string;
 
-/** Behavioral Checklist question id, unique within its Module: 'q1' … 'q3'. */
+/** Self-Check question id, unique within its Module: 'q1' … 'q3'. */
 export type ChecklistQuestionId = string;
 
 /** ISO-8601 instant in UTC, e.g. '2026-08-12T09:41:00.000Z'. */
@@ -135,46 +136,25 @@ export interface ModuleContent {
   ]; // exactly 3
 }
 
-// ── Learner progress (the only data Kata ever persists) ──────────────────
+// ── Reader answers (the only data Kata ever persists) ────────────────────
 
-export interface Checkpoint {
-  readonly moduleId: ModuleId;
-  readonly passedAt: IsoDateTime; // written once at the pass; never updated
-}
-
-/** Complete answers: one chosen option value per checklist question id. */
-export type ChecklistAnswers = Readonly<Record<ChecklistQuestionId, string>>;
-
-/** Autosaved answers, possibly incomplete. Never part of the Exit Gate. */
-export type PartialChecklistAnswers = Readonly<
+/** A Module's Self-Check picks: one option value per question id. Always
+ *  partial — none, some, or all three answered are equally normal. */
+export type SelfCheckAnswers = Readonly<
   Partial<Record<ChecklistQuestionId, string>>
 >;
 
-export interface SubmittedChecklist {
+/** One Module's stored Self-Check answers; at most one record per Module. */
+export interface ModuleSelfCheck {
   readonly moduleId: ModuleId;
-  readonly answers: ChecklistAnswers;
-  readonly submittedAt: IsoDateTime;
-}
-
-export interface ChecklistDraft {
-  readonly moduleId: ModuleId;
-  readonly answers: PartialChecklistAnswers;
-  readonly savedAt: IsoDateTime;
-}
-
-export interface GateStatus {
-  readonly moduleId: ModuleId;
-  readonly passed: boolean; // true iff the Behavioral Checklist is submitted
-  readonly checklistSubmittedAt: IsoDateTime | null;
-  readonly checkpointAt: IsoDateTime | null; // null while the gate is not passed
+  readonly answers: SelfCheckAnswers;
+  readonly savedAt: IsoDateTime; // when the last pick was autosaved
 }
 
 /** The whole persisted state, in one value: backup file and test fixture. */
 export interface ProgressState {
-  readonly schemaVersion: 1;
-  readonly checkpoints: readonly Checkpoint[];
-  readonly submittedChecklists: readonly SubmittedChecklist[];
-  readonly checklistDrafts: readonly ChecklistDraft[];
+  readonly schemaVersion: 2;
+  readonly selfCheckAnswers: readonly ModuleSelfCheck[];
 }
 
 // ── What ICurriculum hands to the screens ────────────────────────────────
@@ -217,21 +197,13 @@ export declare function createCurriculum(content: ContentSource): ICurriculum;
 // ── Target Interface 2 of 2: IProgress ───────────────────────────────────
 
 export interface IProgress {
-  /** Passes the Exit Gate and writes this Module's one Checkpoint. */
-  submitChecklist(
+  /** Autosave of a Module's Self-Check picks; replaces what was stored. */
+  saveSelfCheckAnswers(
     moduleId: ModuleId,
-    answers: ChecklistAnswers,
-  ): Promise<GateStatus>;
-  /** Autosave of unsubmitted answers. Never affects the Exit Gate. */
-  saveChecklistDraft(
-    moduleId: ModuleId,
-    partialAnswers: PartialChecklistAnswers,
+    answers: SelfCheckAnswers,
   ): Promise<void>;
-  getChecklistDraft(moduleId: ModuleId): Promise<ChecklistDraft | null>;
-  getSubmittedChecklist(moduleId: ModuleId): Promise<SubmittedChecklist | null>;
-  getGateStatus(moduleId: ModuleId): Promise<GateStatus>;
-  listCheckpoints(): Promise<readonly Checkpoint[]>;
-  getCheckpoint(moduleId: ModuleId): Promise<Checkpoint | null>;
+  /** One Module's stored answers; null when that Module has none. */
+  getSelfCheckAnswers(moduleId: ModuleId): Promise<ModuleSelfCheck | null>;
   /** Whole state out, for the backup file and for test fixtures. */
   exportState(): Promise<ProgressState>;
   /** Whole state in: replaces everything stored. All-or-nothing. */
@@ -275,45 +247,29 @@ and never touch IndexedDB.
 
 ### IProgress — behaviour
 
-The integrity of the whole system: **IProgress is the only writer of
-Checkpoints.** No screen, no content file, and no other code module ever
-creates, edits, or deletes one.
+The integrity of the whole system: **IProgress is the app's only write path**,
+and what it writes is the reader's own Self-Check answers — nothing else. No
+screen, no content file, and no other code module ever writes storage.
 
-**The Exit Gate.** A Module's gate is passed **iff its Behavioral Checklist has
-been submitted**. That is the sole condition, and it is **self-assessed** —
-Kata never runs code, never inspects the learner's solution, and never judges
-quality. A draft is not a submission. There is no second condition to add.
+**Answers are not a judgement.** An answer is stored because the reader picked
+it and would like it back on the next visit. It opens nothing, closes nothing,
+and is never read as a measure of the reader (#159): Kata never runs code,
+never inspects the learner's solution, and never judges quality.
 
 Rules, in the order a reviewer should check them:
 
-- `submitChecklist(moduleId, answers)` — when the Module has **no** submitted
-  checklist: store the `SubmittedChecklist` with `submittedAt = now`, write
-  **exactly one** `Checkpoint` with `passedAt = now`, delete that Module's
-  draft, and return the resulting `GateStatus`. The write is atomic: either the
-  submitted checklist and the Checkpoint both land, or neither does.
-- `submitChecklist` on an **already-submitted** Module is a **no-op** that
-  returns the existing `GateStatus`. The original `submittedAt`, the original
-  answers, and the original Checkpoint `passedAt` are all kept. Submitting is
-  idempotent; a Module never gets a second Checkpoint.
-- `submitChecklist` **throws** when `answers` is empty. It does not check that
-  every question was answered, because the question set belongs to
-  `ICurriculum`; the checklist form owns that rule and keeps submit disabled
-  until all three pairs have an answer.
-- `saveChecklistDraft(moduleId, partialAnswers)` replaces that Module's draft
-  (last write wins) with `savedAt = now`. On an **already-submitted** Module it
-  is a no-op. Drafts are never a gate input.
-- `getGateStatus(moduleId)` is a pure read: `passed` mirrors "a submitted
-  checklist exists", `checklistSubmittedAt` and `checkpointAt` come from the
-  stored records, and both are `null` while the gate is not passed. For an
-  unknown or pending Module it returns a not-passed status rather than throwing.
-- `listCheckpoints()` returns Checkpoints **ordered by the Module's ordinal**,
-  i.e. by `moduleId` ascending, which is the same thing given the `m01`…`m05`
-  id shape. `getCheckpoint(moduleId)` returns that Module's Checkpoint or
-  `null`.
-- `exportState()` returns everything stored. `importState(state)` **replaces**
-  all three stores wholesale in one transaction, after rejecting a state with a
-  `schemaVersion` it does not know or with more than one Checkpoint for the
-  same Module. A rejected import changes nothing.
+- `saveSelfCheckAnswers(moduleId, answers)` replaces that Module's record
+  (last write wins) with `savedAt = now`. It accepts a partial map, including
+  an empty one, because a reader may answer one question or none.
+- `getSelfCheckAnswers(moduleId)` is a pure read of that Module's record, or
+  `null` when it has none. For an unknown or pending Module it returns `null`
+  rather than throwing.
+- Records are **per Module**: writing one Module's answers never touches
+  another's, and the key is the `moduleId` itself, so a Module has at most one.
+- `exportState()` returns everything stored, ordered by `moduleId` ascending —
+  the Module's ordinal, given the `m01`…`m05` id shape. `importState(state)`
+  **replaces** the store wholesale in one transaction, after rejecting a state
+  with a `schemaVersion` it does not know. A rejected import changes nothing.
 - Every write records the instant it happened and nothing else. There is no
   timeline, streak, schedule, or history of attempts anywhere.
 
@@ -321,23 +277,23 @@ Rules, in the order a reviewer should check them:
 
 | Screen | Reads |
 |---|---|
-| Curriculum | `ICurriculum.getModules()` for the rows, in ordinal order; `IProgress.getChecklistDraft` for the `In progress` tag |
-| Module | `ICurriculum.getModule(id)` for Concept Page, Model Examples, Exercise cards; `IProgress.getGateStatus(id)` for the Exit Gate aside and the poster |
-| Exercise | the brief from `ICurriculum.getModule(moduleId)`; `ICurriculum`'s `checklistQuestions` for the form; `IProgress` for draft, submission, and gate banner |
+| Curriculum | `ICurriculum.getModules()` for the rows, in ordinal order; `IProgress.getSelfCheckAnswers` for the `In progress` tag |
+| Module | `ICurriculum.getModule(id)` for Concept Page, Model Examples, Exercise cards; its `checklistQuestions` for the Self-Check, whose picks are `IProgress.getSelfCheckAnswers(id)` |
+| Exercise | the brief from `ICurriculum.getModule(moduleId)`; no `IProgress` read at all |
 
 Two consequences worth stating:
 
 - The Exercise route must carry **both** the Module id and the Exercise id — a
   brief is only reachable through its Module.
-- The Behavioral Checklist is **per Module**, not per Exercise. Both of a
-  Module's Exercise screens show the same checklist state.
+- The Self-Check is **per Module**, not per Exercise: it lives on the Module
+  screen, beside the prose it belongs to (#157).
 
-A Curriculum row's tag comes from one draft lookup — `ModuleSummary` carries no
-state of the reader at all:
+A Curriculum row's tag comes from one answers lookup — `ModuleSummary` carries
+no state of the reader at all:
 
 | Condition | Tag |
 |---|---|
-| a draft exists for the Module | outline `In progress` |
+| the Module has stored Self-Check answers | outline `In progress` |
 | otherwise | neutral `Ready to start` |
 
 Two tags, both about the reader's own Self-Check answers and neither a
@@ -405,21 +361,25 @@ content text may use a banned term from `docs/ubiquitous-language.md`.
 
 ## 4. Storage (IndexedDB)
 
-Database `kata`, version 1, three object stores — each keyed by `moduleId`, so
+Database `kata-v2`, version 1, **one** object store — keyed by `moduleId`, so
 the "at most one per Module" invariant is the key itself:
 
 | Store | `keyPath` | Value | Written by |
 |---|---|---|---|
-| `checkpoints` | `moduleId` | `Checkpoint` | `IProgress` only, once per Module |
-| `submittedChecklists` | `moduleId` | `SubmittedChecklist` | `IProgress` only, once per Module |
-| `checklistDrafts` | `moduleId` | `ChecklistDraft` | `IProgress`, replaced on each autosave, deleted on submit |
+| `selfCheckAnswers` | `moduleId` | `ModuleSelfCheck` | `IProgress`, replaced on each autosave |
 
 **That is the entire persisted surface.** Nothing else is ever written: no copy
 of the content (the service worker cache holds that), no analytics, no session
-or device identity, no timestamps beyond `passedAt`, `submittedAt`, and
-`savedAt`. Clearing site data resets the learner to Module 1 unlocked and zero
-Checkpoints — which is exactly why `exportState`/`importState` exist as the
-backup story.
+or device identity, no timestamp beyond `savedAt`. Clearing site data clears
+the reader's answers and nothing else — which is why `exportState`/
+`importState` exist as the backup story.
+
+**The old `kata` database is abandoned, not migrated** (#159). It held the
+gated model's records, and those describe a judgement the Library no longer
+makes, so there is nothing worth carrying forward. Opening `IProgress` deletes
+it — `indexedDB.deleteDatabase('kata')`, fire-and-forget: a browser that never
+had one is the normal case, and a failure to delete leaves the app working, so
+nothing waits on it.
 
 **When IndexedDB will not open at all** (site data blocked for the origin, a
 hardened privacy profile, some embedded webviews), there is no Kata to run:
@@ -431,7 +391,7 @@ one fix the learner controls, on the page rather than in the console (#68).
 
 ## 5. Authoring-time content workflow
 
-Concept Pages, Model Examples, Exercise briefs, Behavioral Checklist questions,
+Concept Pages, Model Examples, Exercise briefs, Self-Check questions,
 and exercise material are **drafted at authoring time on the build host, never
 at runtime**:
 
@@ -501,10 +461,10 @@ exercises/
 2. **Read path** — content schema + the five-Module index, `ICurriculum`, then
    the Curriculum, Module, and Exercise screens read-only. Real content for
    Module 1 lands here. The app is useful for reading on day 1.
-3. **Progression loop** — `IProgress`, the Behavioral Checklist form, the Exit
-   Gate aside and poster, the Checkpoint write, the Curriculum unlock cascade.
-   The loop closes here; everything after is content and polish.
-4. **Content packs** — Modules 2–5 (Concept Pages, Model Examples, checklist
+3. **Answer loop** — `IProgress` and the Self-Check form: the reader's picks
+   are stored and restored. Everything after is content and polish. (Built
+   first as a gated progression loop; un-gated in L1, #155–#159.)
+4. **Content packs** — Modules 2–5 (Concept Pages, Model Examples, Self-Check
    questions, briefs) plus the committed exercise folders.
 5. **Polish** — the pending-Module placeholder, progress export/import, and the
    design-fidelity sweep against `design/screens/`.
@@ -524,13 +484,12 @@ The app is built with the workflow it teaches — it is its own first Exercise.
   the code — never the reverse.
 - **Every authoring prompt embeds `docs/ubiquitous-language.md`** verbatim, and
   every UI string uses its terms exactly.
-- **Critical-path review**: `IProgress`'s gate and Checkpoint write path —
-  `submitChecklist` and `importState` — gets a line-by-line human review in its
-  PR. It is the only place a Checkpoint is ever created, and Checkpoints are
-  the learner's entire progress.
-- **Deriving beats storing.** Lock state and gate status are computed from
-  Checkpoints and submissions on every read. The only stored facts are the
-  three in § 4.
+- **Critical-path review**: `IProgress`'s write paths —
+  `saveSelfCheckAnswers` and `importState` — get a line-by-line human review in
+  their PR. They are the only places anything is ever stored, and the stored
+  answers are everything the reader would lose.
+- **Deriving beats storing.** A screen's state is computed from the stored
+  answers on every read. The only stored fact is the one in § 4.
 
 ---
 
@@ -547,8 +506,8 @@ this section is the only place they are named:
 | `IGenerator` (runtime LLM calls) | Content is authored on the build host and committed (§ 5), so the app ships no LLM client and no key |
 | `IWorkbench` (materialising an Exercise to disk) | Exercise folders are committed in this repo; the learner clones the folder themselves (§ 6) |
 | Verifier CLI (`kata verify`) | Kata does not run the learner's code, so it has nothing to report to |
-| Verification Runs, test-result parsing, run history | The Exit Gate is the Behavioral Checklist alone — self-assessed, sole condition — so pass/fail counts have no reader |
-| "All Exercise Test Suites green" as a gate condition | Same: the gate has exactly one condition |
+| Verification Runs, test-result parsing, run history | Kata records nothing but the reader's own Self-Check answers, so pass/fail counts have no reader |
+| Test Suite results as a pass condition | A Module has no pass condition at all (#155) — the Library opens every page from the first visit |
 
 The Test Suite is still the trustworthy artifact and still the point of the
 practice — the learner runs it in their own IDE and judges their own work.

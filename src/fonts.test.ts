@@ -217,9 +217,8 @@ describe('the font ramp, both directions (#114)', () => {
   });
 
   it('resolves the weights the app actually renders: 400 and 800', () => {
-    // 600 left with the Behavioral Checklist (#157): its submitted panel's
-    // answer rows and the gate panel's condition title were the only two
-    // rules that asked for it. The bundled face is the 100–900 variable one,
+    // 600 left with the gated model (#157): its removed panels' answer rows
+    // and condition title were the only two rules that asked for it. The bundled face is the 100–900 variable one,
     // so a dropped weight is one less synthesis, not one less file.
     expect(renderedWeights()).toEqual([400, 800]);
   });
