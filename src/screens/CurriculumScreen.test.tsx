@@ -26,10 +26,6 @@ const index: ModuleIndex = {
   ],
 };
 
-// What a locked row says (#74) — the row's only lock state that is not a
-// pixel, and since #140 it is on screen rather than clipped out of sight.
-const LOCKED_TEXT = "Locked — pass the previous Module's Exit Gate to unlock it.";
-
 const source: ContentSource = {
   loadIndex: async () => index,
   // The Curriculum screen never opens a content file.
@@ -97,24 +93,32 @@ describe('Curriculum screen', () => {
     expect(container.querySelector('.curriculum-closing-rule')).toBeInTheDocument();
   });
 
-  it('with no Checkpoints: Module 1 is Ready to start, Modules 2–5 are locked', async () => {
+  // The Library's first rule on this screen (#156): with an empty browser,
+  // every Module is open to read from the very first visit.
+  it('with empty storage: every row is a link to its own Module', async () => {
     const { container } = await renderScreen();
     await screen.findByText('01');
 
-    // Exactly one unlocked row, and it is a link to Module 1's route.
-    const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAttribute('href', '/modules/m01');
-    expect(screen.getAllByText('Ready to start')).toHaveLength(1);
+    const rows = [...container.querySelectorAll('.curriculum-row')];
+    expect(rows).toHaveLength(5);
+    expect(rows.map((row) => row.tagName)).toEqual(Array(5).fill('A'));
+    expect(
+      screen.getAllByRole('link').map((a) => a.getAttribute('href')),
+    ).toEqual([
+      '/modules/m01',
+      '/modules/m02',
+      '/modules/m03',
+      '/modules/m04',
+      '/modules/m05',
+    ]);
 
-    // Locked rows: inert divs, no status tag.
-    const locked = container.querySelectorAll('.curriculum-row-locked');
-    expect(locked).toHaveLength(4);
-    for (const row of locked) {
-      expect(row.tagName).toBe('DIV');
-      expect(row).toHaveAttribute('aria-disabled', 'true');
-      expect(row.querySelector('.tag')).toBeNull();
+    // No row is dimmed, disabled or held back by an icon that says so.
+    for (const row of rows) {
+      expect(row).not.toHaveAttribute('aria-disabled');
+      expect(row.querySelectorAll('svg')).toHaveLength(1);
+      expect(row.querySelector('.tag')).toHaveClass('tag-neutral');
     }
+    expect(screen.getAllByText('Ready to start')).toHaveLength(5);
   });
 
   it('has one h1 and no skipped heading levels (#75)', async () => {
@@ -185,104 +189,52 @@ describe('Curriculum screen', () => {
     expect(beforeLoad).not.toMatch(/\d/);
   });
 
-  it('a locked row says it is locked in visible text, and stays inert (#140)', async () => {
-    const { container } = await renderScreen();
+  // The acceptance criterion of #156: a browser still holding data from the
+  // old model renders exactly what an empty one does. The Checkpoints below
+  // are legacy rows in IndexedDB — the screen reads none of them.
+  it('renders identically whether or not legacy Checkpoint data exists', async () => {
+    const empty = await renderScreen();
     await screen.findByText('01');
+    const emptyHtml = empty.container.innerHTML;
+    empty.unmount();
+    globalThis.indexedDB = new IDBFactory();
 
-    // The lock state is text, in the status column, where every other row's
-    // state is read — not opacity, an aria-hidden icon and a cursor (#74) —
-    // and it is on screen, not clipped away from everyone but a screen
-    // reader (#140).
-    const notes = screen.getAllByText(LOCKED_TEXT);
-    expect(notes).toHaveLength(4);
-    for (const note of notes) {
-      expect(note).toHaveClass('curriculum-row-locked-reason');
-      expect(note).not.toHaveClass('visually-hidden');
-      expect(note.closest('.curriculum-row-status')).not.toBeNull();
-    }
-
-    // …and the row is still inert: a div, no tag, nothing focusable inside it.
-    for (const row of container.querySelectorAll('.curriculum-row-locked')) {
-      expect(row.textContent).toContain('Locked');
-      expect(row.tagName).toBe('DIV');
-      expect(row).not.toHaveAttribute('tabindex');
-      expect(row.querySelector('a, button, [tabindex], [role]')).toBeNull();
-      expect(row.querySelector('.tag')).toBeNull();
-    }
-
-    // Unlocked rows are untouched: their tag is the only state they carry.
-    const unlocked = container.querySelector('a.curriculum-row');
-    expect(unlocked?.textContent).not.toMatch(/Locked/);
-    expect(unlocked?.querySelector('.visually-hidden')).toBeNull();
-  });
-
-  // The whole point of #140: one copy of the reason per locked row, readable
-  // by eye and by screen reader — never a visible node plus a clipped one.
-  it('says the locked reason exactly once per row, with nothing clipped alongside it', async () => {
-    const { container } = await renderScreen();
-    await screen.findByText('01');
-
-    for (const row of container.querySelectorAll('.curriculum-row-locked')) {
-      // Nothing hidden from the accessibility tree, and nothing hidden from
-      // the eye: the one node carrying the reason is the same node for both.
-      expect(row.querySelectorAll('.visually-hidden')).toHaveLength(0);
-      expect(row.querySelector('[aria-hidden="true"]:not(svg)')).toBeNull();
-      expect(row.querySelectorAll('.curriculum-row-locked-reason')).toHaveLength(1);
-      // Once in the row's text, not twice.
-      const occurrences = (row.textContent ?? '').split(LOCKED_TEXT).length - 1;
-      expect(occurrences).toBe(1);
-    }
-
-    // Four locked rows, four copies screen-wide — the reason belongs to the
-    // row, not to the screen.
-    expect(screen.getAllByText(LOCKED_TEXT)).toHaveLength(4);
-  });
-
-  // The other three row states keep the tag they had — the visible reason is
-  // a locked-row-only addition (#140).
-  it('leaves Ready to start, In progress and passed rows tagless of any lock text', async () => {
-    const { container } = await renderScreen({
-      checkpoints: [{ moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' }],
-      drafts: [
-        { moduleId: 'm02', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
+    const legacy = await renderScreen({
+      checkpoints: [
+        { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
+        { moduleId: 'm02', passedAt: '2026-06-20T09:41:00.000Z' },
       ],
     });
-    await screen.findByText('In progress');
+    await screen.findByText('01');
 
-    // Passed (01), in progress (02), and — once 03 is reachable — nothing
-    // else changes shape: only locked rows carry the reason.
-    expect(screen.getByText('Exit Gate passed')).toHaveClass('tag', 'tag-accent');
-    expect(screen.getByText('Checkpoint · 12 Jun 2026')).toBeInTheDocument();
-    expect(screen.getByText('In progress')).toHaveClass('tag', 'tag-outline');
-
-    for (const row of container.querySelectorAll('a.curriculum-row')) {
-      expect(row.querySelector('.curriculum-row-locked-reason')).toBeNull();
-      expect(row.textContent).not.toMatch(/Locked/);
-    }
-    // Modules 03–05 are still locked, and they are the only rows saying so.
-    expect(screen.getAllByText(LOCKED_TEXT)).toHaveLength(3);
+    expect(legacy.container.innerHTML).toBe(emptyHtml);
+    // Nothing the old model recorded reaches the screen: no passed tag, no
+    // date, no count of any kind.
+    const text = legacy.container.textContent ?? '';
+    expect(text).not.toMatch(/passed|Checkpoint|Jun 2026/i);
   });
 
-  it('a fresh Ready to start row carries the neutral tag and no lock text', async () => {
+  it('a fresh row carries the neutral tag and one arrow', async () => {
     const { container } = await renderScreen();
-    const tag = await screen.findByText('Ready to start');
+    await screen.findByText('01');
 
+    const firstRow = container.querySelector('a.curriculum-row');
+    const tag = firstRow?.querySelector('.tag');
     expect(tag).toHaveClass('tag', 'tag-neutral');
-    const unlockedRow = container.querySelector('a.curriculum-row');
-    expect(unlockedRow?.querySelector('.curriculum-row-locked-reason')).toBeNull();
-    expect(unlockedRow?.querySelector('.tag')).toBe(tag);
+    expect(tag?.textContent).toBe('Ready to start');
+    expect(firstRow?.querySelectorAll('svg')).toHaveLength(1);
   });
 
-  it('clicking a locked row does nothing', async () => {
+  it('clicking any row navigates to its Module route — including the last', async () => {
     await renderScreen();
     await screen.findByText('01');
 
-    fireEvent.click(screen.getByText('Dependency Direction'));
+    fireEvent.click(screen.getByRole('link', { name: /Error Design/ }));
 
-    expect(screen.queryByText('module screen probe')).not.toBeInTheDocument();
+    expect(screen.getByText('module screen probe')).toBeInTheDocument();
   });
 
-  it('clicking an unlocked row navigates to the Module route', async () => {
+  it('clicking the first row navigates to the Module route', async () => {
     await renderScreen();
     await screen.findByText('01');
 
@@ -291,23 +243,8 @@ describe('Curriculum screen', () => {
     expect(screen.getByText('module screen probe')).toBeInTheDocument();
   });
 
-  it('a Checkpoint shows Exit Gate passed with its date and unlocks the next Module', async () => {
+  it('a saved Self-Check draft shows the outline In progress tag (#18)', async () => {
     await renderScreen({
-      checkpoints: [{ moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' }],
-    });
-    await screen.findByText('01');
-
-    expect(screen.getByText('Exit Gate passed')).toBeInTheDocument();
-    expect(screen.getByText('Checkpoint · 12 Jun 2026')).toBeInTheDocument();
-    // The lock chain (derived by ICurriculum): Module 2 is now a link too.
-    const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(['/modules/m01', '/modules/m02']);
-    expect(screen.getAllByText('Ready to start')).toHaveLength(1);
-  });
-
-  it('a saved checklist draft shows the outline In progress tag (#18)', async () => {
-    await renderScreen({
-      checkpoints: [{ moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' }],
       drafts: [
         { moduleId: 'm02', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
       ],
@@ -315,23 +252,24 @@ describe('Curriculum screen', () => {
 
     const tag = await screen.findByText('In progress');
     expect(tag).toHaveClass('tag', 'tag-outline');
-    // The draft replaces `Ready to start` on row 02; row 01 stays passed.
-    expect(screen.queryByText('Ready to start')).not.toBeInTheDocument();
-    expect(screen.getByText('Exit Gate passed')).toBeInTheDocument();
+    // One row changed tag; the other four are untouched.
+    expect(screen.getAllByText('Ready to start')).toHaveLength(4);
   });
 
-  it('a draft on a locked Module shows no tag — locked rows stay bare', async () => {
-    const { container } = await renderScreen({
+  // Drafts are read for every Module, whatever its position in the order
+  // (#156) — a reader who answered Module 5's Self-Check first sees it said.
+  it('shows the In progress tag on any Module, in any order', async () => {
+    await renderScreen({
       drafts: [
-        { moduleId: 'm03', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
+        { moduleId: 'm05', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
       ],
     });
-    await screen.findByText('Ready to start');
 
-    expect(screen.queryByText('In progress')).not.toBeInTheDocument();
-    for (const row of container.querySelectorAll('.curriculum-row-locked')) {
-      expect(row.querySelector('.tag')).toBeNull();
-    }
+    const tag = await screen.findByText('In progress');
+    expect(tag.closest('.curriculum-row')).toHaveAttribute(
+      'href',
+      '/modules/m05',
+    );
   });
 
   // #77: the Curriculum is the app itself, so the tab carries only its name.
@@ -350,6 +288,23 @@ describe('Curriculum screen', () => {
     const text = container.textContent ?? '';
     expect(text).not.toMatch(/lesson|course|level|quiz|flashcard|grade|score/i);
     expect(text).not.toMatch(/Green · |suites? green|\d+ \/ \d+ green/i);
+  });
+
+  // docs/ubiquitous-language.md § Removed terms — the words the Library
+  // dropped when reading stopped being something to earn (#156).
+  it('uses no removed term anywhere on the screen', async () => {
+    const { container } = await renderScreen({
+      checkpoints: [{ moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' }],
+      drafts: [
+        { moduleId: 'm02', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
+      ],
+    });
+    await screen.findByText('01');
+
+    const text = container.textContent ?? '';
+    expect(text).not.toMatch(
+      /Exit Gate|Behavioral Checklist|Checkpoint|Verification Run|Verifier CLI|Workbench|unlock|locked|\bgate\b|submit/i,
+    );
   });
 
   // design/issue-guide.md § UI copy ban list (#115) — the writing-style list,

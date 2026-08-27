@@ -91,6 +91,18 @@ has() {
   return 1
 }
 
+# lacks <file> <needle> <what> — the marker a removal must have taken away.
+# The mirror of `has`: some issues are proved by what the deployed bundle no
+# longer ships, and a check that only ever looks for presence cannot see that.
+lacks() {
+  if grep -qF -- "$2" "$1"; then
+    bad "$(basename "$1") still ships $3 ('$2')"
+    return 1
+  fi
+  note "absent $3"
+  return 0
+}
+
 # magic <file> <ascii-magic> — first bytes of a binary, e.g. PNG or wOF2.
 magic() {
   if node -e '
@@ -151,7 +163,9 @@ if [[ -z "$JS_URL" ]]; then
   bad "the shell links no /assets/*.js bundle — nothing would render"
 elif get "$JS_URL" "$WORK/app.js"; then
   has "$WORK/app.js" 'app-nav-brand' 'the Kata nav lockup'
-  has "$WORK/app.js" 'Checkpoints' 'the Checkpoint count label'
+  # The nav's count went with the lock chain (#156): the Library never
+  # measures the reader, so its one string must not be in the deployed pack.
+  lacks "$WORK/app.js" 'Checkpoints {passed} / {total}' 'the removed nav count (#156)'
   has "$WORK/app.js" 'curriculum-row' 'the Curriculum Module rows (#10)'
   has "$WORK/app.js" 'Ready to start' 'the fresh-Module status tag (#10)'
   # The orientation block (#134): its container class ships in the bundle —
@@ -161,10 +175,10 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # shipped with #29, so the new clause is what proves the deployed pack tells
   # the learner what the exported file is for.
   has "$WORK/app.js" 'only copy of your progress that exists outside this browser' 'the backup note browser-only clause (#142)'
-  # The visible locked-row reason (#140): the string itself shipped before as
-  # `.visually-hidden` text, so the class that puts it on screen is what
-  # proves it is no longer clipped out of sight.
-  has "$WORK/app.js" 'curriculum-row-locked-reason' 'the visible locked-row reason (#140)'
+  # Every Module row is a link (#156). The row's inert state was a class
+  # (`curriculum-row-locked`, and the reason node #140 added inside it), so
+  # the class's absence is what proves the deployed rows are all open to read.
+  lacks "$WORK/app.js" 'curriculum-row-locked' 'the removed Curriculum row lock states (#156)'
   # The Module route is hash-routed, so it is this same 200 document; its
   # markup shipping in the bundle is what "the route serves the screen" means.
   has "$WORK/app.js" 'module-concept' 'the Module Concept Page container (#11)'

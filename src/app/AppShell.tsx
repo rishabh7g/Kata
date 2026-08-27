@@ -1,25 +1,19 @@
 import { Link, Outlet } from 'react-router-dom';
 import { KataMark } from './KataMark';
-import { useCurriculum } from './CurriculumContext';
-import { useModuleSummaries } from './useModuleSummaries';
-import { interpolate, useStrings } from '../strings/strings';
 
 /**
- * The chrome every screen sits in: the fixed nav with the Kata lockup and the
- * Checkpoint count, then the one scroll area (.app-main) the screens render
- * into (design/README.md § Brand and § Screens; #104).
+ * The chrome every screen sits in: the fixed nav with the Kata lockup, then
+ * the one scroll area (.app-main) the screens render into
+ * (design/README.md § Brand and § Screens; #104).
  *
- * The count comes from `ICurriculum.getModules()`: Checkpoints recorded over
- * Modules in the index — both counted, never hard-coded, and never a
- * percentage (docs/engineering.md § 2). It is live (#18): ICurriculum reads
- * IProgress's Checkpoints on every call, and useModuleSummaries re-reads on
- * every navigation, so passing an Exit Gate moves the count on return.
+ * The nav carries the lockup and nothing else (#156). It used to carry a
+ * count of the reader beside it, which the Library has no place for: reading
+ * is self-paced, nothing is recorded but the reader's own Self-Check answers
+ * (docs/ubiquitous-language.md § Library), and a running tally in permanent
+ * chrome measures the reader on every screen. The nav is a way back to the
+ * Curriculum, not a readout.
  */
 export function AppShell() {
-  const s = useStrings();
-  const modules = useModuleSummaries(useCurriculum());
-  const passed = modules?.filter((m) => m.checkpointAt !== null).length;
-
   return (
     <div className="app-shell">
       <header className="nav app-nav">
@@ -27,13 +21,6 @@ export function AppShell() {
           <KataMark size={18} />
           Kata
         </Link>
-        <span className="text-muted app-nav-checkpoints">
-          {modules !== null &&
-            interpolate(s['shell.checkpointCount'], {
-              passed: passed ?? 0,
-              total: modules.length,
-            })}
-        </span>
       </header>
       <main className="app-main">
         <div className="app-container">

@@ -6,36 +6,37 @@ import { useDocumentTitle } from '../app/useDocumentTitle';
 import { useModuleSummaries } from '../app/useModuleSummaries';
 import type { ModuleId, ModuleSummary } from '../curriculum';
 import type { IProgress } from '../progress';
-import { interpolate, useStrings } from '../strings/strings';
+import { useStrings } from '../strings/strings';
 import { ProgressBackup } from './ProgressBackup';
 
 /**
- * Curriculum — the fixed, ordered Module list with lock state
- * (design/README.md § Screens › 1, design/screens/01-state.png).
+ * Curriculum — the Library's index: every Module in order, every row open to
+ * read (design/README.md § Screens › 1, design/screens/01-state.png).
  *
- * Renders exactly what `ICurriculum.getModules()` returns: ordering, the lock
- * chain and `checkpointAt` are derived there (#9), never here. The status
- * column is a tag only — no suite-run counts anywhere (verification removed
- * per the read-only decision, #3). The one thing read from IProgress directly
- * is checklist-draft existence, which ModuleSummary deliberately does not
+ * Renders exactly what `ICurriculum.getModules()` returns, in its order —
+ * which is a suggested reading order and nothing else
+ * (docs/ubiquitous-language.md § Curriculum), so every row is a link to its
+ * Module screen from the very first visit (#156). The status column is a tag
+ * only — no suite-run counts anywhere (verification removed per the
+ * read-only decision, #3). The one thing read from IProgress directly is
+ * Self-Check draft existence, which ModuleSummary deliberately does not
  * carry: it drives the outline `In progress` tag (#18).
  */
 export function CurriculumScreen() {
-  const s = useStrings();
   const modules = useModuleSummaries(useCurriculum());
   const draftModuleIds = useDraftModuleIds(useProgress(), modules);
   // The home screen is the app itself: the tab reads plain `Kata` (#77).
   useDocumentTitle(null);
+  const s = useStrings();
 
   return (
     <>
       {/* The kicker ("Curriculum — fixed order, foundations down") and the
-          intro ("Five Modules. Advance by passing each Exit Gate…") were
-          read-once explainer copy — deleted on the copy pass (#113). What
-          came back in their place (#134) is the orientation block: three
-          first-use definitions, which the keeper test's fourth clause keeps
-          (design/issue-guide.md § UI copy ban list). It sits in the header's
-          340px muted column — the one the intro used to fill
+          intro were read-once explainer copy — deleted on the copy pass
+          (#113). What came back in their place (#134) is the orientation
+          block: three first-use definitions, which the keeper test's fourth
+          clause keeps (design/issue-guide.md § UI copy ban list). It sits in
+          the header's 340px muted column — the one the intro used to fill
           (design/README.md § Screens › 1) — so it reads under the title at
           phone widths through the header's existing reflow, and nothing
           about the rows changes. Static text: no link, no disclosure, no
@@ -74,10 +75,13 @@ export function CurriculumScreen() {
 }
 
 /**
- * The unlocked-but-unpassed Modules that have a saved Behavioral Checklist
- * draft (IProgress autosave, docs/engineering.md § 2) — the rows that show
- * the outline `In progress` tag. Locked and passed rows never need the read:
- * locked rows carry no tag, and submitChecklist deletes the Module's draft.
+ * The Modules carrying a saved Self-Check draft (IProgress autosave,
+ * docs/engineering.md § 2) — the rows that show the outline `In progress`
+ * tag.
+ *
+ * Asked of every Module in the index, without exception (#156): the Library
+ * reads the reader's own answers and nothing else, so a browser still
+ * holding data from the old model renders exactly what an empty one does.
  */
 function useDraftModuleIds(
   progress: IProgress,
@@ -88,11 +92,8 @@ function useDraftModuleIds(
   useEffect(() => {
     if (modules === null) return;
     let cancelled = false;
-    const candidates = modules.filter(
-      (module) => module.unlocked && module.checkpointAt === null,
-    );
     Promise.all(
-      candidates.map(async (module) => ({
+      modules.map(async (module) => ({
         id: module.id,
         draft: await progress.getChecklistDraft(module.id),
       })),
@@ -105,7 +106,7 @@ function useDraftModuleIds(
       })
       .catch((error: unknown) => {
         // No draft state, no tag — the row falls back to `Ready to start`.
-        console.error('Failed to read checklist drafts', error);
+        console.error('Failed to read Self-Check drafts', error);
       });
     return () => {
       cancelled = true;
@@ -115,6 +116,11 @@ function useDraftModuleIds(
   return draftIds;
 }
 
+/**
+ * One row, always a link (#156). There is no inert row state left: nothing in
+ * the Library blocks the reader, so the row has no opacity of its own, no
+ * `not-allowed` cursor and no icon but the arrow into the Module.
+ */
 function ModuleRow({
   module,
   inProgress,
@@ -122,8 +128,8 @@ function ModuleRow({
   module: ModuleSummary;
   inProgress: boolean;
 }) {
-  const cells = (
-    <>
+  return (
+    <Link to={`/modules/${module.id}`} className="curriculum-row">
       <div className="curriculum-row-ordinal">
         {String(module.ordinal).padStart(2, '0')}
       </div>
@@ -132,84 +138,25 @@ function ModuleRow({
         <p className="text-muted curriculum-row-desc">{module.description}</p>
       </div>
       <div className="curriculum-row-status">
-        <StatusTag module={module} inProgress={inProgress} />
+        <StatusTag inProgress={inProgress} />
       </div>
       <div className="curriculum-row-icon">
-        {module.unlocked ? <ArrowRightIcon /> : <LockIcon />}
+        <ArrowRightIcon />
       </div>
-    </>
-  );
-
-  // Locked: 0.5 opacity, not-allowed cursor, click inert — a plain div, not a
-  // disabled link, so there is nothing to focus or activate.
-  if (!module.unlocked) {
-    return (
-      <div className="curriculum-row curriculum-row-locked" aria-disabled="true">
-        {cells}
-      </div>
-    );
-  }
-  return (
-    <Link to={`/modules/${module.id}`} className="curriculum-row">
-      {cells}
     </Link>
   );
 }
 
-function StatusTag({
-  module,
-  inProgress,
-}: {
-  module: ModuleSummary;
-  inProgress: boolean;
-}) {
-  // Locked rows carry no tag (design/README.md § Screens › 1 row states) — the
-  // design says "locked" with 0.5 opacity, the lock icon and the `not-allowed`
-  // cursor. None of those is a screen reader's to see, so #74 put the reason
-  // into the status column in words, and #73 clipped it out of sight
-  // (`.visually-hidden`) to leave the capture untouched.
-  //
-  // That left the explanation backwards: only assistive technology was told
-  // why the row is inert (#140). The text is now visible, in the same column
-  // and the same words. Fidelity to `screens/01-state.png` was the reason to
-  // hide it, and it loses to a first-time learner reading four dimmed rows
-  // with no stated reason — so the capture is the thing that is now out of
-  // date, and README.md § Screens › 1 records the change. It is exactly one
-  // node either way: visible text is announced, so there is no second,
-  // clipped copy to read twice.
+/**
+ * The row's one tag. Two states, both about the reader's own Self-Check
+ * answers and neither a judgement: answers saved, or none yet.
+ */
+function StatusTag({ inProgress }: { inProgress: boolean }) {
   const s = useStrings();
-  if (!module.unlocked) {
-    return (
-      <span className="curriculum-row-locked-reason">
-        {s['curriculum.row.locked']}
-      </span>
-    );
-  }
-  if (module.checkpointAt !== null) {
-    return (
-      <>
-        <span className="tag tag-accent">{s['status.gatePassed']}</span>
-        <span className="text-muted curriculum-checkpoint-date">
-          {interpolate(s['gate.checkpointLine'], {
-            date: formatCheckpointDate(module.checkpointAt),
-          })}
-        </span>
-      </>
-    );
-  }
   if (inProgress) {
     return <span className="tag tag-outline">{s['status.inProgress']}</span>;
   }
   return <span className="tag tag-neutral">{s['status.readyToStart']}</span>;
-}
-
-/** '2026-06-12T…Z' → '12 Jun 2026', the format the mock shows. */
-function formatCheckpointDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
 }
 
 // Icons copied from the design reference (design/DevGym.dc.html § Curriculum).
@@ -229,26 +176,6 @@ function ArrowRightIcon() {
     >
       <path d="M5 12h14" />
       <path d="m12 5 7 7-7 7" />
-    </svg>
-  );
-}
-
-function LockIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ opacity: 0.5 }}
-      aria-hidden="true"
-    >
-      <rect width="18" height="11" x="3" y="11" rx="0" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
   );
 }

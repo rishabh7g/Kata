@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -8,9 +8,11 @@ import { ProgressProvider } from './app/ProgressContext';
 import type { ICurriculum, ModuleSummary } from './curriculum';
 import { createProgress } from './progress';
 
-// A minimal ICurriculum: the shell only counts Checkpoints over Modules, and
-// the index route only lists what getModules() returns. Two Checkpoints so
-// the count is visibly counted, not the hard-coded 0 / 5.
+// A minimal ICurriculum: the shell renders no data of its own since the nav
+// dropped its readout (#156), and the index route only lists what
+// getModules() returns. The summaries still carry the old per-Module fields —
+// the contract change is its own issue — precisely so the shell can be proved
+// to ignore them.
 const summaries: readonly ModuleSummary[] = [
   { id: 'm01', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false, unlocked: true, checkpointAt: '2026-06-12T09:41:00.000Z' },
   { id: 'm02', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: true, unlocked: true, checkpointAt: '2026-07-01T09:41:00.000Z' },
@@ -52,29 +54,23 @@ describe('app shell', () => {
     );
   });
 
-  it('counts Checkpoints over Modules in the nav — never a percentage', async () => {
-    await renderAt('/');
+  // #156: the nav is a way back to the Curriculum, not a readout. It carries
+  // the lockup and nothing else — no tally of the reader in permanent chrome.
+  it('carries the lockup and nothing else in the nav', async () => {
+    const { container } = await renderAt('/');
+    await screen.findByText('01');
 
-    expect(await screen.findByText('Checkpoints 2 / 5')).toBeInTheDocument();
+    const nav = container.querySelector('.app-nav');
+    expect(nav?.textContent).toBe('Kata');
+    expect(nav?.querySelectorAll('a')).toHaveLength(1);
   });
 
-  it('re-reads the count on navigation: a new Checkpoint moves it (#18)', async () => {
-    // ICurriculum derives from stored Checkpoints at read time, so the stub
-    // is mutable: the state changes underneath, navigation re-reads it.
-    let live: readonly ModuleSummary[] = summaries.map((s) => ({
-      ...s,
-      checkpointAt: null,
-    }));
-    await renderAt('/', {
-      getModules: async () => live,
-      getModule: async () => null,
-    });
-    expect(await screen.findByText('Checkpoints 0 / 5')).toBeInTheDocument();
+  // The stub's summaries still carry the old per-Module fields; the shell
+  // renders nothing from them, on any route.
+  it('renders no count even where the summaries still carry old fields', async () => {
+    const { container } = await renderAt('/nowhere');
 
-    live = summaries; // two Checkpoints now recorded
-    fireEvent.click(screen.getByRole('link', { name: 'Kata' }));
-
-    expect(await screen.findByText('Checkpoints 2 / 5')).toBeInTheDocument();
+    expect(container.querySelector('.app-nav')?.textContent).toBe('Kata');
   });
 
   it('serves the Curriculum screen at the root route', async () => {

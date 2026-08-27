@@ -12,9 +12,9 @@ import { describe, expect, it } from 'vitest';
  *
  * Two categories are not body text and are allow-listed below: the uppercase
  * micro-labels that act as section furniture (kickers, section labels, the
- * nav's Checkpoint count, the example BEFORE/AFTER labels, the exercise spec
- * label, and design/styles.css's own card kicker), and display type above
- * 16px, which this floor never touches.
+ * example BEFORE/AFTER labels, the exercise spec label, and
+ * design/styles.css's own card kicker), and display type above 16px, which
+ * this floor never touches.
  */
 
 const read = (path: string): string =>
@@ -36,8 +36,6 @@ const ALLOWED_LABEL_SELECTORS = new Set([
   '.exercise-kicker',
   '.exercise-spec-label',
   '.module-example-label',
-  // The nav's `CHECKPOINTS n / 5` readout — uppercase chrome, not prose.
-  '.app-nav-checkpoints',
   // design/styles.css — the design system's own kicker, same role as the
   // app's kickers above.
   '.card-kicker',
