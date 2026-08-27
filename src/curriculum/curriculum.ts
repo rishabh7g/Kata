@@ -1,11 +1,10 @@
 // ICurriculum — docs/engineering.md § ICurriculum — behaviour.
 //
-// A pure function of (content, Checkpoints): reads the committed content JSON
-// through the ContentSource seam, derives the lock chain from CheckpointReader,
-// and writes nothing, ever. Pure TypeScript — no DOM, no React.
+// A pure function of content: reads the committed content JSON through the
+// ContentSource seam and writes nothing, ever. It reads no progress data at
+// all — the Library has no lock chain to derive (#158). Pure TypeScript — no
+// DOM, no React.
 import type {
-  Checkpoint,
-  CheckpointReader,
   ContentSource,
   ICurriculum,
   ModuleContent,
@@ -15,13 +14,9 @@ import type {
   ModuleSummary,
 } from './contract';
 
-export function createCurriculum(
-  content: ContentSource,
-  checkpoints: CheckpointReader,
-): ICurriculum {
+export function createCurriculum(content: ContentSource): ICurriculum {
   // Content is committed and immutable per deploy, so both methods may cache
-  // it in memory. Checkpoints are read on EVERY call — a freshly written
-  // Checkpoint must show up without a reload.
+  // it in memory — the only state this function holds.
   let indexPromise: Promise<readonly ModuleIndexEntry[]> | null = null;
   const contentCache = new Map<ModuleId, ModuleContent>();
 
@@ -48,52 +43,31 @@ export function createCurriculum(
     return loaded;
   }
 
-  // The lock chain — the only unlock rule in the system. Rule 2 is normative
-  // as written (also for gapped states arriving through importState):
-  //   1. ordinal === 1 is always unlocked;
-  //   2. ordinal === n (n > 1) is unlocked iff a Checkpoint exists for the
-  //      Module with ordinal === n − 1;
-  //   3. nothing else affects lock state; 4. derived at read time, never stored.
-  function summarize(
-    entry: ModuleIndexEntry,
-    entries: readonly ModuleIndexEntry[],
-    checkpointList: readonly Checkpoint[],
-  ): ModuleSummary {
-    const byModuleId = new Map(checkpointList.map((c) => [c.moduleId, c]));
-    const previous = entries.find((e) => e.ordinal === entry.ordinal - 1);
-    const unlocked =
-      entry.ordinal === 1 ||
-      (previous !== undefined && byModuleId.has(previous.id));
+  // A ModuleSummary is the index entry and nothing else: no state of the
+  // reader is derived here, so every row reads the same on any browser.
+  function summarize(entry: ModuleIndexEntry): ModuleSummary {
     return {
       id: entry.id,
       ordinal: entry.ordinal,
       title: entry.title,
       description: entry.description,
       pending: entry.pending,
-      unlocked,
-      checkpointAt: byModuleId.get(entry.id)?.passedAt ?? null,
     };
   }
 
   return {
     async getModules(): Promise<readonly ModuleSummary[]> {
-      const [entries, checkpointList] = await Promise.all([
-        orderedEntries(),
-        checkpoints.listCheckpoints(),
-      ]);
-      return entries.map((entry) => summarize(entry, entries, checkpointList));
+      const entries = await orderedEntries();
+      return entries.map(summarize);
     },
 
     async getModule(id: ModuleId): Promise<ModuleDetail | null> {
-      const [entries, checkpointList] = await Promise.all([
-        orderedEntries(),
-        checkpoints.listCheckpoints(),
-      ]);
+      const entries = await orderedEntries();
       const entry = entries.find((e) => e.id === id);
       // Unknown id: null — never throw, never invent a Module.
       if (entry === undefined) return null;
 
-      const summary = summarize(entry, entries, checkpointList);
+      const summary = summarize(entry);
       // A pending Module has no content file; a non-pending Module whose file
       // is missing is a content error CI should have caught — at runtime both
       // fall back to the pending shape so a screen never goes blank.

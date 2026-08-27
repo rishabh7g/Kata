@@ -3,16 +3,14 @@ import { useLocation } from 'react-router-dom';
 import type { ICurriculum, ModuleSummary } from '../curriculum';
 
 /**
- * Every Module, ordered by ordinal with derived lock state — straight from
- * `ICurriculum.getModules()`. `null` while loading; the callers (nav count,
- * Curriculum rows) render nothing until the data is here rather than a
- * made-up placeholder.
+ * Every Module, ordered by ordinal — straight from `ICurriculum.getModules()`.
+ * `null` while loading; the caller (the Curriculum rows) renders nothing until
+ * the data is here rather than a made-up placeholder.
  *
- * Re-reads on every navigation (`location.key`): ICurriculum derives lock
- * state from Checkpoints at read time (#9), so a Checkpoint the checklist
- * just wrote (#16) must move the nav count and unlock the next row as soon
- * as the learner returns to the Curriculum — the always-mounted AppShell
- * would otherwise keep the count it fetched on first load (#18).
+ * Re-reads on every navigation (`location.key`). ICurriculum is a pure
+ * function of committed content and caches it in memory (#158), so a return
+ * to the Curriculum costs one cached call and the screen never has to decide
+ * whether its list is still current.
  */
 export function useModuleSummaries(
   curriculum: ICurriculum,

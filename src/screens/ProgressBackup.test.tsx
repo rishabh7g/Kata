@@ -62,7 +62,7 @@ afterEach(() => {
 async function renderScreen(initial?: ProgressState): Promise<IProgress> {
   const progress = await createProgress();
   if (initial) await progress.importState(initial);
-  const curriculum = createCurriculum(source, progress);
+  const curriculum = createCurriculum(source);
   render(
     <CurriculumProvider curriculum={curriculum}>
       <ProgressProvider progress={progress}>

@@ -124,8 +124,6 @@ export interface ModuleSummary {
   readonly title: string;
   readonly description: string;
   readonly pending: boolean;
-  readonly unlocked: boolean; // derived per the lock chain; never stored
-  readonly checkpointAt: IsoDateTime | null; // non-null iff a Checkpoint exists
 }
 
 export interface ModuleDetail extends ModuleSummary {
@@ -137,11 +135,6 @@ export interface ModuleDetail extends ModuleSummary {
 
 // ── Seams ────────────────────────────────────────────────────────────────
 
-/** The only progress data ICurriculum may read. IProgress satisfies it. */
-export interface CheckpointReader {
-  listCheckpoints(): Promise<readonly Checkpoint[]>;
-}
-
 /** Where authored content comes from: HTTP in the app, in-memory in tests. */
 export interface ContentSource {
   loadIndex(): Promise<ModuleIndex>;
@@ -152,20 +145,17 @@ export interface ContentSource {
 // ── Target Interface 1 of 2: ICurriculum ─────────────────────────────────
 
 export interface ICurriculum {
-  /** Every Module, ordered by ordinal ascending, with derived lock state. */
+  /** Every Module, ordered by ordinal ascending. */
   getModules(): Promise<readonly ModuleSummary[]>;
   /** Full detail for one Module; null when the id is unknown. */
   getModule(id: ModuleId): Promise<ModuleDetail | null>;
 }
 
-export declare function createCurriculum(
-  content: ContentSource,
-  checkpoints: CheckpointReader,
-): ICurriculum;
+export declare function createCurriculum(content: ContentSource): ICurriculum;
 
 // ── Target Interface 2 of 2: IProgress ───────────────────────────────────
 
-export interface IProgress extends CheckpointReader {
+export interface IProgress {
   /** Passes the Exit Gate and writes this Module's one Checkpoint. */
   submitChecklist(
     moduleId: ModuleId,

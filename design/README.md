@@ -79,18 +79,18 @@ The screen is exactly four things: **header, Exercise Spec grid (Concept / Smell
 
 ## State management
 Screen-local state maps 1:1 onto the **two** Target Interfaces (`docs/engineering.md` § 2), both async, absence always `null`:
-- `ICurriculum.getModules()` — Curriculum rows, ordinal order, with `unlocked` and `checkpointAt` already derived.
+- `ICurriculum.getModules()` — Curriculum rows, ordinal order. Id, ordinal, title, description, pending: the authored index entry and nothing about the reader (#158).
 - `ICurriculum.getModule(id)` — Concept Page, Model Examples, Exercise briefs, and the three checklist questions.
-- `IProgress` — the drafts, the submission, the gate (`getGateStatus`), the Checkpoints (`listCheckpoints` also feeds the nav count).
+- `IProgress` — the Self-Check drafts. (Its stored Checkpoints and submissions are the last of the gated-course model; no screen reads them, and #159 is where they go.)
 
-Unlock = a Checkpoint exists for the previous Module. (No screen renders either any more: nothing is gated (#156) and nothing is passed (#157) — the Target Interfaces still derive them, and #158/#159 are where they go.) Compute nothing else client-side, and never persist it.
+The two Target Interfaces do not touch each other: `createCurriculum(content)` reads no progress data, so there is nothing to derive per reader (#158). Compute nothing else client-side, and never persist it.
 
 ## Design tokens
-`styles.css` (ship it) and `tokens.json` (mirror + app-layer values: layout grids, type scale, code sizes, semantics). Key semantics: red = emphasis and attention — primary action and the passed-gate poster (field red `--color-accent`; any red *string* uses `--color-accent-text`); passing = ink + check; locked = 50% opacity. Never a green/red traffic pair. (`semantics.failing` in `tokens.json` has no rendered use now that no screen reports test results.)
+`styles.css` (ship it) and `tokens.json` (mirror + app-layer values: layout grids, type scale, code sizes, semantics). Key semantics: red = emphasis and attention — primary action (field red `--color-accent`; any red *string* uses `--color-accent-text`); passing = ink + check. Never a green/red traffic pair. (`semantics.failing` in `tokens.json` has no rendered use now that no screen reports test results; `semantics.locked` is gone with the lock chain, #158.)
 
 ## Assets
 - `assets/kata-mark.svg` — brand mark (also the app-icon/favicon source). `assets/devgym-mark.svg` stays in place as a historical artifact, no longer used.
-- Icons: [Lucide](https://lucide.dev), 2px stroke, currentColor — used: arrow-right, arrow-left, lock, check, x.
+- Icons: [Lucide](https://lucide.dev), 2px stroke, currentColor — used: arrow-right, arrow-left, check, x.
 - No photography in the app. If any is ever added it prints grayscale.
 
 ## Files

@@ -5,7 +5,6 @@ export type {
   ChecklistQuestion,
   ChecklistQuestionId,
   Checkpoint,
-  CheckpointReader,
   ContentSource,
   ExerciseBrief,
   ExerciseId,

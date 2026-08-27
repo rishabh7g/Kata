@@ -1,10 +1,9 @@
 // Written from docs/engineering.md § ICurriculum — behaviour, BEFORE the
 // implementation exists (Module 0 discipline: tests come from the doc, the
-// code comes from the tests). The seam is exactly the one the doc names:
-// an in-memory ContentSource and a two-line CheckpointReader stub.
+// code comes from the tests). The seam is exactly the one the doc names, and
+// since #158 the only one: an in-memory ContentSource.
 import { describe, expect, it } from 'vitest';
 import type {
-  Checkpoint,
   ChecklistQuestion,
   ContentSource,
   ModuleContent,
@@ -63,83 +62,34 @@ function memorySource(overrides?: Partial<ContentSource>): ContentSource {
   };
 }
 
-function checkpoints(...moduleIds: readonly ModuleId[]) {
-  const list: readonly Checkpoint[] = moduleIds.map((moduleId, i) => ({
-    moduleId,
-    passedAt: `2026-08-0${i + 1}T09:00:00.000Z`,
-  }));
-  return { listCheckpoints: async () => list };
-}
-
-// ── getModules: ordering ───────────────────────────────────────────────────
+// ── getModules: ordering and the shape of a summary ───────────────────────
 
 describe('getModules ordering', () => {
   it('returns every Module sorted by ordinal ascending, not file order', async () => {
-    const curriculum = createCurriculum(memorySource(), checkpoints());
+    const curriculum = createCurriculum(memorySource());
 
     const modules = await curriculum.getModules();
 
     expect(modules.map((m) => m.id)).toEqual(['m01', 'm02', 'm03', 'm04', 'm05']);
     expect(modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5]);
   });
-});
 
-// ── The lock chain — the only unlock rule in the system ───────────────────
-
-describe('lock chain', () => {
-  it('with 0 Checkpoints only the ordinal-1 Module is unlocked', async () => {
-    const curriculum = createCurriculum(memorySource(), checkpoints());
-
-    const modules = await curriculum.getModules();
-
-    expect(modules.map((m) => m.unlocked)).toEqual([true, false, false, false, false]);
-    expect(modules.every((m) => m.checkpointAt === null)).toBe(true);
-  });
-
-  it('with the m01 Checkpoint, Modules 1–2 are unlocked and 3–5 locked', async () => {
-    const curriculum = createCurriculum(memorySource(), checkpoints('m01'));
+  it('summarises the index entry and nothing else — no state of the reader', async () => {
+    // The lock chain is gone (#158): ICurriculum takes content alone, so a
+    // summary has no field derived from progress left to carry, and every
+    // reader sees the same five rows.
+    const curriculum = createCurriculum(memorySource());
 
     const modules = await curriculum.getModules();
 
-    expect(modules.map((m) => m.unlocked)).toEqual([true, true, false, false, false]);
-    expect(modules[0]?.checkpointAt).toBe('2026-08-01T09:00:00.000Z');
-    expect(modules[1]?.checkpointAt).toBeNull();
-  });
-
-  it('with all Checkpoints every Module is unlocked, each with its own checkpointAt', async () => {
-    const curriculum = createCurriculum(
-      memorySource(),
-      checkpoints('m01', 'm02', 'm03', 'm04', 'm05'),
-    );
-
-    const modules = await curriculum.getModules();
-
-    expect(modules.every((m) => m.unlocked)).toBe(true);
-    expect(modules.every((m) => m.checkpointAt !== null)).toBe(true);
-  });
-
-  it('applies rule 2 as written to a gapped state (importState can produce one)', async () => {
-    // A Checkpoint for m02 only: m01 by rule 1, m03 iff m02 has one. m02 stays
-    // locked — nothing else affects lock state.
-    const curriculum = createCurriculum(memorySource(), checkpoints('m02'));
-
-    const modules = await curriculum.getModules();
-
-    expect(modules.map((m) => m.unlocked)).toEqual([true, false, true, false, false]);
-  });
-
-  it('reads Checkpoints on every call, so a fresh Checkpoint shows without a reload', async () => {
-    let list: readonly Checkpoint[] = [];
-    const curriculum = createCurriculum(memorySource(), {
-      listCheckpoints: async () => list,
+    expect(modules[0]).toEqual({
+      id: 'm01',
+      ordinal: 1,
+      title: 'Deep Modules',
+      description: 'Hide complexity.',
+      pending: false,
     });
-
-    const before = await curriculum.getModules();
-    list = [{ moduleId: 'm01', passedAt: '2026-08-12T09:41:00.000Z' }];
-    const after = await curriculum.getModules();
-
-    expect(before[1]?.unlocked).toBe(false);
-    expect(after[1]?.unlocked).toBe(true);
+    expect(createCurriculum).toHaveLength(1);
   });
 });
 
@@ -147,7 +97,7 @@ describe('lock chain', () => {
 
 describe('getModule', () => {
   it('returns full detail for an authored Module', async () => {
-    const curriculum = createCurriculum(memorySource(), checkpoints());
+    const curriculum = createCurriculum(memorySource());
 
     const detail = await curriculum.getModule('m01');
 
@@ -160,13 +110,13 @@ describe('getModule', () => {
   });
 
   it('returns null for an unknown id — never throws, never invents a Module', async () => {
-    const curriculum = createCurriculum(memorySource(), checkpoints());
+    const curriculum = createCurriculum(memorySource());
 
     await expect(curriculum.getModule('m99')).resolves.toBeNull();
   });
 
   it('surfaces the pending flag with empty content for a pending Module', async () => {
-    const curriculum = createCurriculum(memorySource(), checkpoints());
+    const curriculum = createCurriculum(memorySource());
 
     const detail = await curriculum.getModule('m03');
 
@@ -181,7 +131,6 @@ describe('getModule', () => {
     // A content error CI should have caught; the screen must never go blank.
     const curriculum = createCurriculum(
       memorySource({ loadModuleContent: async () => null }),
-      checkpoints(),
     );
 
     const detail = await curriculum.getModule('m01');
@@ -200,7 +149,6 @@ describe('getModule', () => {
           throw new TypeError('Failed to fetch');
         },
       }),
-      checkpoints(),
     );
 
     await expect(curriculum.getModule('m01')).rejects.toThrow('Failed to fetch');
@@ -219,7 +167,6 @@ describe('getModule', () => {
           return index;
         },
       }),
-      checkpoints(),
     );
 
     await expect(curriculum.getModule('m01')).rejects.toThrow('Failed to fetch');
@@ -228,12 +175,12 @@ describe('getModule', () => {
     expect(attempts).toBe(2);
   });
 
-  it('does not gate on lock state: a locked Module still returns its detail', async () => {
-    const curriculum = createCurriculum(memorySource(), checkpoints());
+  it('answers for every Module, whatever its position — nothing waits on another', async () => {
+    const curriculum = createCurriculum(memorySource());
 
     const detail = await curriculum.getModule('m02');
 
     expect(detail).not.toBeNull();
-    expect(detail?.unlocked).toBe(false);
+    expect(detail?.title).toBe('Dependency Direction');
   });
 });

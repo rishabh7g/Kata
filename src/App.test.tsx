@@ -10,15 +10,14 @@ import { createProgress } from './progress';
 
 // A minimal ICurriculum: the shell renders no data of its own since the nav
 // dropped its readout (#156), and the index route only lists what
-// getModules() returns. The summaries still carry the old per-Module fields —
-// the contract change is its own issue — precisely so the shell can be proved
-// to ignore them.
+// getModules() returns. A summary is the index entry and nothing else (#158)
+// — there are no per-reader fields left for the shell to ignore.
 const summaries: readonly ModuleSummary[] = [
-  { id: 'm01', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false, unlocked: true, checkpointAt: '2026-06-12T09:41:00.000Z' },
-  { id: 'm02', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: true, unlocked: true, checkpointAt: '2026-07-01T09:41:00.000Z' },
-  { id: 'm03', ordinal: 3, title: 'Testing at Boundaries', description: 'Test the Target Interface.', pending: true, unlocked: true, checkpointAt: null },
-  { id: 'm04', ordinal: 4, title: 'Naming', description: 'Ubiquitous Language.', pending: true, unlocked: false, checkpointAt: null },
-  { id: 'm05', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.', pending: true, unlocked: false, checkpointAt: null },
+  { id: 'm01', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false },
+  { id: 'm02', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: true },
+  { id: 'm03', ordinal: 3, title: 'Testing at Boundaries', description: 'Test the Target Interface.', pending: true },
+  { id: 'm04', ordinal: 4, title: 'Naming', description: 'Ubiquitous Language.', pending: true },
+  { id: 'm05', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.', pending: true },
 ];
 
 const curriculum: ICurriculum = {
