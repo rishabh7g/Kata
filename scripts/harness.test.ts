@@ -105,7 +105,7 @@ describe('content schema + Module index (#7)', () => {
   const INDEX_SCHEMA = 'schemas/module-index.schema.json';
 
   it('rejects a module entry missing ordinal, title, or description', () => {
-    const result = validate(INDEX_SCHEMA, `${FIXTURES}/invalid-index`);
+    const result = validate(INDEX_SCHEMA, `${FIXTURES}/invalid-index/missing-fields.json`);
 
     expect(result.status).toBe(3);
     expect(result.stdout).toContain('missing-fields.json');
@@ -114,12 +114,24 @@ describe('content schema + Module index (#7)', () => {
     }
   });
 
+  it('rejects a Module whose categoryId names no declared Category (#160)', () => {
+    // Reference integrity inside one document is invisible to draft 2020-12,
+    // so validate-content.mjs checks it beside the schema — same gate, same
+    // exit code, and it runs against the DEPLOYED index in smoke.sh too.
+    const result = validate(INDEX_SCHEMA, `${FIXTURES}/invalid-index/unknown-category.json`);
+
+    expect(result.status).toBe(3);
+    expect(result.stdout).toContain('unknown-category.json');
+    expect(result.stdout).toContain('must name a Category this index declares');
+  });
+
   it('lists all five Modules, in Curriculum order, titles verbatim, all five authored', () => {
     const index = JSON.parse(
       readFileSync(join(REPO, 'public/content/index.json'), 'utf8'),
     ) as {
       schemaVersion: number;
-      modules: { id: string; ordinal: number; title: string; pending: boolean }[];
+      categories: { id: string; ordinal: number; title: string; language: string }[];
+      modules: { id: string; categoryId: string; ordinal: number; title: string; pending: boolean }[];
     };
 
     // docs/design.md § Curriculum — fixed order, foundations-down.
@@ -136,6 +148,26 @@ describe('content schema + Module index (#7)', () => {
     // #24 shipped m02, #25 shipped m03, #26 shipped m04, #27 shipped m05 —
     // the Curriculum is complete, no pending Module remains.
     expect(index.modules.map((m) => m.pending)).toEqual([false, false, false, false, false]);
+  });
+
+  it('files all five Modules under the Software Design Category, in C# (#160)', () => {
+    const index = JSON.parse(
+      readFileSync(join(REPO, 'public/content/index.json'), 'utf8'),
+    ) as {
+      schemaVersion: number;
+      categories: { id: string; ordinal: number; title: string; language: string }[];
+      modules: { categoryId: string; ordinal: number }[];
+    };
+
+    // docs/design.md § Categories and Modules — the language belongs to the
+    // shelf: Software Design practises in C#.
+    expect(index.schemaVersion).toBe(2);
+    expect(index.categories.map((c) => [c.id, c.ordinal, c.title, c.language])).toEqual([
+      ['software-design', 1, 'Software Design', 'csharp'],
+    ]);
+    // A Module's ordinal is 1-based and contiguous WITHIN its Category.
+    expect(index.modules.map((m) => m.categoryId)).toEqual(Array(5).fill('software-design'));
+    expect(index.modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5]);
   });
 });
 

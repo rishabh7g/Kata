@@ -1,6 +1,9 @@
 // Public surface of the curriculum module. Screens (#10–#13) import from
 // here; contract.ts stays the verbatim copy of the docs/engineering.md block.
 export type {
+  Category,
+  CategoryId,
+  CategoryLanguage,
   ChecklistOption,
   ChecklistQuestion,
   ChecklistQuestionId,

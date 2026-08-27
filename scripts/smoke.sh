@@ -304,6 +304,11 @@ else
       note "$out"
     else
       note "$out"
+      # Categories (#160): the deployed index declares the Software Design
+      # shelf and every Module is filed under it — the language now belongs to
+      # the Category, so a live index without `categories` is the old model.
+      has "$WORK/content/index.json" '"categories"' 'the Categories array (#160)'
+      has "$WORK/content/index.json" '"software-design"' 'the Software Design Category (#160)'
       MODULES="$(node -e '
         const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
         console.log(data.modules.filter((m) => !m.pending).map((m) => m.id).join(" "));

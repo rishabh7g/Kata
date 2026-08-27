@@ -24,10 +24,13 @@ import { ModuleScreen } from './ModuleScreen';
 // As in CurriculumScreen.test.tsx: the fixture is the real createCurriculum
 // over an in-memory ContentSource — the same seam main.tsx wires, minus HTTP.
 const index: ModuleIndex = {
-  schemaVersion: 1,
+  schemaVersion: 2,
+  categories: [
+    { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+  ],
   modules: [
-    { id: 'm01', ordinal: 1, title: 'Deep Modules & Information Hiding', description: 'Hide the most complexity behind the smallest surface.', pending: false },
-    { id: 'm02', ordinal: 2, title: 'Dependency Direction', description: 'Point dependencies at stable abstractions.', pending: true },
+    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules & Information Hiding', description: 'Hide the most complexity behind the smallest surface.', pending: false },
+    { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point dependencies at stable abstractions.', pending: true },
   ],
 };
 

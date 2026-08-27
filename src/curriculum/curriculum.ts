@@ -5,6 +5,8 @@
 // all — the Library has no lock chain to derive (#158). Pure TypeScript — no
 // DOM, no React.
 import type {
+  Category,
+  CategoryId,
   ContentSource,
   ICurriculum,
   ModuleContent,
@@ -14,16 +16,42 @@ import type {
   ModuleSummary,
 } from './contract';
 
+/** An index entry paired with the Category it was authored under, so both the
+ *  sort and the summary read one flat value instead of joining twice. */
+interface PlacedModule {
+  readonly entry: ModuleIndexEntry;
+  readonly category: Category;
+}
+
 export function createCurriculum(content: ContentSource): ICurriculum {
   // Content is committed and immutable per deploy, so both methods may cache
   // it in memory — the only state this function holds.
-  let indexPromise: Promise<readonly ModuleIndexEntry[]> | null = null;
+  let indexPromise: Promise<readonly PlacedModule[]> | null = null;
   const contentCache = new Map<ModuleId, ModuleContent>();
 
-  function orderedEntries(): Promise<readonly ModuleIndexEntry[]> {
+  function orderedEntries(): Promise<readonly PlacedModule[]> {
     indexPromise ??= content
       .loadIndex()
-      .then((index) => [...index.modules].sort((a, b) => a.ordinal - b.ordinal))
+      .then((index) => {
+        const categories = new Map<CategoryId, Category>(
+          index.categories.map((category) => [category.id, category]),
+        );
+        // A Module naming an undeclared Category is a content error the schema
+        // rejects before a deploy (docs/engineering.md § 3); at runtime it is
+        // simply not placed, so the shelf shows what it can rather than
+        // throwing a screen away.
+        const placed: PlacedModule[] = [];
+        for (const entry of index.modules) {
+          const category = categories.get(entry.categoryId);
+          if (category !== undefined) placed.push({ entry, category });
+        }
+        // Category ordinal first, then the Module's ordinal within it: the
+        // Curriculum reads shelf by shelf, in the order the data gives.
+        return placed.sort(
+          (a, b) =>
+            a.category.ordinal - b.category.ordinal || a.entry.ordinal - b.entry.ordinal,
+        );
+      })
       .catch((error: unknown) => {
         // A failed load is not an answer worth caching: drop it so the next
         // call fetches again instead of replaying the rejection forever —
@@ -43,11 +71,14 @@ export function createCurriculum(content: ContentSource): ICurriculum {
     return loaded;
   }
 
-  // A ModuleSummary is the index entry and nothing else: no state of the
-  // reader is derived here, so every row reads the same on any browser.
-  function summarize(entry: ModuleIndexEntry): ModuleSummary {
+  // A ModuleSummary is the index entry plus its Category's id and language,
+  // denormalized so a screen never joins the two arrays itself. No state of
+  // the reader is derived here, so every row reads the same on any browser.
+  function summarize({ entry, category }: PlacedModule): ModuleSummary {
     return {
       id: entry.id,
+      categoryId: category.id,
+      language: category.language,
       ordinal: entry.ordinal,
       title: entry.title,
       description: entry.description,
@@ -63,15 +94,15 @@ export function createCurriculum(content: ContentSource): ICurriculum {
 
     async getModule(id: ModuleId): Promise<ModuleDetail | null> {
       const entries = await orderedEntries();
-      const entry = entries.find((e) => e.id === id);
+      const placed = entries.find((p) => p.entry.id === id);
       // Unknown id: null — never throw, never invent a Module.
-      if (entry === undefined) return null;
+      if (placed === undefined) return null;
 
-      const summary = summarize(entry);
+      const summary = summarize(placed);
       // A pending Module has no content file; a non-pending Module whose file
       // is missing is a content error CI should have caught — at runtime both
       // fall back to the pending shape so a screen never goes blank.
-      const moduleContent = entry.pending ? null : await loadContent(id);
+      const moduleContent = placed.entry.pending ? null : await loadContent(id);
       if (moduleContent === null) {
         return {
           ...summary,

@@ -117,6 +117,25 @@ function formatErrors(errors) {
   });
 }
 
+/**
+ * The one index rule draft 2020-12 cannot state: a Module's `categoryId` must
+ * name a Category the same file declares (docs/engineering.md § 3). Reference
+ * integrity inside one document is invisible to the schema, so it is checked
+ * here rather than in a test — that way a dangling reference fails the same
+ * gate locally, in CI, and against the DEPLOYED index in scripts/smoke.sh.
+ */
+function danglingCategoryErrors(data) {
+  if (!Array.isArray(data?.categories) || !Array.isArray(data?.modules)) return [];
+  const declared = new Set(data.categories.map((category) => category?.id));
+  return data.modules
+    .map((module, position) =>
+      declared.has(module?.categoryId)
+        ? null
+        : `  /modules/${position}/categoryId: must name a Category this index declares (${module?.categoryId})`,
+    )
+    .filter((line) => line !== null);
+}
+
 /** Validates one schema/content pair, collecting failures rather than exiting. */
 function validatePair(schemaPath, contentPath, failures) {
   note(`schema ${show(schemaPath)}`);
@@ -141,7 +160,14 @@ function validatePair(schemaPath, contentPath, failures) {
       continue;
     }
     if (validate(data)) {
-      note(`  ok   ${show(file)}`);
+      const dangling = danglingCategoryErrors(data);
+      if (dangling.length === 0) {
+        note(`  ok   ${show(file)}`);
+        continue;
+      }
+      note(`  FAIL ${show(file)}`);
+      for (const line of dangling) note(`  ${line}`);
+      failures.push({ file: show(file), errors: dangling });
       continue;
     }
     const errors = formatErrors(validate.errors);

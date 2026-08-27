@@ -4,7 +4,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createHttpContentSource } from './http-content-source';
 
-const index = { schemaVersion: 1, modules: [] };
+// The committed index shape (#160): Categories, then Modules each naming the
+// Category they belong to. This seam only fetches and parses — it never
+// reshapes what it read, so the fixture is the real thing in miniature.
+const index = {
+  schemaVersion: 2,
+  categories: [
+    { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+  ],
+  modules: [
+    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false },
+  ],
+};
 
 function stubFetch(responder: (url: string) => Response) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL) =>
@@ -26,6 +37,17 @@ describe('createHttpContentSource', () => {
 
     expect(fetchMock).toHaveBeenCalledWith('/Kata/content/index.json');
     expect(loaded).toEqual(index);
+  });
+
+  it('passes the Categories and each Module\'s categoryId through untouched', async () => {
+    stubFetch(() => Response.json(index));
+
+    const loaded = await createHttpContentSource('/Kata/').loadIndex();
+
+    expect(loaded.categories).toEqual([
+      { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+    ]);
+    expect(loaded.modules.map((m) => m.categoryId)).toEqual(['software-design']);
   });
 
   it('loads a Module content file from <base>content/modules/<id>.json', async () => {

@@ -1,8 +1,18 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "categories": [
+    {
+      "id": "software-design",
+      "ordinal": 1,
+      "title": "Software Design",
+      "description": "Five design fundamentals in C#, ordered foundations-down.",
+      "language": "csharp"
+    }
+  ],
   "modules": [
     {
       "id": "m01",
+      "categoryId": "software-design",
       "ordinal": 1,
       "title": "Deep Modules & Information Hiding",
       "description": "Hide the most complexity behind the smallest surface — the generative root of good design.",
@@ -10,6 +20,7 @@
     },
     {
       "id": "m02",
+      "categoryId": "software-design",
       "ordinal": 2,
       "title": "Dependency Direction",
       "description": "Coupling, cohesion, and pointing dependencies at stable abstractions.",
@@ -17,6 +28,7 @@
     },
     {
       "id": "m03",
+      "categoryId": "software-design",
       "ordinal": 3,
       "title": "Testing at Boundaries + TDD loop",
       "description": "Test the Target Interface, not the internals — small steps as the speed limit.",
@@ -24,6 +36,7 @@
     },
     {
       "id": "m04",
+      "categoryId": "software-design",
       "ordinal": 4,
       "title": "Naming & Ubiquitous Language",
       "description": "The cheapest, highest-leverage improvement — names drawn from the Ubiquitous Language.",
@@ -31,6 +44,7 @@
     },
     {
       "id": "m05",
+      "categoryId": "software-design",
       "ordinal": 5,
       "title": "Error Design",
       "description": "Define errors out of existence — API design for backend .NET work.",
