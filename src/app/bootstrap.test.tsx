@@ -53,7 +53,9 @@ describe('startKata', () => {
     });
 
     expect(screen.getByRole('link', { name: 'Kata' })).toBeInTheDocument();
-    expect(await screen.findByText('Checkpoints 0 / 2')).toBeInTheDocument();
+    // The Curriculum's first row — the nav carries no readout to assert on
+    // since #156, so the proof the app rendered is the screen under it.
+    expect(await screen.findByText('01')).toBeInTheDocument();
   });
 
   it('renders nothing before the progress database answers — no flash', async () => {
@@ -87,9 +89,9 @@ describe('startKata', () => {
     // Inside #root, wearing the app stylesheet's classes.
     expect(container).toContainElement(notice);
     expect(notice).toHaveClass('app-notice');
-    // Still the app: the lockup is there, the Checkpoint count is not.
+    // Still the app: the lockup is there, and it is all the nav carries (#156).
     expect(screen.getByText('Kata')).toBeInTheDocument();
-    expect(screen.queryByText(/^Checkpoints \d/)).not.toBeInTheDocument();
+    expect(container.querySelector('.app-nav')?.textContent).toBe('Kata');
   });
 
   it('gives the blocked-database screen an outline to navigate (#94)', async () => {

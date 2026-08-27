@@ -13,7 +13,9 @@ import { CurriculumScreen } from './CurriculumScreen';
 // The backup footer lives on the Curriculum screen, so the fixture is the
 // same full wiring as CurriculumScreen.test.tsx: real createProgress over
 // fake-indexeddb, real createCurriculum over an in-memory index — the import
-// must visibly move the rows' lock chain, not just the stores.
+// must visibly move the rows, not just the stores. Since #156 the rows show
+// one thing about the reader, the outline `In progress` tag over a saved
+// Self-Check draft, so that tag is what a landed import is read by.
 const index: ModuleIndex = {
   schemaVersion: 1,
   modules: [
@@ -30,8 +32,11 @@ const source: ContentSource = {
   loadModuleContent: async () => null,
 };
 
-// A backup of a learner who passed Module 1 — the issue's round-trip fixture.
-const m01Passed: ProgressState = {
+// A backup of a reader partway through — the issue's round-trip fixture. It
+// still carries the two record types the old model wrote, because a real
+// backup file from that model does and an import of one must round-trip
+// losslessly; the draft is the part the rows render (#156).
+const savedProgress: ProgressState = {
   schemaVersion: 1,
   checkpoints: [{ moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' }],
   submittedChecklists: [
@@ -41,7 +46,9 @@ const m01Passed: ProgressState = {
       submittedAt: '2026-06-12T09:41:00.000Z',
     },
   ],
-  checklistDrafts: [],
+  checklistDrafts: [
+    { moduleId: 'm02', answers: { q1: 'a' }, savedAt: '2026-06-13T10:00:00.000Z' },
+  ],
 };
 
 beforeEach(() => {
@@ -79,7 +86,7 @@ function pickFile(text: string, name = 'kata-progress.json') {
 
 describe('Progress backup — export', () => {
   it('downloads kata-progress.json holding exactly exportState', async () => {
-    const progress = await renderScreen(m01Passed);
+    const progress = await renderScreen(savedProgress);
     let exported: Blob | null = null;
     let download = '';
     vi.stubGlobal('URL', {
@@ -109,10 +116,10 @@ describe('Progress backup — export', () => {
 
 describe('Progress backup — import', () => {
   it('confirm summary, then replace: the imported state shows on the rows', async () => {
-    const progress = await renderScreen(); // fresh profile, nothing passed
-    expect(screen.queryByText('Exit Gate passed')).not.toBeInTheDocument();
+    const progress = await renderScreen(); // fresh profile, nothing saved
+    expect(screen.queryByText('In progress')).not.toBeInTheDocument();
 
-    pickFile(serializeProgressState(m01Passed));
+    pickFile(serializeProgressState(savedProgress));
 
     // The confirm step always appears before any overwrite.
     const summary = await screen.findByText(
@@ -130,18 +137,24 @@ describe('Progress backup — import', () => {
 
     // Lossless round-trip into the stores…
     await waitFor(async () => {
-      expect(await progress.exportState()).toEqual(m01Passed);
+      expect(await progress.exportState()).toEqual(savedProgress);
     });
-    // …and visible without a reload: row 01 passed with the Checkpoint's own
-    // date, and the lock chain unlocks row 02.
-    expect(await screen.findByText('Exit Gate passed')).toBeInTheDocument();
-    expect(screen.getByText('Checkpoint · 12 Jun 2026')).toBeInTheDocument();
+    // …and visible without a reload: row 02 picks up the imported draft's
+    // outline tag. Every row was a link before the import and still is — the
+    // Library never opens or closes one (#156).
+    expect(await screen.findByText('In progress')).toBeInTheDocument();
     const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(['/modules/m01', '/modules/m02']);
+    expect(hrefs).toEqual([
+      '/modules/m01',
+      '/modules/m02',
+      '/modules/m03',
+      '/modules/m04',
+      '/modules/m05',
+    ]);
   });
 
   it('cancel leaves current progress untouched', async () => {
-    const progress = await renderScreen(m01Passed);
+    const progress = await renderScreen(savedProgress);
     const before = await progress.exportState();
 
     pickFile(
@@ -158,11 +171,11 @@ describe('Progress backup — import', () => {
       screen.queryByText(/replace current progress\?/),
     ).not.toBeInTheDocument();
     expect(await progress.exportState()).toEqual(before);
-    expect(screen.getByText('Exit Gate passed')).toBeInTheDocument();
+    expect(screen.getByText('In progress')).toBeInTheDocument();
   });
 
   it('a garbage file shows a clear error and changes nothing', async () => {
-    const progress = await renderScreen(m01Passed);
+    const progress = await renderScreen(savedProgress);
     const before = await progress.exportState();
 
     pickFile('this is not json', 'garbage.json');
@@ -222,7 +235,7 @@ describe('Progress backup — import', () => {
     pickFile('nope');
     await screen.findByRole('alert');
 
-    pickFile(serializeProgressState(m01Passed));
+    pickFile(serializeProgressState(savedProgress));
     await screen.findByText('1 Checkpoint, 1 checklist — replace current progress?');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
@@ -243,7 +256,7 @@ describe('Progress backup — the confirm is the dialog it claims to be', () => 
     await renderScreen();
     importButton().focus();
 
-    pickFile(serializeProgressState(m01Passed));
+    pickFile(serializeProgressState(savedProgress));
 
     const dialog = await screen.findByRole('alertdialog', {
       name: 'Confirm import',
@@ -260,7 +273,7 @@ describe('Progress backup — the confirm is the dialog it claims to be', () => 
     const progress = await renderScreen();
     const before = await progress.exportState();
     importButton().focus();
-    pickFile(serializeProgressState(m01Passed));
+    pickFile(serializeProgressState(savedProgress));
     await waitFor(() => expect(confirmDialog()).toHaveFocus());
 
     fireEvent.keyDown(document, { key: 'Escape' });
@@ -272,13 +285,13 @@ describe('Progress backup — the confirm is the dialog it claims to be', () => 
     );
     expect(importButton()).toHaveFocus();
     expect(await progress.exportState()).toEqual(before);
-    expect(screen.queryByText('Exit Gate passed')).not.toBeInTheDocument();
+    expect(screen.queryByText('In progress')).not.toBeInTheDocument();
   });
 
   it('Cancel does the same — dismissed, unchanged, focus returned', async () => {
     const progress = await renderScreen();
     const before = await progress.exportState();
-    pickFile(serializeProgressState(m01Passed));
+    pickFile(serializeProgressState(savedProgress));
     await screen.findByRole('alertdialog', { name: 'Confirm import' });
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -291,27 +304,27 @@ describe('Progress backup — the confirm is the dialog it claims to be', () => 
   });
 
   it('Escape does nothing once no confirm is open', async () => {
-    const progress = await renderScreen(m01Passed);
+    const progress = await renderScreen(savedProgress);
     const before = await progress.exportState();
 
     fireEvent.keyDown(document, { key: 'Escape' });
 
     expect(await progress.exportState()).toEqual(before);
-    expect(screen.getByText('Exit Gate passed')).toBeInTheDocument();
+    expect(screen.getByText('In progress')).toBeInTheDocument();
   });
 
   it('Replace imports, then says so and hands focus back — never to <body>', async () => {
     const progress = await renderScreen();
-    pickFile(serializeProgressState(m01Passed));
+    pickFile(serializeProgressState(savedProgress));
     await screen.findByRole('alertdialog', { name: 'Confirm import' });
 
     fireEvent.click(screen.getByRole('button', { name: 'Replace progress' }));
 
     // The import itself, and the re-navigation that re-reads the rows.
     await waitFor(async () => {
-      expect(await progress.exportState()).toEqual(m01Passed);
+      expect(await progress.exportState()).toEqual(savedProgress);
     });
-    expect(await screen.findByText('Exit Gate passed')).toBeInTheDocument();
+    expect(await screen.findByText('In progress')).toBeInTheDocument();
     // The button that opened the confirm is where focus lands, and the live
     // region is what says the replace happened (#73's announcer).
     await waitFor(() => expect(importButton()).toHaveFocus());
@@ -321,7 +334,7 @@ describe('Progress backup — the confirm is the dialog it claims to be', () => 
   });
 
   it('says nothing on load — the live region only announces what arrives', async () => {
-    await renderScreen(m01Passed);
+    await renderScreen(savedProgress);
 
     expect(screen.getByRole('status').textContent).toBe('');
   });
@@ -376,7 +389,7 @@ describe('Progress backup — copy', () => {
   // Empty IndexedDB and a full one read the same: the note carries no counts,
   // only the confirm does.
   it('reads the same with progress stored as with none', async () => {
-    await renderScreen(m01Passed);
+    await renderScreen(savedProgress);
 
     expect(noteText()).toBe(NOTE);
     expect(noteText()).not.toMatch(/\d/);
@@ -387,7 +400,7 @@ describe('Progress backup — copy', () => {
   it('the confirm asks its one question and adds no second warning', async () => {
     await renderScreen();
 
-    pickFile(serializeProgressState(m01Passed));
+    pickFile(serializeProgressState(savedProgress));
 
     const dialog = await screen.findByRole('alertdialog');
     expect(dialog.textContent).toBe(
@@ -415,7 +428,7 @@ describe('Progress backup — copy', () => {
       new Error('quota exceeded'),
     );
 
-    pickFile(serializeProgressState(m01Passed));
+    pickFile(serializeProgressState(savedProgress));
     await screen.findByRole('alertdialog');
     fireEvent.click(screen.getByRole('button', { name: 'Replace progress' }));
 
