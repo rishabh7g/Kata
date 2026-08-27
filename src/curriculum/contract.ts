@@ -147,6 +147,9 @@ export interface ContentSource {
 // ── Target Interface 1 of 2: ICurriculum ─────────────────────────────────
 
 export interface ICurriculum {
+  /** Every Category, in its own ordinal order — the shelves the Curriculum
+   *  groups its rows under. */
+  getCategories(): Promise<readonly Category[]>;
   /** Every Module, ordered by Category ordinal, then Module ordinal. */
   getModules(): Promise<readonly ModuleSummary[]>;
   /** Full detail for one Module; null when the id is unknown. */

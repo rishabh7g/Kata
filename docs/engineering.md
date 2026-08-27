@@ -211,6 +211,9 @@ export interface ContentSource {
 // ── Target Interface 1 of 2: ICurriculum ─────────────────────────────────
 
 export interface ICurriculum {
+  /** Every Category, in its own ordinal order — the shelves the Curriculum
+   *  groups its rows under. */
+  getCategories(): Promise<readonly Category[]>;
   /** Every Module, ordered by Category ordinal, then Module ordinal. */
   getModules(): Promise<readonly ModuleSummary[]>;
   /** Full detail for one Module; null when the id is unknown. */
@@ -246,6 +249,11 @@ Owns the authored content and nothing else. It is a pure function of content:
 given the same content it returns the same output, it reads no progress data at
 all, and it **writes nothing, ever**.
 
+- `getCategories()` returns the index's Categories **sorted by `ordinal`**,
+  each exactly as authored (id, ordinal, title, description, language). It is
+  the titles and one-line descriptions the Curriculum's headings read (#163);
+  the rows themselves still come from `getModules()`, so a Category is a
+  heading over rows and never a screen, a route or a second way into a Module.
 - `getModules()` returns one `ModuleSummary` per entry in the module index,
   **sorted by its Category's `ordinal`, then by its own `ordinal`**. Order
   comes from the data, never from the file order. Each summary carries the
@@ -308,7 +316,7 @@ Rules, in the order a reviewer should check them:
 
 | Screen | Reads |
 |---|---|
-| Curriculum | `ICurriculum.getModules()` for the rows, in ordinal order; `IProgress.getSelfCheckAnswers` for the `In progress` tag |
+| Curriculum | `ICurriculum.getCategories()` for the headings and `ICurriculum.getModules()` for the rows under them, both in ordinal order; `IProgress.getSelfCheckAnswers` for the `In progress` tag |
 | Module | `ICurriculum.getModule(id)` for Concept Page, Model Examples, Exercise cards; its `selfCheckQuestions` for the Self-Check, whose picks are `IProgress.getSelfCheckAnswers(id)` |
 | Exercise | the brief from `ICurriculum.getModule(moduleId)`; no `IProgress` read at all |
 

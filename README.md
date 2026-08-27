@@ -45,8 +45,8 @@ Every push to `main` runs the same steps in
 
 ## Status
 
-All three screens are live on GitHub Pages. Curriculum lists the Modules, all of
-them open to read; Module carries its Concept Page, Model Examples, Self-Check
+All three screens are live on GitHub Pages. Curriculum lists the Modules under
+their Category heading, all of them open to read; Module carries its Concept Page, Model Examples, Self-Check
 and Exercises; Exercise shows the Exercise Spec, the immutable Target Interface,
 and the link to the committed practice folder. All five Software Design Modules
 are authored — a Concept Page, three Model Examples, and two Exercises whose

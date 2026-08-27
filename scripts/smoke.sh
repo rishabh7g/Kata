@@ -171,6 +171,12 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The orientation block (#134): its container class ships in the bundle —
   # static copy, so the class is the whole surface to check.
   has "$WORK/app.js" 'curriculum-orientation' 'the Curriculum orientation block (#134)'
+  # Category headings (#163). The heading TEXT ("Software Design") is authored
+  # content, not shell copy, so it is checked in the content step below; what
+  # the client-rendered bundle has to ship is the markup that groups the rows
+  # under it, and the one place a Category's language is named.
+  has "$WORK/app.js" 'curriculum-category-title' 'the Curriculum Category headings (#163)'
+  has "$WORK/app.js" 'curriculum-category-language' 'the Category language, named once per heading (#163)'
   # The backup note's browser-only consequence (#142): `curriculum-backup-note`
   # shipped with #29, so the new clause is what proves the deployed pack tells
   # the learner what the exported file is for.
@@ -313,6 +319,12 @@ else
       # the Category, so a live index without `categories` is the old model.
       has "$WORK/content/index.json" '"categories"' 'the Categories array (#160)'
       has "$WORK/content/index.json" '"software-design"' 'the Software Design Category (#160)'
+      # The heading the deployed Curriculum groups its five rows under (#163):
+      # the app is client-rendered, so the served markup is the bundle above
+      # plus this content — the title it reads has to be live in the index.
+      json "$WORK/content/index.json" \
+        'data.categories.some((c) => c.title === "Software Design" && c.language === "csharp")' \
+        'the Software Design heading and its language (#163)'
       MODULES="$(node -e '
         const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
         console.log(data.modules.filter((m) => !m.pending).map((m) => m.id).join(" "));

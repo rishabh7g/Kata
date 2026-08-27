@@ -63,6 +63,14 @@ export const STRINGS_KEYS = [
   'status.inProgress',
   'status.readyToStart',
 
+  // The Category's practice language, named the way a reader names it (#163).
+  // Not a screen's copy: the Curriculum's Category heading shows it once per
+  // Category, and the Exercise screen names the same language beside the
+  // command the learner runs — one table, `LANGUAGE_LABEL_KEY`
+  // (src/strings/language.ts), keyed by `CategoryLanguage`.
+  'language.csharp',
+  'language.python',
+
   // Curriculum screen. `curriculum.kicker` and `curriculum.intro` were
   // removed on the read-once copy pass (#113) — both were pure explainer,
   // read once and skimmed past forever after, and neither carried live data,
@@ -165,6 +173,9 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
 
   'status.inProgress': [],
   'status.readyToStart': [],
+
+  'language.csharp': [],
+  'language.python': [],
 
   'curriculum.title': [],
   'curriculum.orientation.module': [],

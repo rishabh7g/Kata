@@ -37,6 +37,14 @@ const en = {
     readyToStart: 'Ready to start',
   },
 
+  // A Category's practice language, as a reader would name it (#163) — read
+  // through `LANGUAGE_LABEL_KEY` in src/strings/language.ts, never by
+  // hand-mapping the `CategoryLanguage` value at a call site.
+  language: {
+    csharp: 'C#',
+    python: 'Python',
+  },
+
   curriculum: {
     title: 'Learn design by producing code.',
     // The orientation block (#134): three first-use definitions, each the
