@@ -66,8 +66,11 @@ always a C# `interface`.
 ```ts
 // ── Ids and scalars ──────────────────────────────────────────────────────
 
-/** Module id exactly as committed in the content files: 'm01' … 'm05'. */
+/** Module id exactly as committed in the content files; opaque to the app. */
 export type ModuleId = string;
+
+/** Category id exactly as committed in the content files; opaque to the app. */
+export type CategoryId = string;
 
 /** Exercise id, unique app-wide, equal to its repo folder name: 'm01-e1'. */
 export type ExerciseId = string;
@@ -80,24 +83,37 @@ export type IsoDateTime = string;
 
 export type ExerciseType = 'refactor' | 'construct';
 
+/** The one practice language every Module in a Category is written in. */
+export type CategoryLanguage = 'csharp' | 'python';
+
 // ── Authored content (committed JSON, read-only at runtime) ──────────────
+
+export interface Category {
+  readonly id: CategoryId;
+  readonly ordinal: number; // 1-based, contiguous, the order Categories read in
+  readonly title: string;
+  readonly description: string; // one line, shown under the title
+  readonly language: CategoryLanguage; // every Module in it practises this one
+}
 
 export interface ModuleIndexEntry {
   readonly id: ModuleId;
-  readonly ordinal: number; // 1-based, contiguous, the fixed Curriculum order
+  readonly categoryId: CategoryId; // the one Category this Module belongs to
+  readonly ordinal: number; // 1-based, contiguous within its Category
   readonly title: string;
   readonly description: string; // one line, shown under the title
   readonly pending: boolean; // true = content pack not authored yet
 }
 
 export interface ModuleIndex {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
+  readonly categories: readonly Category[];
   readonly modules: readonly ModuleIndexEntry[];
 }
 
 export interface ModelExample {
-  readonly before: string; // C# source, <= 40 lines
-  readonly after: string; // C# source, <= 40 lines
+  readonly before: string; // source in the Category's language, <= 40 lines
+  readonly after: string; // source in the Category's language, <= 40 lines
   readonly caption: string; // what moved or got hidden
 }
 
@@ -107,7 +123,7 @@ export interface ExerciseBrief {
   readonly title: string;
   readonly concept: string; // Exercise Spec row 1
   readonly smell: string; // Exercise Spec row 2 — the planted flaw
-  readonly targetInterfaceCode: string; // C# source, rendered read-only
+  readonly targetInterfaceCode: string; // Category's language, read-only
   readonly sizeBudgetLoc: number; // <= 300
   readonly folderUrl: string | null; // GitHub folder link; null until committed
 }
@@ -161,7 +177,9 @@ export interface ProgressState {
 
 export interface ModuleSummary {
   readonly id: ModuleId;
-  readonly ordinal: number;
+  readonly categoryId: CategoryId; // denormalized from the index, for grouping
+  readonly language: CategoryLanguage; // denormalized from its Category
+  readonly ordinal: number; // within its Category
   readonly title: string;
   readonly description: string;
   readonly pending: boolean;
@@ -186,7 +204,7 @@ export interface ContentSource {
 // ── Target Interface 1 of 2: ICurriculum ─────────────────────────────────
 
 export interface ICurriculum {
-  /** Every Module, ordered by ordinal ascending. */
+  /** Every Module, ordered by Category ordinal, then Module ordinal. */
   getModules(): Promise<readonly ModuleSummary[]>;
   /** Full detail for one Module; null when the id is unknown. */
   getModule(id: ModuleId): Promise<ModuleDetail | null>;
@@ -222,8 +240,10 @@ given the same content it returns the same output, it reads no progress data at
 all, and it **writes nothing, ever**.
 
 - `getModules()` returns one `ModuleSummary` per entry in the module index,
-  **sorted by `ordinal` ascending**. Order comes from the data, never from the
-  file order.
+  **sorted by its Category's `ordinal`, then by its own `ordinal`**. Order
+  comes from the data, never from the file order. Each summary carries the
+  `categoryId` it was authored under and its Category's `language`,
+  denormalized so a screen never has to join the two arrays itself.
 - `getModule(id)` returns `ModuleDetail`. For an **unknown id it returns
   `null`** — it never throws and never invents a Module. For a **pending**
   Module it returns detail with `pending: true` and empty content
@@ -235,6 +255,10 @@ all, and it **writes nothing, ever**.
 - A Module that is **not** flagged pending but whose content file is missing is
   a content error that CI should have caught; at runtime `getModule` falls back
   to the pending shape rather than throwing, so a screen never goes blank.
+- A Module whose `categoryId` names no declared Category cannot deploy — the
+  schema rejects the index — so at runtime it is simply **not placed**: it is
+  left out of `getModules()` and `getModule` answers `null` for it, by the same
+  never-go-blank rule.
 - Both methods may cache the fetched content in memory, which is safe because
   the content is committed and immutable per deploy. A **failed** load is never
   cached: the next call fetches again, so a `Try again` after an offline first
@@ -320,16 +344,34 @@ schemas/module-content.schema.json # JSON Schema for a Module content file
 content from `` `${import.meta.env.BASE_URL}content/…` ``. The `schemas/` folder
 is a repo-root authoring artifact and is not shipped.
 
-**Module index** — `{ schemaVersion: 1, modules: [...] }`, every entry
-requiring:
+**Module index** — `{ schemaVersion: 2, categories: [...], modules: [...] }`.
+A **Category** is a titled group of Modules that share one practice language,
+and every Module belongs to exactly one. Each entry of `categories` requires:
 
 | Field | Type | Rule |
 |---|---|---|
-| `id` | string | `^m\d{2}$`, unique |
-| `ordinal` | integer | ≥ 1, unique, contiguous from 1 |
+| `id` | string | `^[a-z0-9]+(-[a-z0-9]+)*$`, unique — an opaque slug, not a position |
+| `ordinal` | integer | ≥ 1, unique, contiguous from 1 — the order Categories read in |
+| `title` | string | non-empty, one line |
+| `description` | string | non-empty, one line |
+| `language` | string | `csharp` \| `python` — the language its Modules practise |
+
+Each entry of `modules` requires:
+
+| Field | Type | Rule |
+|---|---|---|
+| `id` | string | `^m\d{2}$`, unique app-wide |
+| `categoryId` | string | equals the `id` of one entry of `categories` |
+| `ordinal` | integer | ≥ 1, unique and contiguous from 1 **within its Category** |
 | `title` | string | non-empty; matches `docs/design.md` § Curriculum verbatim |
 | `description` | string | non-empty, one line |
 | `pending` | boolean | `true` until that Module's content pack is authored |
+
+A Module naming a `categoryId` no Category declares is a **content error**, so
+the index never validates and never deploys. Reference integrity inside one
+document is the one rule draft 2020-12 cannot state, so
+`scripts/validate-content.mjs` checks it beside the schema — same gate, same
+exit code, and it runs against the deployed index in `scripts/smoke.sh` too.
 
 **Module content** — one file per non-pending Module, requiring:
 
@@ -338,14 +380,15 @@ requiring:
 | `schemaVersion` | integer | `1` |
 | `id` | string | matches the file name and an index entry |
 | `conceptPageMarkdown` | string | non-empty markdown, ~1 page of prose |
-| `modelExamples` | array | 2–3 items, each `{ before, after, caption }`, all non-empty; each C# side ≤ 40 lines (an authoring rule, checked in review) |
+| `modelExamples` | array | 2–3 items, each `{ before, after, caption }`, all non-empty; each code side ≤ 40 lines, in the Category's language (an authoring rule, checked in review) |
 | `exercises` | array | ≥ 2 briefs, at least one `refactor` and one `construct` |
 | `checklistQuestions` | array | **exactly 3**, each `{ id, prompt, options }` with **exactly 2** options `{ value, label }`; option values unique within a question; question ids unique within the Module |
 
 **Exercise brief** — each item of `exercises` requires `id` (`^m\d{2}-e\d+$`,
 unique app-wide, equal to its folder name), `type` (`refactor` | `construct`),
-`title`, `concept`, `smell`, `targetInterfaceCode` (the C# `interface` the
-learner must end up behind), `sizeBudgetLoc` (integer, ≤ 300), and `folderUrl`
+`title`, `concept`, `smell`, `targetInterfaceCode` (the Target Interface the
+learner must end up behind, in the Category's language), `sizeBudgetLoc`
+(integer, ≤ 300), and `folderUrl`
 (a GitHub folder URL, **or `null`** — the placeholder the schema allows until
 the folder is committed; the Exercise screen renders a quiet disabled note
 instead of a dead link while it is `null`).

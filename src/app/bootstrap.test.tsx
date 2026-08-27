@@ -7,10 +7,13 @@ import { expectWellFormedOutline } from '../test/headings';
 
 // The committed index, trimmed to two Modules — enough for the nav count.
 const index: ModuleIndex = {
-  schemaVersion: 1,
+  schemaVersion: 2,
+  categories: [
+    { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+  ],
   modules: [
-    { id: 'm01', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false },
-    { id: 'm02', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: false },
+    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false },
+    { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: false },
   ],
 };
 

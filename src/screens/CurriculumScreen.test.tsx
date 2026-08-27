@@ -16,13 +16,16 @@ import { CurriculumScreen } from './CurriculumScreen';
 // wires in main.tsx, minus HTTP. Mirrors the committed index: m01 non-pending.
 // Deliberately not in ordinal order: row order must come from the data.
 const index: ModuleIndex = {
-  schemaVersion: 1,
+  schemaVersion: 2,
+  categories: [
+    { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+  ],
   modules: [
-    { id: 'm03', ordinal: 3, title: 'Testing at Boundaries + TDD loop', description: 'Test the Target Interface, not the internals.', pending: true },
-    { id: 'm01', ordinal: 1, title: 'Deep Modules & Information Hiding', description: 'Hide the most complexity behind the smallest surface.', pending: false },
-    { id: 'm05', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.', pending: true },
-    { id: 'm02', ordinal: 2, title: 'Dependency Direction', description: 'Point dependencies at stable abstractions.', pending: true },
-    { id: 'm04', ordinal: 4, title: 'Naming & Ubiquitous Language', description: 'Names drawn from the Ubiquitous Language.', pending: true },
+    { id: 'm03', categoryId: 'software-design', ordinal: 3, title: 'Testing at Boundaries + TDD loop', description: 'Test the Target Interface, not the internals.', pending: true },
+    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules & Information Hiding', description: 'Hide the most complexity behind the smallest surface.', pending: false },
+    { id: 'm05', categoryId: 'software-design', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.', pending: true },
+    { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point dependencies at stable abstractions.', pending: true },
+    { id: 'm04', categoryId: 'software-design', ordinal: 4, title: 'Naming & Ubiquitous Language', description: 'Names drawn from the Ubiquitous Language.', pending: true },
   ],
 };
 

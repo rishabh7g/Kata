@@ -4,8 +4,11 @@
 
 // ── Ids and scalars ──────────────────────────────────────────────────────
 
-/** Module id exactly as committed in the content files: 'm01' … 'm05'. */
+/** Module id exactly as committed in the content files; opaque to the app. */
 export type ModuleId = string;
+
+/** Category id exactly as committed in the content files; opaque to the app. */
+export type CategoryId = string;
 
 /** Exercise id, unique app-wide, equal to its repo folder name: 'm01-e1'. */
 export type ExerciseId = string;
@@ -18,24 +21,37 @@ export type IsoDateTime = string;
 
 export type ExerciseType = 'refactor' | 'construct';
 
+/** The one practice language every Module in a Category is written in. */
+export type CategoryLanguage = 'csharp' | 'python';
+
 // ── Authored content (committed JSON, read-only at runtime) ──────────────
+
+export interface Category {
+  readonly id: CategoryId;
+  readonly ordinal: number; // 1-based, contiguous, the order Categories read in
+  readonly title: string;
+  readonly description: string; // one line, shown under the title
+  readonly language: CategoryLanguage; // every Module in it practises this one
+}
 
 export interface ModuleIndexEntry {
   readonly id: ModuleId;
-  readonly ordinal: number; // 1-based, contiguous, the fixed Curriculum order
+  readonly categoryId: CategoryId; // the one Category this Module belongs to
+  readonly ordinal: number; // 1-based, contiguous within its Category
   readonly title: string;
   readonly description: string; // one line, shown under the title
   readonly pending: boolean; // true = content pack not authored yet
 }
 
 export interface ModuleIndex {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
+  readonly categories: readonly Category[];
   readonly modules: readonly ModuleIndexEntry[];
 }
 
 export interface ModelExample {
-  readonly before: string; // C# source, <= 40 lines
-  readonly after: string; // C# source, <= 40 lines
+  readonly before: string; // source in the Category's language, <= 40 lines
+  readonly after: string; // source in the Category's language, <= 40 lines
   readonly caption: string; // what moved or got hidden
 }
 
@@ -45,7 +61,7 @@ export interface ExerciseBrief {
   readonly title: string;
   readonly concept: string; // Exercise Spec row 1
   readonly smell: string; // Exercise Spec row 2 — the planted flaw
-  readonly targetInterfaceCode: string; // C# source, rendered read-only
+  readonly targetInterfaceCode: string; // Category's language, read-only
   readonly sizeBudgetLoc: number; // <= 300
   readonly folderUrl: string | null; // GitHub folder link; null until committed
 }
@@ -99,7 +115,9 @@ export interface ProgressState {
 
 export interface ModuleSummary {
   readonly id: ModuleId;
-  readonly ordinal: number;
+  readonly categoryId: CategoryId; // denormalized from the index, for grouping
+  readonly language: CategoryLanguage; // denormalized from its Category
+  readonly ordinal: number; // within its Category
   readonly title: string;
   readonly description: string;
   readonly pending: boolean;
@@ -124,7 +142,7 @@ export interface ContentSource {
 // ── Target Interface 1 of 2: ICurriculum ─────────────────────────────────
 
 export interface ICurriculum {
-  /** Every Module, ordered by ordinal ascending. */
+  /** Every Module, ordered by Category ordinal, then Module ordinal. */
   getModules(): Promise<readonly ModuleSummary[]>;
   /** Full detail for one Module; null when the id is unknown. */
   getModule(id: ModuleId): Promise<ModuleDetail | null>;

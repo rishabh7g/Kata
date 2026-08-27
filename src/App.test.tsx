@@ -13,11 +13,11 @@ import { createProgress } from './progress';
 // getModules() returns. A summary is the index entry and nothing else (#158)
 // — there are no per-reader fields left for the shell to ignore.
 const summaries: readonly ModuleSummary[] = [
-  { id: 'm01', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false },
-  { id: 'm02', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: true },
-  { id: 'm03', ordinal: 3, title: 'Testing at Boundaries', description: 'Test the Target Interface.', pending: true },
-  { id: 'm04', ordinal: 4, title: 'Naming', description: 'Ubiquitous Language.', pending: true },
-  { id: 'm05', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.', pending: true },
+  { id: 'm01', categoryId: 'software-design', language: 'csharp', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false },
+  { id: 'm02', categoryId: 'software-design', language: 'csharp', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: true },
+  { id: 'm03', categoryId: 'software-design', language: 'csharp', ordinal: 3, title: 'Testing at Boundaries', description: 'Test the Target Interface.', pending: true },
+  { id: 'm04', categoryId: 'software-design', language: 'csharp', ordinal: 4, title: 'Naming', description: 'Ubiquitous Language.', pending: true },
+  { id: 'm05', categoryId: 'software-design', language: 'csharp', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.', pending: true },
 ];
 
 const curriculum: ICurriculum = {

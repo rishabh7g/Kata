@@ -1,4 +1,13 @@
 {
-  "schemaVersion": 1,
-  "modules": [{ "id": "m01", "pending": true }]
+  "schemaVersion": 2,
+  "categories": [
+    {
+      "id": "software-design",
+      "ordinal": 1,
+      "title": "Software Design",
+      "description": "Design fundamentals in C#.",
+      "language": "csharp"
+    }
+  ],
+  "modules": [{ "id": "m01", "categoryId": "software-design", "pending": true }]
 }

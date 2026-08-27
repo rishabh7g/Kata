@@ -5,9 +5,48 @@
   "description": "docs/engineering.md § 3 Content schema — the machine-checkable twin of the ModuleIndex TypeScript type (§ 2). Validated by scripts/validate-content.mjs against public/content/index.json, locally and in CI before the build. Ordinal contiguity and title verbatim-ness against docs/design.md § Curriculum are held by scripts/harness.test.ts, not expressible here.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "modules"],
+  "required": ["schemaVersion", "categories", "modules"],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": { "const": 2 },
+    "categories": {
+      "description": "A Category is a titled group of Modules that share one practice language; every Module belongs to exactly one.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "ordinal", "title", "description", "language"],
+        "properties": {
+          "id": {
+            "description": "Category id exactly as committed in the content files — an opaque slug, e.g. 'software-design'.",
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "ordinal": {
+            "description": "1-based, contiguous, the order the Categories read in.",
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "description": "One line, shown above the Category's Modules.",
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^\\n]+$"
+          },
+          "description": {
+            "description": "One line, shown under the title — no newlines.",
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^\\n]+$"
+          },
+          "language": {
+            "description": "The one practice language every Module in this Category is written in.",
+            "enum": ["csharp", "python"]
+          }
+        }
+      }
+    },
     "modules": {
       "type": "array",
       "minItems": 1,
@@ -15,15 +54,20 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "ordinal", "title", "description", "pending"],
+        "required": ["id", "categoryId", "ordinal", "title", "description", "pending"],
         "properties": {
           "id": {
-            "description": "Module id exactly as committed in the content files: 'm01' … 'm05'.",
+            "description": "Module id exactly as committed in the content files, unique app-wide: 'm01', 'm02', …",
             "type": "string",
             "pattern": "^m\\d{2}$"
           },
+          "categoryId": {
+            "description": "The one Category this Module belongs to — must equal the id of an entry in categories.",
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
           "ordinal": {
-            "description": "1-based, contiguous, the fixed Curriculum order.",
+            "description": "1-based, contiguous within its Category — the reading order inside that Category.",
             "type": "integer",
             "minimum": 1
           },

@@ -14,16 +14,19 @@ import { createCurriculum } from './curriculum';
 
 // ── Fixtures: the real committed shapes, in miniature ─────────────────────
 
-// Deliberately NOT in ordinal order — order must come from the data,
-// never from the file order.
+// One Category, its Modules deliberately NOT in ordinal order — order must
+// come from the data, never from the file order.
 const index: ModuleIndex = {
-  schemaVersion: 1,
+  schemaVersion: 2,
+  categories: [
+    { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+  ],
   modules: [
-    { id: 'm03', ordinal: 3, title: 'Testing at Boundaries', description: 'Test the Target Interface.', pending: true },
-    { id: 'm01', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false },
-    { id: 'm05', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.', pending: true },
-    { id: 'm02', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: false },
-    { id: 'm04', ordinal: 4, title: 'Naming', description: 'Ubiquitous Language.', pending: true },
+    { id: 'm03', categoryId: 'software-design', ordinal: 3, title: 'Testing at Boundaries', description: 'Test the Target Interface.', pending: true },
+    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false },
+    { id: 'm05', categoryId: 'software-design', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.', pending: true },
+    { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: false },
+    { id: 'm04', categoryId: 'software-design', ordinal: 4, title: 'Naming', description: 'Ubiquitous Language.', pending: true },
   ],
 };
 
@@ -74,22 +77,82 @@ describe('getModules ordering', () => {
     expect(modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5]);
   });
 
-  it('summarises the index entry and nothing else — no state of the reader', async () => {
+  it('summarises the index entry plus its Category — no state of the reader', async () => {
     // The lock chain is gone (#158): ICurriculum takes content alone, so a
     // summary has no field derived from progress left to carry, and every
-    // reader sees the same five rows.
+    // reader sees the same five rows. What it does carry is its Category's id
+    // and language (#160), denormalized so a screen never joins the arrays.
     const curriculum = createCurriculum(memorySource());
 
     const modules = await curriculum.getModules();
 
     expect(modules[0]).toEqual({
       id: 'm01',
+      categoryId: 'software-design',
+      language: 'csharp',
       ordinal: 1,
       title: 'Deep Modules',
       description: 'Hide complexity.',
       pending: false,
     });
     expect(createCurriculum).toHaveLength(1);
+  });
+
+  it('gives every Module a non-empty categoryId and its Category language', async () => {
+    const curriculum = createCurriculum(memorySource());
+
+    const modules = await curriculum.getModules();
+
+    expect(modules).toHaveLength(5);
+    expect(modules.every((m) => m.categoryId.length > 0)).toBe(true);
+    expect(modules.map((m) => m.language)).toEqual(Array(5).fill('csharp'));
+  });
+
+  it('orders by Category ordinal first, then Module ordinal within it (#160)', async () => {
+    // Two Categories, each with its own 1-based contiguous ordinals — so a
+    // sort on the Module ordinal alone would interleave the two shelves.
+    const twoCategories: ModuleIndex = {
+      schemaVersion: 2,
+      categories: [
+        { id: 'agentic-ai', ordinal: 2, title: 'Agentic AI', description: 'Agents in Python.', language: 'python' },
+        { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+      ],
+      modules: [
+        { id: 'm07', categoryId: 'agentic-ai', ordinal: 2, title: 'Tools', description: 'Give the agent hands.', pending: true },
+        { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: true },
+        { id: 'm06', categoryId: 'agentic-ai', ordinal: 1, title: 'Prompts', description: 'Say what you want.', pending: true },
+        { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: true },
+      ],
+    };
+    const curriculum = createCurriculum({
+      loadIndex: async () => twoCategories,
+      loadModuleContent: async () => null,
+    });
+
+    const modules = await curriculum.getModules();
+
+    expect(modules.map((m) => m.id)).toEqual(['m01', 'm02', 'm06', 'm07']);
+    expect(modules.map((m) => m.language)).toEqual(['csharp', 'csharp', 'python', 'python']);
+  });
+
+  it('leaves out a Module whose categoryId names no declared Category', async () => {
+    // The schema rejects such an index before it can deploy, so the runtime
+    // rule is only that a screen never goes blank over it: unplaceable, so
+    // not placed.
+    const dangling: ModuleIndex = {
+      ...index,
+      modules: [
+        ...index.modules,
+        { id: 'm09', categoryId: 'nowhere', ordinal: 1, title: 'Orphan', description: 'No shelf.', pending: true },
+      ],
+    };
+    const curriculum = createCurriculum({
+      loadIndex: async () => dangling,
+      loadModuleContent: async () => null,
+    });
+
+    expect((await curriculum.getModules()).map((m) => m.id)).not.toContain('m09');
+    await expect(curriculum.getModule('m09')).resolves.toBeNull();
   });
 });
 
