@@ -216,8 +216,12 @@ describe('the font ramp, both directions (#114)', () => {
     expect(requiredFamilies(stacks['mono'] ?? [])).toEqual([]);
   });
 
-  it('resolves the weights the app actually renders: 400, 600 and 800', () => {
-    expect(renderedWeights()).toEqual([400, 600, 800]);
+  it('resolves the weights the app actually renders: 400 and 800', () => {
+    // 600 left with the Behavioral Checklist (#157): its submitted panel's
+    // answer rows and the gate panel's condition title were the only two
+    // rules that asked for it. The bundled face is the 100–900 variable one,
+    // so a dropped weight is one less synthesis, not one less file.
+    expect(renderedWeights()).toEqual([400, 800]);
   });
 
   it('covers every (family, weight) the tokens name with a committed @font-face', () => {

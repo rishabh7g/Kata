@@ -122,7 +122,6 @@ html, body {
  * different things — this is the seam between them.
  */
 .module-section-label,
-.module-gate-poster-label,
 .exercise-section-label,
 .exercise-section-label-inline {
   font-size: 13px;
@@ -367,14 +366,10 @@ a.curriculum-row:hover {
 
 /* Header: title block and status tag on the shared baseline, no rule under
    it — the first .hr belongs to the sections (prototype § Module). */
+/* Kicker over title, nothing beside them: the status tag the header used to
+   balance on its baseline went with the Exit Gate (#157), and with it the
+   flex row that placed it. */
 .module-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  /* Wraps only when the tag no longer fits beside the title (phone widths,
-     #30) — the page never scrolls sideways for a status tag. */
-  flex-wrap: wrap;
   padding-bottom: 8px;
   margin-bottom: 40px;
 }
@@ -395,11 +390,6 @@ a.curriculum-row:hover {
   font-size: 44px;
   margin: 0;
   max-width: 22ch;
-}
-
-.module-header-tag {
-  margin-bottom: 8px;
-  flex: none;
 }
 
 /* tokens.json layout.moduleGrid: 1fr 350px, gap 56. Single column is the
@@ -566,7 +556,7 @@ a.curriculum-row:hover {
   flex: none;
 }
 
-/* Exit Gate aside: pinned while the main column scrolls
+/* Self-Check aside (#157): pinned while the main column scrolls
    (tokens.json layout.asideStickyTop; .module-body's align-items: start
    keeps the grid from stretching it full-height, which would kill sticky). */
 .module-aside {
@@ -577,127 +567,47 @@ a.curriculum-row:hover {
   gap: 16px;
 }
 
-/* Not-passed panel: 2px rule border (tokens.json layout.rules.major),
-   prototype § Module Exit Gate. */
-.module-gate-panel {
+/* The Self-Check panel (#157): the same 2px rule border the aside has always
+   carried (tokens.json layout.rules.major), around the Module's optional
+   questions. */
+.self-check {
   border: 2px solid var(--color-divider);
   padding: 20px;
 }
 
-/* The two definitions (#135) — what an Exit Gate is, what a Checkpoint is —
-   between the panel's `Exit Gate` label and whatever follows it: the condition
-   row, or the pending note. Static prose at the 16px body-text floor (#108),
-   muted like every other explanatory line in the aside, and inside the panel's
-   existing 20px padding, so the aside's 350px column and its sticky offset are
-   untouched. The bottom margin is the gap to the condition row's own 1px top
-   rule (which brings its 12px padding with it). */
-.module-gate-definitions {
-  display: grid;
-  gap: 8px;
-  margin: 0 0 14px;
-}
-
-.module-gate-definition {
-  margin: 0;
+/* What a Self-Check is (#157) — one clause under the heading, at the 16px
+   body-text floor (#108), muted like every other explanatory line in the
+   aside. Its bottom margin is the gap to the first question's own 1px rule. */
+.self-check-definition {
   font-size: 16px;
+  margin: 0 0 12px;
 }
 
-/* The single condition row: minor 1px rule on top, marker + text. */
-.module-gate-condition {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 12px 0;
+/* One question: minor 1px rule on top (tokens.json layout.rules.minor). */
+.self-check-item {
+  padding: 14px 0;
   border-top: 1px solid var(--color-divider);
 }
 
-/* Unmet marker: the 14px empty ink-outline square, no icon.
-
-   The square is what says "not yet submitted" — a meaningful non-text element,
-   so WCAG SC 1.4.11 asks 3:1 of it. The prototype's neutral-400 read 1.80:1 on
-   the ground (#93). --color-text-muted is the outline: 5.83:1 / 5.38:1, the
-   same tone as the "Not yet submitted" line the square marks, and the ink
-   outline design/README.md § Screens › 2 already describes. Not the accent —
-   red is the passed colour here (poster, passed tag), so it would say the
-   opposite of what this marker means. */
-.module-gate-box {
-  width: 14px;
-  height: 14px;
-  border: 1.5px solid var(--color-text-muted);
-  display: inline-block;
-  flex: none;
-  margin-top: 3px;
-}
-
-/* Met marker: the check icon sits on the same optical line as the square. */
-.module-gate-check {
-  flex: none;
-  margin-top: 2px;
-}
-
-.module-gate-condition-title {
+.self-check-prompt {
   font-size: 16px;
-  font-weight: 600;
+  margin-bottom: 10px;
+  max-width: 62ch;
 }
 
-.module-gate-condition-status {
-  font-size: 16px;
-}
-
-/* Pending-Module aside note (#28): the panel's only content, so it needs no
-   condition-row offset above it. tokens.json typeScale.app.meta: raised to
-   the 16px body-text floor (#108). The not-pending sibling this shared with
-   (.module-gate-note, the "Checkpoint-based — advance…" reassurance line)
-   was deleted on the copy pass (#113); its font-size lives here now, the
-   only place still rendering this type. */
-.module-gate-note-pending {
-  font-size: 16px;
-  margin: 0;
-}
-
-/* Passed poster (#17): the accent field with bg-colored type — the one place
-   red runs as a field (tokens.json semantics.passed; prototype § Module). */
-.module-gate-poster {
-  background: var(--color-accent);
-  color: var(--color-bg);
-  padding: 28px 24px;
-}
-
-/* The section label inherits ink by default; the poster's runs bg-colored.
-   Dimming it to 0.75 dropped it to 2.63:1 on the accent field — under even the
-   3:1 the poster's display type answers to (#71). 0.9 keeps it a step under
-   "Passed." and reads 3.27:1. */
-.module-gate-poster-label {
-  margin: 0 0 14px;
-  color: var(--color-bg);
-  opacity: 0.9;
-}
-
-/* "Passed." — 32px/800 display type (prototype § Module poster). */
-.module-gate-passed {
-  font-family: var(--font-heading);
-  font-weight: var(--font-heading-weight);
-  font-size: 32px;
-  line-height: 1.05;
-  letter-spacing: -0.01em;
-}
-
-.module-gate-checkpoint {
-  margin-top: 16px;
-  font-size: 16px;
-}
-
-/* Next-Module-unlocked line (or Module 5's closing line). */
-.module-gate-next {
-  font-size: 16px;
-  margin-top: 4px;
+/* The radio pair; wraps rather than clipping the longer m01 labels. */
+.self-check-options {
+  display: flex;
+  gap: 10px 24px;
+  flex-wrap: wrap;
 }
 
 /* ── Exercise screen (#15) — design/README.md § Screens › 3 ───────────────
    Header, the Exercise Spec grid, the immutable Target Interface block, and
-   the practice-material link. The aside column stays empty until the
-   Behavioral Checklist panel lands (#16) — the grid reserves it from day one
-   so the geometry never shifts. */
+   the practice-material link — one column, top to bottom. The 400px aside
+   went with the Behavioral Checklist (#157): the Module's questions are its
+   Self-Check now, answered on the Module screen, and nothing else ever sat
+   in that column. */
 
 /* Ghost back button above the header (prototype: header sits 20px below). */
 .exercise-back {
@@ -725,29 +635,6 @@ a.curriculum-row:hover {
   font-size: 40px;
   margin: 0 0 14px;
   max-width: 24ch;
-}
-
-/* tokens.json layout.exerciseGrid: 1fr 400px, gap 56. Single column is the
-   base rule, as on the Module body (#103); two columns from min-width: 1024px. */
-.exercise-body {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 56px;
-  align-items: start;
-}
-
-/* As on the Module body: a long Target Interface line must scroll inside its
-   `pre`, never set the column's min-content and widen the page (#30). */
-.exercise-body > * {
-  min-width: 0;
-}
-
-/* Laptop band: two columns only from min-width: 1024px up, as the Module
-   body does. */
-@media (min-width: 1024px) {
-  .exercise-body {
-    grid-template-columns: 1fr 400px;
-  }
 }
 
 /* Section labels carry the label type from the shared rule above (#75); only
@@ -857,129 +744,4 @@ a.curriculum-row:hover {
 .exercise-folder-note code {
   font-family: var(--font-mono);
   font-size: 16px;
-}
-
-/* The right column: sticky at the shared aside offset (tokens.json
-   layout.asideStickyTop); the flex gap is for the gate banner under the
-   checklist panel (#19). */
-.exercise-aside {
-  position: sticky;
-  top: var(--layout-aside-sticky-top);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* ── Behavioral Checklist (#16) — design/README.md § Screens › 3 ──────────
-   The whole Exit Gate: three radio pairs (`.radio` from design/styles.css),
-   one primary submit, and the read-only submitted panel. */
-
-/* The section label + the muted gate meta on one baseline (prototype § Exercise). */
-.exercise-checklist-heading {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-/* tokens.json typeScale.app.caption: 11. */
-.exercise-checklist-meta {
-  font-size: 16px;
-}
-
-/* What the Behavioral Checklist is (#136) — one clause under the panel
-   heading, above the first check. Body-floor size (#108), muted, and its
-   bottom margin is the gap to that check's own 1px top rule; the 400px aside
-   column and the heading's own 8px gap are untouched. */
-.exercise-checklist-definition {
-  font-size: 16px;
-  margin: 0 0 12px;
-}
-
-/* One check: minor 1px rule on top (tokens.json layout.rules.minor). */
-.exercise-checklist-item {
-  padding: 14px 0;
-  border-top: 1px solid var(--color-divider);
-}
-
-.exercise-checklist-prompt {
-  font-size: 16px;
-  margin-bottom: 10px;
-  max-width: 62ch;
-}
-
-/* The radio pair; wraps rather than clipping the longer m01 labels. */
-.exercise-checklist-options {
-  display: flex;
-  gap: 10px 24px;
-  flex-wrap: wrap;
-}
-
-/* The one primary action in the view (tokens.json semantics.primaryAction);
-   the disabled 0.45 opacity comes with .btn from styles.css. */
-.exercise-checklist-submit {
-  margin-top: 20px;
-}
-
-.exercise-checklist-note {
-  font-size: 16px;
-  margin: 8px 0 0;
-}
-
-/* Submitted, read-only: 2px rule border (tokens.json layout.rules.major). */
-.exercise-checklist-panel {
-  border: 2px solid var(--color-divider);
-  padding: 18px 20px;
-}
-
-/* Check + `Submitted · time` — 16px/800, the body-text floor (#108;
-   design/README.md § Screens › 3). */
-.exercise-checklist-submitted-line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 16px;
-}
-
-/* Question/answer rows: 1px rules, answers at 600 weight. */
-.exercise-checklist-row {
-  display: grid;
-  grid-template-columns: 1fr 140px;
-  gap: 16px;
-  padding: 10px 0;
-  border-top: 1px solid var(--color-divider);
-}
-
-.exercise-checklist-row-question {
-  font-size: 16px;
-}
-
-.exercise-checklist-row-answer {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-/* ── Gate banner (#19) — design/README.md § Screens › 3 › Gate banner ─────
-   Under the checklist panel once the gate passes: the accent field with
-   bg-colored type (tokens.json semantics.passed), sized per the prototype
-   (§ Exercise): 18/20 padding, 16px/800 line, 16px next-Module line, the
-   body-text floor (#108). */
-.exercise-gate-banner {
-  background: var(--color-accent);
-  color: var(--color-bg);
-  padding: 18px 20px;
-}
-
-.exercise-gate-banner-title {
-  font-family: var(--font-heading);
-  font-weight: var(--font-heading-weight);
-  font-size: 16px;
-}
-
-.exercise-gate-banner-next {
-  font-size: 16px;
-  margin-top: 6px;
 }

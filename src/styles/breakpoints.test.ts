@@ -59,19 +59,21 @@ describe('the breakpoint set (#103)', () => {
     }
   });
 
-  it('.module-body and .exercise-body are single-column by default, two-column at 1024px', () => {
+  it('.module-body is single-column by default, two-column at 1024px', () => {
     const baseModuleBody = /\.module-body\s*\{([\s\S]*?)\}/.exec(appCss)?.[1] ?? '';
-    const baseExerciseBody = /\.exercise-body\s*\{([\s\S]*?)\}/.exec(appCss)?.[1] ?? '';
     expect(baseModuleBody).toMatch(/grid-template-columns:\s*1fr\s*;/);
-    expect(baseExerciseBody).toMatch(/grid-template-columns:\s*1fr\s*;/);
 
     // The two-column form only appears inside a min-width: 1024px block —
     // proves it isn't the base rule any more.
     expect(appCss).toMatch(
       /@media \(min-width:\s*1024px\)\s*\{\s*\.module-body\s*\{[\s\S]*?grid-template-columns:\s*1fr 350px/,
     );
-    expect(appCss).toMatch(
-      /@media \(min-width:\s*1024px\)\s*\{\s*\.exercise-body\s*\{[\s\S]*?grid-template-columns:\s*1fr 400px/,
-    );
+  });
+
+  it('gives the Exercise screen no second column to reflow (#157)', () => {
+    // The Exercise body lost its 400px aside with the Behavioral Checklist:
+    // one column at every width, so there is no grid left to break at 1024.
+    expect(appCss).not.toMatch(/\.exercise-body/);
+    expect(appCss).not.toMatch(/1fr 400px/);
   });
 });

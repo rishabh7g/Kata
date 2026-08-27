@@ -50,11 +50,11 @@ describe('the app shell (#104)', () => {
     expect(appCss).toMatch(/html,\s*body\s*\{\s*height:\s*100%;/);
   });
 
-  it('the Module and Exercise asides still pin against a scroll container', () => {
+  it('the Module aside still pins against a scroll container', () => {
+    // The one aside left (#157): the Self-Check beside the Concept Page. The
+    // Exercise screen's 400px column went with the Behavioral Checklist.
     const moduleAside = /\.module-aside\s*\{([\s\S]*?)\}/.exec(appCss)?.[1] ?? '';
-    const exerciseAside =
-      /\.exercise-aside\s*\{([\s\S]*?)\}/.exec(appCss)?.[1] ?? '';
     expect(moduleAside).toMatch(/position:\s*sticky/);
-    expect(exerciseAside).toMatch(/position:\s*sticky/);
+    expect(appCss).not.toMatch(/\.exercise-aside/);
   });
 });

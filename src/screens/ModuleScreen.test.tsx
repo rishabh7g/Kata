@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
 import {
   MemoryRouter,
@@ -15,13 +15,12 @@ import type {
   ContentSource,
   ModuleContent,
   ModuleIndex,
-  ModuleSummary,
 } from '../curriculum';
 import { createCurriculum } from '../curriculum';
-import type { GateStatus, IProgress } from '../progress';
+import type { IProgress } from '../progress';
 import { createProgress } from '../progress';
 import { expectWellFormedOutline } from '../test/headings';
-import { ExitGateAside, ModuleScreen } from './ModuleScreen';
+import { ModuleScreen } from './ModuleScreen';
 
 // As in CurriculumScreen.test.tsx: the fixture is the real createCurriculum
 // over an in-memory ContentSource — the same seam main.tsx wires, minus HTTP.
@@ -152,38 +151,10 @@ async function renderAt(
   return { ...utils, progress: activeProgress };
 }
 
-/** A real IProgress with Module 1's Behavioral Checklist already submitted. */
-async function passedProgress(): Promise<IProgress> {
-  const progress = await createProgress();
-  await progress.submitChecklist('m01', { q1: 'a', q2: 'b', q3: 'a' });
-  return progress;
-}
-
-/** A GateStatus fixture for driving ExitGateAside states directly. */
-function gateFixture(overrides: Partial<GateStatus> = {}): GateStatus {
-  return {
-    moduleId: 'm01',
-    passed: false,
-    checklistSubmittedAt: null,
-    checkpointAt: null,
-    ...overrides,
-  };
-}
-
-const nextSummary: ModuleSummary = {
-  id: 'm02',
-  ordinal: 2,
-  title: 'Dependency Direction',
-  description: 'Point dependencies at stable abstractions.',
-  pending: true,
-  unlocked: true,
-  checkpointAt: null,
-};
-
 describe('Module screen', () => {
   it('has one h1 and no skipped heading levels (#75)', async () => {
     const { container } = await renderAt('/modules/m01');
-    await screen.findByText('Concept Page');
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
     // Section labels are h2 while still rendering as the design system's 13px
     // uppercase label, and the Concept Page's own prose sits one level under
@@ -194,13 +165,13 @@ describe('Module screen', () => {
       'h3 The trade every module makes',
       'h2 Model Examples',
       'h2 Exercises',
-      'h2 Exit Gate',
+      'h2 Self-Check',
     ]);
   });
 
   it('renders the Concept Page markdown as styled prose in the 66ch container', async () => {
     const { container } = await renderAt('/modules/m01');
-    await screen.findByText('Concept Page');
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
     // The markdown's own leading `# title` is stripped — the header h1 (#12)
     // already carries it, so the title renders exactly once on the page.
@@ -242,7 +213,7 @@ describe('Module screen', () => {
   // used to sit in (#30) nor, once that display went, the prose body.
   it('renders no provenance note anywhere on an authored Module (#139)', async () => {
     const { container } = await renderAt('/modules/m01');
-    await screen.findByText('Concept Page');
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
     expect(container.textContent ?? '').not.toContain('LLM first draft');
     expect(container.textContent ?? '').not.toContain('human-edited once');
@@ -363,19 +334,21 @@ describe('Module screen', () => {
       </CurriculumProvider>,
     );
     const moduleTitle = 'Module 01 — Deep Modules & Information Hiding · Kata';
+    // The title is named from an effect, which flushes after the DOM node the
+    // query waits on — so the tab is asserted with waitFor, not read once.
     await screen.findByText('Concept Page');
-    expect(document.title).toBe(moduleTitle);
+    await waitFor(() => expect(document.title).toBe(moduleTitle));
 
     fireEvent.click(screen.getByRole('button', { name: 'back' }));
     await screen.findByRole('heading', {
       level: 1,
       name: 'Learn design by producing code.',
     });
-    expect(document.title).toBe('Kata');
+    await waitFor(() => expect(document.title).toBe('Kata'));
 
     fireEvent.click(screen.getByRole('button', { name: 'forward' }));
     await screen.findByText('Concept Page');
-    expect(document.title).toBe(moduleTitle);
+    await waitFor(() => expect(document.title).toBe(moduleTitle));
   });
 
   it('deep-loads through the app routes identically', async () => {
@@ -398,41 +371,47 @@ describe('Module screen', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows the header: kicker, 44px title, status tag, ghost back button (#12)', async () => {
-    await renderAt('/modules/m01');
+  it('shows the header: kicker, 44px title, ghost back button — and no tag (#12, #157)', async () => {
+    const { container } = await renderAt('/modules/m01');
 
     expect(await screen.findByText('Module 01')).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { level: 1, name: 'Deep Modules & Information Hiding' }),
     ).toBeInTheDocument();
-    // Fresh Module, no Checkpoint: the neutral tag, as on the Curriculum row.
-    expect(screen.getByText('Ready to start')).toHaveClass('tag-neutral');
     expect(screen.getByRole('link', { name: 'Curriculum' })).toHaveClass(
       'btn-ghost',
     );
-  });
-
-  it('flips the header tag to Exit Gate passed once a Checkpoint exists', async () => {
-    await renderAt('/modules/m01', [
-      { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
-    ]);
-
-    expect(await screen.findByText('Exit Gate passed')).toHaveClass(
-      'tag-accent',
-    );
+    // No status tag on the header at all (#157): the Library reports no state
+    // back to the reader, whatever is stored.
+    expect(container.querySelector('.module-header .tag')).toBeNull();
     expect(screen.queryByText('Ready to start')).not.toBeInTheDocument();
   });
 
-  it('flips the header tag to the outline In progress while a draft exists (#30)', async () => {
-    // The same rule as the Curriculum row (#18): a saved checklist draft is
-    // the started state (screens/03-state.png, prototype statusFor).
+  it('shows no tag for a Module with a recorded Checkpoint either (#157)', async () => {
+    const { container } = await renderAt('/modules/m01', [
+      { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
+    ]);
+    await screen.findByText('Module 01');
+
+    expect(container.querySelector('.module-header .tag')).toBeNull();
+    expect(container.querySelector('.tag-accent')).toBeNull();
+    expect(container.querySelector('.tag-neutral')).toBeNull();
+    expect(container.textContent ?? '').not.toMatch(/Exit Gate passed/i);
+  });
+
+  it('changes nothing outside the Self-Check when answers are stored (#157)', async () => {
+    // The old header tag flipped to `In progress` off exactly this draft
+    // (#30). Answering is not a state the screen reports any more.
     const progress = await createProgress();
     await progress.saveChecklistDraft('m01', { q1: 'a' });
 
-    await renderAt('/modules/m01', [], progress);
+    const { container } = await renderAt('/modules/m01', [], progress);
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
-    expect(await screen.findByText('In progress')).toHaveClass('tag-outline');
-    expect(screen.queryByText('Ready to start')).not.toBeInTheDocument();
+    expect(screen.queryByText('In progress')).not.toBeInTheDocument();
+    expect(container.querySelector('.module-header .tag')).toBeNull();
+    // The answer itself is restored, inside the panel and nowhere else.
+    expect(screen.getAllByRole('radio')[0]!).toBeChecked();
   });
 
   it('returns to the Curriculum via the back button', async () => {
@@ -488,12 +467,11 @@ describe('Module screen', () => {
       { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
     ]);
 
-    // Header stays fully real: kicker, title, neutral tag, ghost back.
+    // Header stays fully real: kicker, title, ghost back.
     expect(await screen.findByText('Module 02')).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { level: 1, name: 'Dependency Direction' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Ready to start')).toHaveClass('tag-neutral');
     expect(screen.getByRole('link', { name: 'Curriculum' })).toHaveClass(
       'btn-ghost',
     );
@@ -518,49 +496,27 @@ describe('Module screen', () => {
     await screen.findByText('Exercises');
 
     // No cards, no links besides the back button — nothing navigates to an
-    // Exercise, and no checklist form renders anywhere.
+    // Exercise, and no question renders anywhere.
     expect(container.querySelector('.module-exercise-card')).toBeNull();
     const links = [...container.querySelectorAll('a')];
     expect(links.map((a) => a.getAttribute('href'))).toEqual(['/']);
     expect(container.querySelector('form, input, button[type="submit"]')).toBeNull();
   });
 
-  it('shows the pending note in the aside — no condition row, no submit (#28)', async () => {
+  it('renders no aside on a pending Module — it carries no questions (#157)', async () => {
     const { container } = await renderAt('/modules/m02');
-    await screen.findByText('Exit Gate');
+    await screen.findByText('Exercises');
 
-    // Same 2px-bordered panel, but its only content is the pending note.
-    const aside = container.querySelector('aside.module-aside');
-    expect(aside?.querySelector('.module-gate-panel')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /The Behavioral Checklist arrives with the Concept Page — nothing to submit yet\./,
-      ),
-    ).toBeInTheDocument();
-
-    // The definitions ship here too (#135) — four of five packs are pending,
-    // so this is where most learners meet the words first — and they sit
-    // above the pending note rather than replacing it.
-    const definitions = aside?.querySelector('.module-gate-definitions');
-    expect(definitions?.textContent).toContain('pass condition');
-    expect(definitions?.textContent).toContain('recorded passage');
-    expect(
-      definitions?.compareDocumentPosition(
-        aside?.querySelector('.module-gate-note-pending') as Node,
-      ),
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-
-    // A checklist that does not exist yet cannot be invited: no condition
-    // row, no unmet square, no submitted/not-submitted status, no poster.
-    expect(aside?.querySelector('.module-gate-condition')).toBeNull();
-    expect(aside?.querySelector('.module-gate-box')).toBeNull();
-    expect(aside?.textContent).not.toMatch(/submitted/i);
-    expect(aside?.querySelector('.module-gate-poster')).toBeNull();
+    // A pending pack has no Self-Check, and the aside never held anything
+    // else: no panel, no heading, no radios, no column at all.
+    expect(container.querySelector('aside.module-aside')).toBeNull();
+    expect(container.querySelector('.self-check')).toBeNull();
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
   });
 
   it('uses no banned terms on the pending screen (#28)', async () => {
     const { container } = await renderAt('/modules/m02');
-    await screen.findByText('Exit Gate');
+    await screen.findByText('Exercises');
 
     expect(container.textContent ?? '').not.toMatch(
       /lesson|course|level|quiz|flashcard|grade|score/i,
@@ -572,7 +528,7 @@ describe('Module screen', () => {
   // terms) the learner has never heard of and cannot act on.
   it('names no part of the authoring pipeline on the pending screen (#139)', async () => {
     const { container } = await renderAt('/modules/m02');
-    await screen.findByText('Exit Gate');
+    await screen.findByText('Exercises');
 
     const text = container.textContent ?? '';
     expect(text).not.toMatch(/generator|ICurriculum|IProgress|\bLLM\b|frozen/i);
@@ -592,164 +548,68 @@ describe('Module screen', () => {
     expect(await screen.findByText('curriculum probe')).toBeInTheDocument();
   });
 
-  it('shows the Exit Gate aside with exactly one unmet condition row (#13)', async () => {
+  // ── The Self-Check aside (#157): the Module's optional questions, in the
+  // 350px column the Exit Gate panel used to hold.
+  it('renders the three questions in the aside, unanswered and unsubmittable', async () => {
     const { container } = await renderAt('/modules/m01');
-    await screen.findByText('Exit Gate');
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
-    // The sticky aside sits in the reserved 350px column (sticky offset via
-    // .module-aside — tokens.json layout.asideStickyTop; CSS, not asserted).
     const aside = container.querySelector('aside.module-aside');
-    expect(aside).toBeInTheDocument();
-    expect(aside?.querySelector('.module-gate-panel')).toBeInTheDocument();
+    expect(aside?.querySelector('.self-check')).toBeInTheDocument();
+    expect(aside?.querySelectorAll('.self-check-item')).toHaveLength(3);
+    const radios = screen.getAllByRole('radio');
+    expect(radios).toHaveLength(6);
+    for (const radio of radios) expect(radio).not.toBeChecked();
 
-    // Exactly ONE condition row: the checklist. Nothing submitted yet, so
-    // it renders unmet — the empty ink-outline square, no check icon.
-    const rows = [...(aside?.querySelectorAll('.module-gate-condition') ?? [])];
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.textContent).toContain('Behavioral Checklist submitted');
-    expect(rows[0]?.textContent).toContain('Not yet submitted');
-    expect(rows[0]?.querySelector('.module-gate-box')).toBeInTheDocument();
-    expect(rows[0]?.querySelector('svg')).not.toBeInTheDocument();
+    // No submit control anywhere in the DOM — not in the aside, not outside.
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(container.querySelector('[type="submit"]')).toBeNull();
   });
 
-  // #135: the Exit Gate and Checkpoint definitions — the first place the app
-  // says what either word means, kept by the keeper test's fourth clause
-  // (design/issue-guide.md § UI copy ban list).
-  it('defines the Exit Gate and the Checkpoint above the condition row (#135)', async () => {
-    const { container } = await renderAt('/modules/m01');
-    await screen.findByText('Exit Gate');
+  it('persists a pick without any button, and restores it on a revisit', async () => {
+    const progress = await createProgress();
+    const { unmount } = await renderAt('/modules/m01', [], progress);
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
-    const panel = container.querySelector('.module-gate-panel');
-    const lines = [
-      ...(panel?.querySelectorAll('.module-gate-definition') ?? []),
-    ].map((line) => line.textContent);
-    expect(lines).toEqual([
-      "The Exit Gate is this Module's pass condition — passing it unlocks the next Module.",
-      'A Checkpoint is a recorded passage through an Exit Gate, counted in the nav.',
-    ]);
+    fireEvent.click(screen.getAllByRole('radio')[1]!);
+    expect((await progress.getChecklistDraft('m01'))?.answers).toEqual({
+      q1: 'b',
+    });
 
-    // Under the `Exit Gate` heading and before the condition row — the panel
-    // reads definition first, state second.
-    const definitions = panel?.querySelector('.module-gate-definitions');
-    const heading = panel?.querySelector('h2');
-    const condition = panel?.querySelector('.module-gate-condition');
-    expect(definitions?.compareDocumentPosition(heading as Node)).toBe(
-      Node.DOCUMENT_POSITION_PRECEDING,
-    );
-    expect(definitions?.compareDocumentPosition(condition as Node)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
-
-    // The condition row is untouched: still exactly one, still unmet.
-    expect(panel?.querySelectorAll('.module-gate-condition')).toHaveLength(1);
-    expect(condition?.textContent).toContain('Behavioral Checklist submitted');
-    expect(condition?.textContent).toContain('Not yet submitted');
-
-    // Static text only — no link, no disclosure, so no second way to reach
-    // anything (the interaction-depth question, design/issue-guide.md).
-    expect(definitions?.querySelector('a, button, details, [role]')).toBeNull();
-    // No live data: the definitions read the same with an empty IndexedDB, so
-    // no Checkpoint has to exist anywhere for them to be readable.
-    expect(definitions?.textContent).not.toMatch(/\d/);
+    // A reload of the same Module, same browser: the pick comes back.
+    unmount();
+    await renderAt('/modules/m01', [], progress);
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
+    expect(screen.getAllByRole('radio')[1]!).toBeChecked();
   });
 
-  it('repeats neither definition on the passed poster (#135)', async () => {
-    const { container } = await renderAt(
-      '/modules/m01',
-      [],
-      await passedProgress(),
-    );
-    await screen.findByText('Passed.');
+  it('answering changes nothing outside the Self-Check panel (#157)', async () => {
+    const progress = await createProgress();
+    const { container } = await renderAt('/modules/m01', [], progress);
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
-    // The poster is the record of a gate already passed — the definitions
-    // would be copy read after it was needed.
-    expect(container.querySelector('.module-gate-definitions')).toBeNull();
-    const text = container.textContent ?? '';
-    expect(text).not.toContain('pass condition');
-    expect(text).not.toContain('recorded passage');
-  });
+    const outside = () => {
+      const clone = container.cloneNode(true) as HTMLElement;
+      clone.querySelector('.self-check')?.remove();
+      return clone.textContent ?? '';
+    };
+    const before = outside();
 
-  it('styles the met condition state (fixture: submitted but not passed)', () => {
-    // Unreachable through IProgress — submitting IS passing — but the row's
-    // met styling stays covered in case the gate ever gains a condition.
-    const { container } = render(
-      <ExitGateAside
-        gate={gateFixture({ checklistSubmittedAt: '2026-08-12T09:41:00.000Z' })}
-        nextModule={nextSummary}
-      />,
-    );
+    for (const radio of screen.getAllByRole('radio')) fireEvent.click(radio);
 
-    const row = container.querySelector('.module-gate-condition');
-    // The check icon replaces the empty square; the row text flips too.
-    expect(row?.querySelector('svg.module-gate-check')).toBeInTheDocument();
-    expect(row?.querySelector('.module-gate-box')).not.toBeInTheDocument();
-    expect(row?.textContent).toContain('Behavioral Checklist submitted');
-    expect(row?.textContent).toContain('Submitted');
-    expect(row?.textContent).not.toContain('Not yet submitted');
-  });
-
-  it('shows the accent poster after Module 1’s checklist is submitted (#17)', async () => {
-    const { container } = await renderAt(
-      '/modules/m01',
-      [],
-      await passedProgress(),
-    );
-    await screen.findByText('Passed.');
-
-    // The poster replaces the bordered condition panel entirely.
-    const poster = container.querySelector('.module-gate-poster');
-    expect(poster).toBeInTheDocument();
-    expect(container.querySelector('.module-gate-panel')).not.toBeInTheDocument();
-    expect(screen.queryByText('Not yet submitted')).not.toBeInTheDocument();
-
-    // Bg-colored type on the accent field: the poster's own classes carry the
-    // colors (app.css .module-gate-poster / -label / -passed), never ink.
-    expect(poster?.querySelector('h2')).toHaveClass('module-gate-poster-label');
-    expect(screen.getByText('Passed.')).toHaveClass('module-gate-passed');
-
-    // The real Checkpoint date, in the Curriculum row format (12 Aug 2026).
-    expect(screen.getByText(/^Checkpoint · \d{1,2} [A-Z][a-z]{2} \d{4}$/)).toHaveClass(
-      'module-gate-checkpoint',
-    );
-    // The next Module is named by ordinal and title.
+    // Same screen, same text, same route: no state line, no status tag, no
+    // banner. The only tags left are the Exercise cards' own type tags.
+    expect(outside()).toBe(before);
+    expect(container.querySelector('.module-header .tag')).toBeNull();
     expect(
-      screen.getByText('Module 02 — Dependency Direction unlocked.'),
-    ).toBeInTheDocument();
-
-    // The header tag flips with the live gate, not the stubbed Checkpoint
-    // seam (#18): accent Exit Gate passed, no banned terms anywhere.
-    expect(screen.getByText('Exit Gate passed')).toHaveClass('tag-accent');
-    expect(screen.queryByText('Ready to start')).not.toBeInTheDocument();
-    expect(container.textContent ?? '').not.toMatch(
-      /lesson|course|level|quiz|flashcard|grade|score/i,
-    );
-  });
-
-  it('shows the Module 5 closing line when no Module follows (fixture)', () => {
-    const { container } = render(
-      <ExitGateAside
-        gate={gateFixture({
-          moduleId: 'm05',
-          passed: true,
-          checklistSubmittedAt: '2026-08-12T09:41:00.000Z',
-          checkpointAt: '2026-08-12T09:41:00.000Z',
-        })}
-        nextModule={null}
-      />,
-    );
-
-    expect(container.querySelector('.module-gate-poster')).toBeInTheDocument();
-    expect(screen.getByText('Passed.')).toBeInTheDocument();
-    expect(
-      screen.getByText('All five Modules passed — the Curriculum is complete.'),
-    ).toBeInTheDocument();
-    // Nothing follows Module 5: no next-Module line.
-    expect(container.textContent ?? '').not.toMatch(/unlocked\./);
+      [...container.querySelectorAll('.tag')].map((tag) => tag.textContent),
+    ).toEqual(['Refactor', 'Construct']);
+    expect(container.textContent ?? '').not.toMatch(/passed|recorded/i);
   });
 
   it('has no schedule talk, no Test-Suites row (#3, #113)', async () => {
     const { container } = await renderAt('/modules/m01');
-    await screen.findByText('Exit Gate');
+    await screen.findByText('Model Examples');
 
     // The read-once "Checkpoint-based — advance when the gate is passed…"
     // reassurance note was deleted (#113): it carried no live data, was not
@@ -771,16 +631,30 @@ describe('Module screen', () => {
   });
 
   // design/issue-guide.md § UI copy ban list (#115) — the writing-style list,
-  // separate from the domain vocabulary above. The gate definitions (#135)
-  // are the first prose this panel has carried since the copy pass, so the
-  // screen asserts against it here.
+  // separate from the domain vocabulary above. The Self-Check definition
+  // (#157) is the only prose the aside carries, so the screen asserts
+  // against it here.
   it('uses no word from the UI copy ban list (#115)', async () => {
     const { container } = await renderAt('/modules/m01');
-    await screen.findByText('Exit Gate');
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
     const text = container.textContent ?? '';
     expect(text).not.toMatch(
       /streak|daily goal|days left|% complete|\bXP\b|\bjust\b|\bsimply\b|\beasy\b/i,
+    );
+  });
+
+  // docs/ubiquitous-language.md § Removed terms: the gated-course vocabulary
+  // this screen carried on every state until #157.
+  it('names no removed term anywhere on the screen (#157)', async () => {
+    const { container } = await renderAt('/modules/m01', [
+      { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
+    ]);
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
+
+    const text = container.textContent ?? '';
+    expect(text).not.toMatch(
+      /exit gate|behavioral checklist|checkpoint|unlock|locked|\bgate\b|submit/i,
     );
   });
 });

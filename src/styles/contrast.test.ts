@@ -244,19 +244,6 @@ describe('the contrast floor', () => {
       // …and it is under AA for text, which is the whole point of the split.
       expect(contrast(token('--color-accent'), BG)).toBeLessThan(4.5);
     });
-
-    it('keeps the poster label readable on the field it dims against', () => {
-      // Ground-coloured type at opacity o over the brand field: 0.75 read
-      // 2.63:1, under even the 3:1 the poster's display type answers to.
-      const opacity = Number(
-        /opacity:\s*([\d.]+)/.exec(rule('.module-gate-poster-label'))?.[1],
-      );
-      const field = token('--color-accent');
-      const dimmed = mix(BG, opacity, field);
-      expect(contrast(dimmed, field)).toBeGreaterThanOrEqual(3);
-      // Still a step under the display line, so the poster keeps its hierarchy.
-      expect(opacity).toBeLessThan(1);
-    });
   });
 
   describe('meaningful non-text elements (#93, #97)', () => {
@@ -267,10 +254,8 @@ describe('the contrast floor', () => {
      * here. Text roles are measured above at 4.5:1; this is the other floor.
      */
     const MARKERS: readonly [string, string][] = [
-      // The empty square that says "not yet submitted" (Module, Exit Gate).
-      ['.module-gate-box', 'border'],
-      // The Behavioral Checklist radio, unanswered — the dot IS the control,
-      // the input behind it is 0×0 (#97).
+      // The Self-Check radio, unanswered — the dot IS the control, the input
+      // behind it is 0×0 (#97).
       ['.radio .dot', 'border'],
       // …and answered: the accent field that says which option is picked.
       ['.radio input:checked + .dot', 'background'],
@@ -285,15 +270,7 @@ describe('the contrast floor', () => {
       }
     });
 
-    it('draws the unmet Exit Gate marker in the outline role, not a ramp step', () => {
-      expect(rule('.module-gate-box')).toMatch(
-        /border:\s*1\.5px solid var\(--color-text-muted\)/,
-      );
-      // The prototype's neutral-400 read 1.80:1 on the ground — the defect.
-      expect(contrast(token('--color-neutral-400'), BG)).toBe(1.8);
-    });
-
-    it('draws the unanswered checklist radio in the outline role, not the divider', () => {
+    it('draws the unanswered Self-Check radio in the outline role, not the divider', () => {
       expect(rule('.radio .dot')).toMatch(
         /border:\s*1\.5px solid var\(--color-text-muted\)/,
       );
@@ -344,14 +321,11 @@ describe('the contrast floor', () => {
         '.curriculum-closing-rule',
         '.curriculum-backup-confirm',
         '.module-example-grid',
-        '.module-gate-panel',
-        '.module-gate-condition',
+        '.self-check',
+        '.self-check-item',
         '.exercise-spec-label',
         '.exercise-spec-value',
         '.exercise-interface-code',
-        '.exercise-checklist-item',
-        '.exercise-checklist-panel',
-        '.exercise-checklist-row',
       ]);
       const painted = [
         ...selectorsPainting(designCss, '--color-divider'),
@@ -366,19 +340,13 @@ describe('the contrast floor', () => {
     it('renders none of the prototype controls the divider still outlines', () => {
       // .input / .seg / .seg-opt / .btn-secondary are control boundaries: at
       // 2.41:1 they would fail SC 1.4.11 the moment a screen used one. No
-      // screen does — the checklist radio was the only one, and it is fixed.
+      // screen does — the Self-Check radio was the only one, and it is fixed.
       for (const control of ['input', 'seg', 'seg-opt', 'btn-secondary']) {
         expect(renderedClasses.has(control)).toBe(false);
       }
       // The control that IS rendered, so the sweep above is not vacuous.
       expect(renderedClasses.has('radio')).toBe(true);
       expect(renderedClasses.has('dot')).toBe(true);
-    });
-
-    it('leaves the met marker inheriting ink', () => {
-      // The check icon is `stroke="currentColor"` on ink: 14.86:1, untouched.
-      expect(rule('.module-gate-check')).not.toMatch(/(?<![\w-])color:/);
-      expect(contrast(token('--color-text'), BG)).toBeGreaterThanOrEqual(3);
     });
 
     it('keeps the ramp steps under 3:1 out of the app stylesheet entirely', () => {

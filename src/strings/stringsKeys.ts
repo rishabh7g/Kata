@@ -19,8 +19,8 @@
  * list, and `STRINGS_PLACEHOLDERS` is `Record<StringsKey, …>`, so a key added
  * to one without the other fails `tsc`.
  *
- * Keys are DOT-PATHS into a nested object: `gate.condition.notSubmitted` is
- * the path to `{"gate":{"condition":{"notSubmitted":…}}}`, which is how
+ * Keys are DOT-PATHS into a nested object: `module.sectionLabel.exercises` is
+ * the path to `{"module":{"sectionLabel":{"exercises":…}}}`, which is how
  * `src/strings/en.ts` is written. The checker and the runtime loader both
  * flatten before comparing.
  *
@@ -38,9 +38,8 @@
 /**
  * Every key of a complete pack, grouped by the screen or shell surface that
  * reads it, in the order those surfaces appear in the app: the failure
- * notices any screen can raise, the shared status/gate vocabulary, then
- * Curriculum, Module, Exercise, the Behavioral Checklist, and Progress
- * Backup.
+ * notices any screen can raise, the shared status tags, then Curriculum,
+ * Module, its Self-Check, Exercise, and Progress Backup.
  */
 export const STRINGS_KEYS = [
   // The app's one failure surface (Notice.tsx), raised by two callers.
@@ -58,14 +57,11 @@ export const STRINGS_KEYS = [
   // measures the reader, so permanent chrome has nothing to count.
   'shell.backToCurriculum',
 
-  // The status tags. `inProgress` and `readyToStart` are shared verbatim by
-  // the Curriculum rows and the Module header; `gatePassed` and the
-  // Checkpoint date line are the Module screen's alone since the Curriculum
-  // rows dropped their passed decorations (#156).
-  'status.gatePassed',
+  // The Curriculum row tags — the only status vocabulary left. `gatePassed`
+  // and the Checkpoint date line went with the Module header tag (#157):
+  // both named a removed term, and the Library measures no reader.
   'status.inProgress',
   'status.readyToStart',
-  'gate.checkpointLine',
 
   // Curriculum screen. `curriculum.kicker` ("Curriculum — fixed order,
   // foundations down") and `curriculum.intro` ("Five Modules. Advance by
@@ -99,27 +95,15 @@ export const STRINGS_KEYS = [
   'module.exercise.tagRefactor',
   'module.exercise.tagConstruct',
 
-  // The Exit Gate — the poster (passed), the panel (not passed) and the
-  // pending note, shared by the Module aside and the Exercise gate banner.
-  'gate.label',
-  // The two definitions the panel carries (#135) — what an Exit Gate is and
-  // what a Checkpoint is, kept by the keeper test's fourth clause: the first
-  // use of two terms the UI then uses as labels (the `Exit Gate passed` tag,
-  // `Checkpoint · {date}`).
-  'gate.definition',
-  'gate.checkpointDefinition',
-  'gate.passedLine',
-  'gate.nextModuleLine',
-  'gate.allModulesPassedLine',
-  'gate.pendingNote',
-  'gate.condition.title',
-  'gate.condition.submitted',
-  'gate.condition.notSubmitted',
-  // `gate.note` ("Checkpoint-based — advance when the gate is passed,
-  // whether that takes 2 days or 2 months.") was removed on #113: pure
-  // reassurance copy that carried no data, instructed nothing, guarded
-  // nothing.
-  'gate.exercisePassedLine',
+  // The Module's Self-Check (#157) — its heading and the one clause that
+  // says what a Self-Check is, kept by the keeper test's fourth clause. The
+  // whole `gate.*` block went with the Exit Gate: no poster, no condition
+  // row, no pending note and no banner, because nothing is passed. So did
+  // `checklist.submitLabel` / `checklist.submittedLine` / `checklist.meta`
+  // and the self-report note — there is no submission to label, time or
+  // scope.
+  'selfCheck.heading',
+  'selfCheck.definition',
 
   // Exercise screen.
   'exercise.kicker',
@@ -142,20 +126,6 @@ export const STRINGS_KEYS = [
   'exercise.practiceMaterial.linkLabel',
   'exercise.practiceMaterial.noteBefore',
   'exercise.practiceMaterial.noteAfter',
-
-  // Behavioral Checklist.
-  'checklist.heading',
-  // What the Behavioral Checklist is (#136) — the first-use definition of
-  // the term the heading, the submit label and the Module gate's condition
-  // row all use as a label.
-  'checklist.definition',
-  // Which Module's Exit Gate this panel is, and that it covers every
-  // Exercise in that Module rather than the one on screen (#138) — the
-  // scope of the live ordinal it already carried.
-  'checklist.meta',
-  'checklist.submitLabel',
-  'checklist.note',
-  'checklist.submittedLine',
 
   // Progress Backup.
   'backup.exportLabel',
@@ -198,11 +168,8 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
 
   'shell.backToCurriculum': [],
 
-  'status.gatePassed': [],
   'status.inProgress': [],
   'status.readyToStart': [],
-  /** The recorded Checkpoint's date, already formatted by the caller. */
-  'gate.checkpointLine': ['{date}'],
 
   'curriculum.title': [],
   'curriculum.orientation.module': [],
@@ -224,18 +191,8 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'module.exercise.tagRefactor': [],
   'module.exercise.tagConstruct': [],
 
-  'gate.label': [],
-  'gate.definition': [],
-  'gate.checkpointDefinition': [],
-  'gate.passedLine': [],
-  /** The Module that just unlocked. */
-  'gate.nextModuleLine': ['{ordinal}', '{title}'],
-  'gate.allModulesPassedLine': [],
-  'gate.pendingNote': [],
-  'gate.condition.title': [],
-  'gate.condition.submitted': [],
-  'gate.condition.notSubmitted': [],
-  'gate.exercisePassedLine': [],
+  'selfCheck.heading': [],
+  'selfCheck.definition': [],
 
   /** The brief's own id and its Module's ordinal. */
   'exercise.kicker': ['{id}', '{ordinal}'],
@@ -256,15 +213,6 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'exercise.practiceMaterial.linkLabel': [],
   'exercise.practiceMaterial.noteBefore': [],
   'exercise.practiceMaterial.noteAfter': [],
-
-  'checklist.heading': [],
-  'checklist.definition': [],
-  /** The owning Module's zero-padded ordinal — the gate's scope (#138). */
-  'checklist.meta': ['{ordinal}'],
-  'checklist.submitLabel': [],
-  'checklist.note': [],
-  /** The formatted submission time. */
-  'checklist.submittedLine': ['{time}'],
 
   'backup.exportLabel': [],
   'backup.importLabel': [],
