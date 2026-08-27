@@ -111,11 +111,11 @@ export function ModuleScreen() {
         {/* The Self-Check rides in the aside beside the prose it asks
             about (#157). A Module with no questions renders no aside — there
             is nothing else the column ever held. */}
-        {module.checklistQuestions.length > 0 && (
+        {module.selfCheckQuestions.length > 0 && (
           <aside className="module-aside">
             <SelfCheck
               moduleId={module.id}
-              questions={module.checklistQuestions}
+              questions={module.selfCheckQuestions}
             />
           </aside>
         )}

@@ -95,7 +95,7 @@ const content: ModuleContent = {
       folderUrl: null,
     },
   ],
-  checklistQuestions: [
+  selfCheckQuestions: [
     { id: 'q1', prompt: 'p1', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
     { id: 'q2', prompt: 'p2', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
     { id: 'q3', prompt: 'p3', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },

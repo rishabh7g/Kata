@@ -110,7 +110,7 @@ export function createCurriculum(content: ContentSource): ICurriculum {
           conceptPageMarkdown: '',
           modelExamples: [],
           exercises: [],
-          checklistQuestions: [],
+          selfCheckQuestions: [],
         };
       }
       return {
@@ -118,7 +118,7 @@ export function createCurriculum(content: ContentSource): ICurriculum {
         conceptPageMarkdown: moduleContent.conceptPageMarkdown,
         modelExamples: moduleContent.modelExamples,
         exercises: moduleContent.exercises,
-        checklistQuestions: moduleContent.checklistQuestions,
+        selfCheckQuestions: moduleContent.selfCheckQuestions,
       };
     },
   };

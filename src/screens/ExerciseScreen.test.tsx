@@ -74,7 +74,7 @@ const content: ModuleContent = {
     { before: 'b2', after: 'a2', caption: 'c2' },
   ],
   exercises: [refactorBrief, constructBrief],
-  checklistQuestions: [
+  selfCheckQuestions: [
     { id: 'q1', prompt: 'p1', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
     { id: 'q2', prompt: 'p2', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
     { id: 'q3', prompt: 'p3', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
@@ -100,7 +100,7 @@ const m02Content: ModuleContent = {
   conceptPageMarkdown: '# Dependency Direction\n\nProse.',
   modelExamples: [{ before: 'b1', after: 'a1', caption: 'c1' }],
   exercises: [m02Brief],
-  checklistQuestions: [
+  selfCheckQuestions: [
     { id: 'q1', prompt: 'm02 p1', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
     { id: 'q2', prompt: 'm02 p2', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
     { id: 'q3', prompt: 'm02 p3', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },

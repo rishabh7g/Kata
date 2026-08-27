@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ProgressProvider } from '../app/ProgressContext';
-import type { ChecklistQuestion } from '../curriculum';
+import type { SelfCheckQuestion } from '../curriculum';
 import type { IProgress } from '../progress';
 import { createProgress } from '../progress';
 import { SelfCheck } from './SelfCheck';
@@ -10,8 +10,10 @@ import { SelfCheck } from './SelfCheck';
 // The panel on its own, over the real createProgress against fake-indexeddb
 // (#14's prescribed test environment) — the Module screen's own wiring is
 // covered by ModuleScreen.test.tsx. Prompts here are the real shape: one
-// long sentence ending in a question, two opposed options.
-const questions: readonly ChecklistQuestion[] = [
+// long sentence ending in a question, two opposed options. None of them
+// authors an `explanation` — that is what makes this set the evidence a
+// question without one reveals nothing at all (#162).
+const questions: readonly SelfCheckQuestion[] = [
   {
     id: 'q1',
     prompt:
@@ -48,7 +50,7 @@ beforeEach(() => {
 
 /** The panel with whatever question set a state needs, un-awaited. */
 function renderWith(
-  questionSet: readonly ChecklistQuestion[],
+  questionSet: readonly SelfCheckQuestion[],
   progress: IProgress,
 ) {
   return render(
@@ -78,6 +80,11 @@ describe('the Self-Check panel (#157)', () => {
     expect(screen.queryAllByRole('button')).toHaveLength(0);
     expect(container.querySelector('form, [type="submit"]')).toBeNull();
     expect(container.textContent ?? '').not.toMatch(/submit/i);
+
+    // No question here authors an explanation, so no slot exists to reveal
+    // one into and no group is described by anything (#162).
+    expect(container.querySelectorAll('.self-check-explanation')).toHaveLength(0);
+    expect(container.querySelector('[aria-describedby]')).toBeNull();
   });
 
   it('states what a Self-Check is, once, under the heading (#157)', async () => {
@@ -199,7 +206,7 @@ describe('Self-Check radio grouping (#72)', () => {
     }
   });
 
-  it("puts exactly that question's two options inside its group", async () => {
+  it("puts exactly that question's own options inside its group", async () => {
     await renderSelfCheck();
 
     for (const question of questions) {
@@ -275,5 +282,160 @@ describe('Self-Check radio grouping (#72)', () => {
       const input = label.querySelector('input[type="radio"]');
       expect(input?.nextElementSibling).toHaveClass('dot');
     }
+  });
+});
+
+/**
+ * 2–4 options and the explanation revealed after answering (#162).
+ *
+ * The load-bearing property is negative: whichever option the reader picks,
+ * the panel renders the SAME thing. Kata never judges an answer, so there is
+ * no correctness signal anywhere in the DOM — not in the text, not in a
+ * class, not in an ARIA attribute.
+ */
+const RECALL_EXPLANATION =
+  'The count is the size of the surface a caller has to hold in their head. Whatever number you picked, it is the one you can watch move as the design changes.';
+
+const explained: readonly SelfCheckQuestion[] = [
+  {
+    id: 'q1',
+    prompt: 'How many things must a caller know before they can use your module?',
+    options: [
+      { value: 'one', label: 'One' },
+      { value: 'two', label: 'Two' },
+      { value: 'three', label: 'Three' },
+      { value: 'more', label: 'More than three' },
+    ],
+    explanation: RECALL_EXPLANATION,
+  },
+  {
+    id: 'q2',
+    prompt: 'Did the search for leaked decisions come back empty?',
+    options: [
+      { value: 'yes', label: 'Yes — nothing leaked' },
+      { value: 'no', label: 'No — at least one hit' },
+    ],
+  },
+];
+
+async function renderExplained(progress?: IProgress) {
+  const activeProgress = progress ?? (await createProgress());
+  const utils = renderWith(explained, activeProgress);
+  await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
+  return { ...utils, progress: activeProgress };
+}
+
+/** The one explanation slot of the four-option question. */
+function explanationSlot(container: HTMLElement) {
+  const item = container.querySelectorAll('.self-check-item')[0];
+  return item?.querySelector('.self-check-explanation') ?? null;
+}
+
+describe('Self-Check options and explanations (#162)', () => {
+  it('renders four radios for a four-option question, and autosaves a pick as before', async () => {
+    const { progress } = await renderExplained();
+    const group = screen.getByRole('radiogroup', { name: explained[0]!.prompt });
+
+    const radios = within(group).getAllByRole('radio');
+    expect(radios).toHaveLength(4);
+    expect(radios.map((radio) => radio.getAttribute('value'))).toEqual([
+      'one',
+      'two',
+      'three',
+      'more',
+    ]);
+
+    fireEvent.click(radios[3]!);
+
+    expect(radios[3]!).toBeChecked();
+    expect((await progress.getSelfCheckAnswers('m01'))?.answers).toEqual({
+      q1: 'more',
+    });
+  });
+
+  it('reveals the explanation once an option is picked, and nothing before', async () => {
+    const { container } = await renderExplained();
+
+    // The slot is in the DOM from first render — a live region has to be
+    // there before its content changes — and says nothing yet.
+    const slot = explanationSlot(container);
+    expect(slot).not.toBeNull();
+    expect(slot).toBeEmptyDOMElement();
+    expect(container.textContent ?? '').not.toContain(RECALL_EXPLANATION);
+
+    fireEvent.click(
+      within(
+        screen.getByRole('radiogroup', { name: explained[0]!.prompt }),
+      ).getAllByRole('radio')[0]!,
+    );
+
+    expect(explanationSlot(container)).toHaveTextContent(RECALL_EXPLANATION);
+  });
+
+  it('reveals nothing for a question that authors no explanation', async () => {
+    const { container } = await renderExplained();
+    const group = screen.getByRole('radiogroup', { name: explained[1]!.prompt });
+
+    fireEvent.click(within(group).getAllByRole('radio')[0]!);
+
+    const item = container.querySelectorAll('.self-check-item')[1];
+    expect(item?.querySelector('.self-check-explanation')).toBeNull();
+    expect(group.getAttribute('aria-describedby')).toBeNull();
+    // Answering it adds no node at all beyond the checked radio.
+    expect(container.querySelectorAll('.self-check-explanation')).toHaveLength(1);
+  });
+
+  it('renders the identical panel whichever option was picked — no correctness anywhere', async () => {
+    const { container } = await renderExplained();
+    const group = screen.getByRole('radiogroup', { name: explained[0]!.prompt });
+    const radios = within(group).getAllByRole('radio');
+
+    const rendered = radios.map((radio) => {
+      fireEvent.click(radio);
+      return container.textContent ?? '';
+    });
+
+    // Every option produces the same text, character for character: the
+    // explanation teaches, it never marks a pick right or wrong.
+    expect(new Set(rendered).size).toBe(1);
+    expect(rendered[0]).toContain(RECALL_EXPLANATION);
+
+    // And nothing else in the DOM carries a verdict either.
+    const marked = [...container.querySelectorAll('*')].filter(
+      (node) =>
+        node.hasAttribute('aria-invalid') ||
+        /correct|wrong|pass|fail|right/i.test(node.getAttribute('class') ?? ''),
+    );
+    expect(marked).toEqual([]);
+    expect(container.textContent ?? '').not.toMatch(
+      /correct|incorrect|\bwrong\b|\bright answer\b|well done|try again/i,
+    );
+  });
+
+  it('shows the explanation for a restored answer on the next visit', async () => {
+    const progress = await createProgress();
+    await progress.saveSelfCheckAnswers('m01', { q1: 'two' });
+
+    const { container } = await renderExplained(progress);
+
+    expect(screen.getByRole('radio', { name: 'Two' })).toBeChecked();
+    expect(explanationSlot(container)).toHaveTextContent(RECALL_EXPLANATION);
+  });
+
+  it('describes the question group with its explanation, in a polite live region', async () => {
+    const { container } = await renderExplained();
+    const group = screen.getByRole('radiogroup', { name: explained[0]!.prompt });
+    const slot = explanationSlot(container);
+
+    expect(slot?.id).toBeTruthy();
+    expect(group.getAttribute('aria-describedby')).toBe(slot?.id);
+    expect(slot?.getAttribute('aria-live')).toBe('polite');
+    // A paragraph after the options, not a control of its own.
+    expect(slot?.tagName).toBe('P');
+    expect(slot?.querySelector('a, button, input, [role]')).toBeNull();
+    expect(
+      group.compareDocumentPosition(slot as Node) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });

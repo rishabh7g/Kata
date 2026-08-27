@@ -4,9 +4,6 @@ export type {
   Category,
   CategoryId,
   CategoryLanguage,
-  ChecklistOption,
-  ChecklistQuestion,
-  ChecklistQuestionId,
   ContentSource,
   ExerciseBrief,
   ExerciseId,
@@ -20,6 +17,9 @@ export type {
   ModuleIndex,
   ModuleIndexEntry,
   ModuleSummary,
+  SelfCheckOption,
+  SelfCheckQuestion,
+  SelfCheckQuestionId,
 } from './contract';
 export { createCurriculum } from './curriculum';
 export { createHttpContentSource } from './http-content-source';

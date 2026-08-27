@@ -41,7 +41,7 @@
       "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m03/m03-e2"
     }
   ],
-  "checklistQuestions": [
+  "selfCheckQuestions": [
     {
       "id": "q1",
       "prompt": "Grep your Test Suite for every type and member that is not on the Target Interface — concrete classes, public fields, step methods. Beyond the single construction line (the CreateX() factory), is the count zero?",

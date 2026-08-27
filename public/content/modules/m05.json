@@ -41,7 +41,7 @@
       "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m05/m05-e2"
     }
   ],
-  "checklistQuestions": [
+  "selfCheckQuestions": [
     {
       "id": "q1",
       "prompt": "Grep your finished src/ for throw and catch. Outside the Target Interface file, is the hit count zero?",

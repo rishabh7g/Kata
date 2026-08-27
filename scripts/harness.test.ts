@@ -138,6 +138,42 @@ describe('content schema + Module index (#7)', () => {
     expect(result.lines[0]).toContain('CONTENT ok (1 file)');
   });
 
+  it('accepts a question with 4 options and an explanation (#162)', () => {
+    // Options are 2–4 now, and `explanation` is optional and additive: the
+    // explain-only fixture carries one question of each shape, so a pack
+    // exercising both new rules still validates.
+    const result = validate(CONTENT_SCHEMA, `${FIXTURES}/explain-only`);
+
+    expect(result.status).toBe(0);
+    expect(result.lines[0]).toContain('CONTENT ok (1 file)');
+  });
+
+  it('rejects a question with more than 4 options (#162)', () => {
+    const result = validate(
+      CONTENT_SCHEMA,
+      `${FIXTURES}/invalid-content/too-many-options.json`,
+    );
+
+    expect(result.status).toBe(3);
+    expect(result.stdout).toContain('too-many-options.json');
+    expect(result.stdout).toContain('must NOT have more than 4 items');
+  });
+
+  it('rejects two options of one question sharing a value (#162)', () => {
+    // A pick is stored BY VALUE, so a duplicate would make one radio
+    // unreachable — and `uniqueItems` cannot see it, because the two options
+    // differ in their labels. validate-content.mjs checks it beside the
+    // schema, same gate and same exit code as the dangling categoryId.
+    const result = validate(
+      CONTENT_SCHEMA,
+      `${FIXTURES}/invalid-content/duplicate-option-value.json`,
+    );
+
+    expect(result.status).toBe(3);
+    expect(result.stdout).toContain('duplicate-option-value.json');
+    expect(result.stdout).toContain('must be unique within the question');
+  });
+
   it('lists all five Modules, in Curriculum order, titles verbatim, all five authored', () => {
     const index = JSON.parse(
       readFileSync(join(REPO, 'public/content/index.json'), 'utf8'),

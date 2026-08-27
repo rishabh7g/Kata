@@ -41,7 +41,7 @@
       "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/m02/m02-e2"
     }
   ],
-  "checklistQuestions": [
+  "selfCheckQuestions": [
     {
       "id": "q1",
       "prompt": "Grep your policy classes for `new` on volatile types — database, file system, HTTP client, clock. Is the count zero?",

@@ -14,7 +14,7 @@ export type CategoryId = string;
 export type ExerciseId = string;
 
 /** Self-Check question id, unique within its Module: 'q1' … 'q3'. */
-export type ChecklistQuestionId = string;
+export type SelfCheckQuestionId = string;
 
 /** ISO-8601 instant in UTC, e.g. '2026-08-12T09:41:00.000Z'. */
 export type IsoDateTime = string;
@@ -66,15 +66,20 @@ export interface ExerciseBrief {
   readonly folderUrl: string | null; // GitHub folder link; null until committed
 }
 
-export interface ChecklistOption {
+export interface SelfCheckOption {
   readonly value: string; // the stored answer value
   readonly label: string; // what the radio shows
 }
 
-export interface ChecklistQuestion {
-  readonly id: ChecklistQuestionId;
+export interface SelfCheckQuestion {
+  readonly id: SelfCheckQuestionId;
   readonly prompt: string; // behaviorally answerable — countable or doable
-  readonly options: readonly [ChecklistOption, ChecklistOption]; // a radio pair
+  readonly options: readonly SelfCheckOption[]; // 2–4 radios
+  /** Revealed once any option is picked, and the SAME text whichever one was:
+   *  it teaches, it never marks an answer right or wrong. 1–3 sentences in the
+   *  novice voice (docs/design.md § Editorial standard). Absent = the question
+   *  reveals nothing at all. */
+  readonly explanation?: string;
 }
 
 export interface ModuleContent {
@@ -83,10 +88,10 @@ export interface ModuleContent {
   readonly conceptPageMarkdown: string;
   readonly modelExamples: readonly ModelExample[]; // 2–3
   readonly exercises: readonly ExerciseBrief[]; // 0..n; [] = explains only
-  readonly checklistQuestions: readonly [
-    ChecklistQuestion,
-    ChecklistQuestion,
-    ChecklistQuestion,
+  readonly selfCheckQuestions: readonly [
+    SelfCheckQuestion,
+    SelfCheckQuestion,
+    SelfCheckQuestion,
   ]; // exactly 3
 }
 
@@ -95,7 +100,7 @@ export interface ModuleContent {
 /** A Module's Self-Check picks: one option value per question id. Always
  *  partial — none, some, or all three answered are equally normal. */
 export type SelfCheckAnswers = Readonly<
-  Partial<Record<ChecklistQuestionId, string>>
+  Partial<Record<SelfCheckQuestionId, string>>
 >;
 
 /** One Module's stored Self-Check answers; at most one record per Module. */
@@ -127,7 +132,7 @@ export interface ModuleDetail extends ModuleSummary {
   readonly conceptPageMarkdown: string; // '' when pending
   readonly modelExamples: readonly ModelExample[]; // [] when pending
   readonly exercises: readonly ExerciseBrief[]; // [] when pending
-  readonly checklistQuestions: readonly ChecklistQuestion[]; // [] when pending, else 3
+  readonly selfCheckQuestions: readonly SelfCheckQuestion[]; // [] when pending, else 3
 }
 
 // ── Seams ────────────────────────────────────────────────────────────────
