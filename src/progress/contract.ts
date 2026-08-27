@@ -9,7 +9,6 @@ export type {
   ChecklistDraft,
   ChecklistQuestionId,
   Checkpoint,
-  CheckpointReader,
   GateStatus,
   IProgress,
   IsoDateTime,

@@ -43,14 +43,10 @@ export async function startKata(
     return;
   }
 
-  // The one real ICurriculum: committed content over HTTP, with IProgress
-  // as its CheckpointReader (#18). ICurriculum re-reads Checkpoints on
-  // every call, so a Checkpoint the checklist just wrote unlocks the next
-  // Module without a reload.
-  const curriculum = createCurriculum(
-    createHttpContentSource(baseUrl),
-    progress,
-  );
+  // The one real ICurriculum: committed content over HTTP and nothing else
+  // (#158). It reads no progress data, so the two Target Interfaces are
+  // wired side by side here rather than into each other.
+  const curriculum = createCurriculum(createHttpContentSource(baseUrl));
 
   root.render(
     <StrictMode>

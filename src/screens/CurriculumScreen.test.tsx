@@ -37,9 +37,9 @@ beforeEach(() => {
   globalThis.indexedDB = new IDBFactory();
 });
 
-// The full wiring from main.tsx (#18): the real IProgress over fake-indexeddb
-// is both ICurriculum's CheckpointReader and the ProgressProvider value the
-// screen reads drafts through.
+// The full wiring from main.tsx (#18): ICurriculum over an in-memory
+// ContentSource, side by side with the real IProgress over fake-indexeddb the
+// screen reads drafts through — the two no longer touch (#158).
 async function renderScreen({
   checkpoints = [],
   drafts = [],
@@ -54,7 +54,7 @@ async function renderScreen({
     submittedChecklists: [],
     checklistDrafts: drafts,
   });
-  const curriculum = createCurriculum(source, progress);
+  const curriculum = createCurriculum(source);
   return render(
     <CurriculumProvider curriculum={curriculum}>
       <ProgressProvider progress={progress}>

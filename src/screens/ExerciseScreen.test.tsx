@@ -149,9 +149,7 @@ async function renderAt(
   jumpTo?: string,
   contentSource: ContentSource = source,
 ) {
-  const curriculum = createCurriculum(contentSource, {
-    listCheckpoints: async () => [],
-  });
+  const curriculum = createCurriculum(contentSource);
   const activeProgress = progress ?? (await createProgress());
   const utils = render(
     <CurriculumProvider curriculum={curriculum}>
@@ -543,9 +541,7 @@ describe('Exercise screen', () => {
 
   it('deep-loads through the app routes identically', async () => {
     // Same entry the reloaded hash URL produces: App resolves the full path.
-    const curriculum = createCurriculum(source, {
-      listCheckpoints: async () => [],
-    });
+    const curriculum = createCurriculum(source);
     const progress = await createProgress();
     render(
       <CurriculumProvider curriculum={curriculum}>

@@ -185,8 +185,6 @@ export interface ModuleSummary {
   readonly title: string;
   readonly description: string;
   readonly pending: boolean;
-  readonly unlocked: boolean; // derived per the lock chain; never stored
-  readonly checkpointAt: IsoDateTime | null; // non-null iff a Checkpoint exists
 }
 
 export interface ModuleDetail extends ModuleSummary {
@@ -198,11 +196,6 @@ export interface ModuleDetail extends ModuleSummary {
 
 // ── Seams ────────────────────────────────────────────────────────────────
 
-/** The only progress data ICurriculum may read. IProgress satisfies it. */
-export interface CheckpointReader {
-  listCheckpoints(): Promise<readonly Checkpoint[]>;
-}
-
 /** Where authored content comes from: HTTP in the app, in-memory in tests. */
 export interface ContentSource {
   loadIndex(): Promise<ModuleIndex>;
@@ -213,20 +206,17 @@ export interface ContentSource {
 // ── Target Interface 1 of 2: ICurriculum ─────────────────────────────────
 
 export interface ICurriculum {
-  /** Every Module, ordered by ordinal ascending, with derived lock state. */
+  /** Every Module, ordered by ordinal ascending. */
   getModules(): Promise<readonly ModuleSummary[]>;
   /** Full detail for one Module; null when the id is unknown. */
   getModule(id: ModuleId): Promise<ModuleDetail | null>;
 }
 
-export declare function createCurriculum(
-  content: ContentSource,
-  checkpoints: CheckpointReader,
-): ICurriculum;
+export declare function createCurriculum(content: ContentSource): ICurriculum;
 
 // ── Target Interface 2 of 2: IProgress ───────────────────────────────────
 
-export interface IProgress extends CheckpointReader {
+export interface IProgress {
   /** Passes the Exit Gate and writes this Module's one Checkpoint. */
   submitChecklist(
     moduleId: ModuleId,
@@ -255,9 +245,9 @@ export declare function createProgress(
 
 ### ICurriculum — behaviour
 
-Owns the authored content and the derived lock chain. It is a pure function of
-(content, Checkpoints): given the same inputs it returns the same output, and
-it **writes nothing, ever**.
+Owns the authored content and nothing else. It is a pure function of content:
+given the same content it returns the same output, it reads no progress data at
+all, and it **writes nothing, ever**.
 
 - `getModules()` returns one `ModuleSummary` per entry in the module index,
   **sorted by `ordinal` ascending**. Order comes from the data, never from the
@@ -267,35 +257,21 @@ it **writes nothing, ever**.
   Module it returns detail with `pending: true` and empty content
   (`conceptPageMarkdown: ''`, `[]` for the three arrays); the screen renders the
   pending placeholder from that.
-- `getModule` does **not** gate on lock state — `unlocked` is data the screen
-  acts on. Deciding what a deep link to a locked Module does is the router's
-  job, not this Target Interface's.
+- `getModule` answers for **every** Module, always: no Module waits on another
+  and nothing here can refuse a read, so a deep link into any Module resolves
+  from the first visit (#156).
 - A Module that is **not** flagged pending but whose content file is missing is
   a content error that CI should have caught; at runtime `getModule` falls back
   to the pending shape rather than throwing, so a screen never goes blank.
-- Both methods may cache the fetched content in memory. Checkpoints are read
-  through `CheckpointReader` **on every call**, so a freshly written Checkpoint
-  shows up without a reload.
+- Both methods may cache the fetched content in memory, which is safe because
+  the content is committed and immutable per deploy. A **failed** load is never
+  cached: the next call fetches again, so a `Try again` after an offline first
+  visit can succeed (#69).
 
-**The lock chain — the only unlock rule in the system:**
-
-1. The Module with `ordinal === 1` is **always unlocked**.
-2. The Module with `ordinal === n` (n > 1) is unlocked **iff a Checkpoint
-   exists for the Module with `ordinal === n − 1`**.
-3. Nothing else affects lock state — not drafts, not content, not time.
-4. Lock state is **derived at read time and never persisted**.
-
-Because Checkpoints are only ever written in Curriculum order by the app, rule
-2 and "every earlier Module has a Checkpoint" coincide in practice. Rule 2 as
-written is the normative one — it is what the tests assert, including for a
-state arriving through `importState`.
-
-`checkpointAt` is that Module's own Checkpoint `passedAt`, or `null`.
-
-**The seam.** `ICurriculum` depends on `CheckpointReader` and nothing else from
-the progression side, so its tests pass a two-line stub
-(`{ listCheckpoints: async () => [] }`) and never touch IndexedDB. In the app,
-`IProgress` is passed as the `CheckpointReader` — it extends it.
+**The one seam.** `createCurriculum` takes a `ContentSource` and nothing else,
+so `ICurriculum` and `IProgress` never touch each other: the Library has no
+lock chain to derive (#156, #158). Its tests pass an in-memory `ContentSource`
+and never touch IndexedDB.
 
 ### IProgress — behaviour
 
@@ -345,7 +321,7 @@ Rules, in the order a reviewer should check them:
 
 | Screen | Reads |
 |---|---|
-| Curriculum | `ICurriculum.getModules()` for rows and lock state; `IProgress.getChecklistDraft` for the `In progress` tag; `IProgress.listCheckpoints().length` for the nav count |
+| Curriculum | `ICurriculum.getModules()` for the rows, in ordinal order; `IProgress.getChecklistDraft` for the `In progress` tag |
 | Module | `ICurriculum.getModule(id)` for Concept Page, Model Examples, Exercise cards; `IProgress.getGateStatus(id)` for the Exit Gate aside and the poster |
 | Exercise | the brief from `ICurriculum.getModule(moduleId)`; `ICurriculum`'s `checklistQuestions` for the form; `IProgress` for draft, submission, and gate banner |
 
@@ -356,19 +332,17 @@ Two consequences worth stating:
 - The Behavioral Checklist is **per Module**, not per Exercise. Both of a
   Module's Exercise screens show the same checklist state.
 
-Curriculum row tags are composed from `ModuleSummary` plus one draft lookup, in
-this precedence:
+A Curriculum row's tag comes from one draft lookup — `ModuleSummary` carries no
+state of the reader at all:
 
 | Condition | Tag |
 |---|---|
-| `checkpointAt !== null` | accent `Exit Gate passed` + `Checkpoint · <date>` |
-| `!unlocked` | no tag; row at 0.5 opacity, lock icon, click inert |
 | a draft exists for the Module | outline `In progress` |
 | otherwise | neutral `Ready to start` |
 
-The nav reads `CHECKPOINTS n / 5`, where `n` is the Checkpoint count and the
-denominator is the number of Modules in the index — counted, never hard-coded,
-and never shown as a percentage.
+Two tags, both about the reader's own Self-Check answers and neither a
+judgement. The row is always a link, at full opacity (#156), and the nav
+carries the Kata lockup and no tally of any kind.
 
 ---
 

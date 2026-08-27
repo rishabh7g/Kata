@@ -11,7 +11,6 @@ import { App } from '../App';
 import { CurriculumProvider } from '../app/CurriculumContext';
 import { ProgressProvider } from '../app/ProgressContext';
 import type {
-  Checkpoint,
   ContentSource,
   ModuleContent,
   ModuleIndex,
@@ -123,13 +122,10 @@ function HistoryControls() {
 
 async function renderAt(
   path: string,
-  checkpoints: readonly Checkpoint[] = [],
   progress?: IProgress,
   contentSource: ContentSource = source,
 ) {
-  const curriculum = createCurriculum(contentSource, {
-    listCheckpoints: async () => checkpoints,
-  });
+  const curriculum = createCurriculum(contentSource);
   const activeProgress = progress ?? (await createProgress());
   const utils = render(
     <CurriculumProvider curriculum={curriculum}>
@@ -248,7 +244,7 @@ describe('Module screen', () => {
         'A second paragraph.',
       ].join('\n'),
     };
-    const { container } = await renderAt('/modules/m01', [], undefined, {
+    const { container } = await renderAt('/modules/m01', undefined, {
       loadIndex: async () => index,
       loadModuleContent: async (id) => (id === 'm01' ? plain : null),
     });
@@ -305,7 +301,7 @@ describe('Module screen', () => {
     };
     document.title = 'Module 02 — Dependency Direction · Kata';
 
-    await renderAt('/modules/m01', [], undefined, slow);
+    await renderAt('/modules/m01', undefined, slow);
 
     // No flash of the Module the tab named a moment ago.
     expect(document.title).toBe('Kata');
@@ -318,9 +314,7 @@ describe('Module screen', () => {
   });
 
   it('follows browser Back and Forward, not just a fresh load (#77)', async () => {
-    const curriculum = createCurriculum(source, {
-      listCheckpoints: async () => [],
-    });
+    const curriculum = createCurriculum(source);
     render(
       <CurriculumProvider curriculum={curriculum}>
         <ProgressProvider progress={await createProgress()}>
@@ -353,9 +347,7 @@ describe('Module screen', () => {
 
   it('deep-loads through the app routes identically', async () => {
     // Same entry the reloaded hash URL produces: App resolves /modules/m01.
-    const curriculum = createCurriculum(source, {
-      listCheckpoints: async () => [],
-    });
+    const curriculum = createCurriculum(source);
     render(
       <CurriculumProvider curriculum={curriculum}>
         <ProgressProvider progress={await createProgress()}>
@@ -382,18 +374,10 @@ describe('Module screen', () => {
       'btn-ghost',
     );
     // No status tag on the header at all (#157): the Library reports no state
-    // back to the reader, whatever is stored.
+    // back to the reader, and since #158 a ModuleSummary carries none to
+    // report — there is no per-reader shape left for a tag to read.
     expect(container.querySelector('.module-header .tag')).toBeNull();
     expect(screen.queryByText('Ready to start')).not.toBeInTheDocument();
-  });
-
-  it('shows no tag for a Module with a recorded Checkpoint either (#157)', async () => {
-    const { container } = await renderAt('/modules/m01', [
-      { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
-    ]);
-    await screen.findByText('Module 01');
-
-    expect(container.querySelector('.module-header .tag')).toBeNull();
     expect(container.querySelector('.tag-accent')).toBeNull();
     expect(container.querySelector('.tag-neutral')).toBeNull();
     expect(container.textContent ?? '').not.toMatch(/Exit Gate passed/i);
@@ -405,7 +389,7 @@ describe('Module screen', () => {
     const progress = await createProgress();
     await progress.saveChecklistDraft('m01', { q1: 'a' });
 
-    const { container } = await renderAt('/modules/m01', [], progress);
+    const { container } = await renderAt('/modules/m01', progress);
     await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
     expect(screen.queryByText('In progress')).not.toBeInTheDocument();
@@ -460,12 +444,10 @@ describe('Module screen', () => {
     expect(await screen.findByText('exercise probe')).toBeInTheDocument();
   });
 
-  // ── Pending Module (#28): Module 1 passed, Module 2 unlocked but its
-  // content pack not authored — the placeholder state, never broken/blank.
+  // ── Pending Module (#28): Module 2 is open like every other Module, but
+  // its content pack is not authored — the placeholder state, never blank.
   it('renders the pending placeholder blocks with the prototype copy (#28)', async () => {
-    await renderAt('/modules/m02', [
-      { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
-    ]);
+    await renderAt('/modules/m02');
 
     // Header stays fully real: kicker, title, ghost back.
     expect(await screen.findByText('Module 02')).toBeInTheDocument();
@@ -568,7 +550,7 @@ describe('Module screen', () => {
 
   it('persists a pick without any button, and restores it on a revisit', async () => {
     const progress = await createProgress();
-    const { unmount } = await renderAt('/modules/m01', [], progress);
+    const { unmount } = await renderAt('/modules/m01', progress);
     await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
     fireEvent.click(screen.getAllByRole('radio')[1]!);
@@ -578,14 +560,14 @@ describe('Module screen', () => {
 
     // A reload of the same Module, same browser: the pick comes back.
     unmount();
-    await renderAt('/modules/m01', [], progress);
+    await renderAt('/modules/m01', progress);
     await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
     expect(screen.getAllByRole('radio')[1]!).toBeChecked();
   });
 
   it('answering changes nothing outside the Self-Check panel (#157)', async () => {
     const progress = await createProgress();
-    const { container } = await renderAt('/modules/m01', [], progress);
+    const { container } = await renderAt('/modules/m01', progress);
     await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
     const outside = () => {
@@ -647,9 +629,7 @@ describe('Module screen', () => {
   // docs/ubiquitous-language.md § Removed terms: the gated-course vocabulary
   // this screen carried on every state until #157.
   it('names no removed term anywhere on the screen (#157)', async () => {
-    const { container } = await renderAt('/modules/m01', [
-      { moduleId: 'm01', passedAt: '2026-06-12T09:41:00.000Z' },
-    ]);
+    const { container } = await renderAt('/modules/m01');
     await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
     const text = container.textContent ?? '';
@@ -689,7 +669,7 @@ describe('Module content that will not load (#69)', () => {
   });
 
   it('says the content is not available instead of rendering nothing', async () => {
-    const { container } = await renderAt('/modules/m01', [], undefined, offlineSource());
+    const { container } = await renderAt('/modules/m01', undefined, offlineSource());
 
     const notice = await screen.findByRole('alert');
     expect(
@@ -710,7 +690,7 @@ describe('Module content that will not load (#69)', () => {
   });
 
   it('is a screen with an outline: the notice title is the h1 (#94)', async () => {
-    const { container } = await renderAt('/modules/m01', [], undefined, offlineSource());
+    const { container } = await renderAt('/modules/m01', undefined, offlineSource());
     await screen.findByRole('alert');
 
     // The failure state is the whole screen, so its title is the only
@@ -723,7 +703,7 @@ describe('Module content that will not load (#69)', () => {
   });
 
   it('keeps the Curriculum back link — never a dead end', async () => {
-    await renderAt('/modules/m01', [], undefined, offlineSource());
+    await renderAt('/modules/m01', undefined, offlineSource());
     await screen.findByRole('alert');
 
     fireEvent.click(screen.getByRole('link', { name: 'Curriculum' }));
@@ -732,7 +712,7 @@ describe('Module content that will not load (#69)', () => {
   });
 
   it('loads the Module on Try again once the fetch succeeds — no reload', async () => {
-    await renderAt('/modules/m01', [], undefined, offlineSource(1));
+    await renderAt('/modules/m01', undefined, offlineSource(1));
     await screen.findByRole('alert');
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
@@ -754,7 +734,7 @@ describe('Module content that will not load (#69)', () => {
   });
 
   it('still logs the failure for whoever is looking at the console', async () => {
-    await renderAt('/modules/m01', [], undefined, offlineSource());
+    await renderAt('/modules/m01', undefined, offlineSource());
     await screen.findByRole('alert');
 
     expect(console.error).toHaveBeenCalledWith(
@@ -764,7 +744,7 @@ describe('Module content that will not load (#69)', () => {
   });
 
   it('uses no banned terms (docs/ubiquitous-language.md § Banned)', async () => {
-    const { container } = await renderAt('/modules/m01', [], undefined, offlineSource());
+    const { container } = await renderAt('/modules/m01', undefined, offlineSource());
     await screen.findByRole('alert');
 
     expect(container.textContent ?? '').not.toMatch(
