@@ -81,7 +81,7 @@ The screen is exactly four things: **header, Exercise Spec grid (Concept / Smell
 Screen-local state maps 1:1 onto the **two** Target Interfaces (`docs/engineering.md` § 2), both async, absence always `null`:
 - `ICurriculum.getModules()` — Curriculum rows, ordinal order. Id, ordinal, title, description, pending: the authored index entry and nothing about the reader (#158).
 - `ICurriculum.getModule(id)` — Concept Page, Model Examples, Exercise briefs, and the three checklist questions.
-- `IProgress` — the Self-Check drafts. (Its stored Checkpoints and submissions are the last of the gated-course model; no screen reads them, and #159 is where they go.)
+- `IProgress` — the Self-Check answers, one record per Module, and nothing else: `saveSelfCheckAnswers` / `getSelfCheckAnswers` plus `exportState` / `importState` for the backup file (#159). The gated-course model's records went with the `kata` database it kept them in; the app opens `kata-v2` and deletes the old one on the first load.
 
 The two Target Interfaces do not touch each other: `createCurriculum(content)` reads no progress data, so there is nothing to derive per reader (#158). Compute nothing else client-side, and never persist it.
 

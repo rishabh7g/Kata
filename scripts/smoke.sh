@@ -221,6 +221,12 @@ elif get "$JS_URL" "$WORK/app.js"; then
   has "$WORK/app.js" 'curriculum-backup' 'the progress backup footer (#29)'
   has "$WORK/app.js" 'kata-progress.json' 'the backup file name (#29)'
   has "$WORK/app.js" 'replace current progress?' 'the import confirm summary (#29)'
+  # The v2 store (#159): Self-Check answers are the only thing Kata persists,
+  # so the deployed bundle opens the v2 database, and the noun the confirm
+  # used to count is gone from the pack with the records it counted.
+  has "$WORK/app.js" 'kata-v2' 'the v2 progress database (#159)'
+  has "$WORK/app.js" '{selfChecks} — replace current progress?' 'the confirm summary counting Self-Checks (#159)'
+  lacks "$WORK/app.js" 'Checkpoint' 'the removed Checkpoint noun (#159)'
 fi
 end
 

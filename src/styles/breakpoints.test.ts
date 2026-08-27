@@ -71,7 +71,7 @@ describe('the breakpoint set (#103)', () => {
   });
 
   it('gives the Exercise screen no second column to reflow (#157)', () => {
-    // The Exercise body lost its 400px aside with the Behavioral Checklist:
+    // The Exercise body lost its 400px aside with the gated model (#157):
     // one column at every width, so there is no grid left to break at 1024.
     expect(appCss).not.toMatch(/\.exercise-body/);
     expect(appCss).not.toMatch(/1fr 400px/);

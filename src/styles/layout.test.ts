@@ -52,7 +52,7 @@ describe('the app shell (#104)', () => {
 
   it('the Module aside still pins against a scroll container', () => {
     // The one aside left (#157): the Self-Check beside the Concept Page. The
-    // Exercise screen's 400px column went with the Behavioral Checklist.
+    // Exercise screen's 400px column went with the gated model (#157).
     const moduleAside = /\.module-aside\s*\{([\s\S]*?)\}/.exec(appCss)?.[1] ?? '';
     expect(moduleAside).toMatch(/position:\s*sticky/);
     expect(appCss).not.toMatch(/\.exercise-aside/);

@@ -140,7 +140,7 @@ html, body {
 
 /* ── Notice (#68) — the app's one failure panel ───────────────────────────
    A 2px-rule panel (tokens.json layout.rules.major), the same quiet framing
-   as the Exit Gate and backup panels, capped at the prose measure. Any
+   as the backup panel, capped at the prose measure. Any
    screen can raise one (src/app/Notice.tsx). */
 .app-notice {
   border: 2px solid var(--color-divider);
@@ -355,9 +355,8 @@ a.curriculum-row:hover {
 }
 
 /* ── Module screen (#11, #12) — design/README.md § Screens › 2 ────────────
-   Header block, Concept Page prose, the Model Examples grid, and the
-   Exercise cards. The Exit Gate aside lands with #13 — the empty aside
-   column keeps the body grid honest from day one. */
+   Header block, Concept Page prose, the Model Examples grid, the Exercise
+   cards, and the Self-Check aside beside them (#157). */
 
 /* Ghost back button above the header (prototype: header sits 20px below). */
 .module-back {
@@ -367,7 +366,7 @@ a.curriculum-row:hover {
 /* Header: title block and status tag on the shared baseline, no rule under
    it — the first .hr belongs to the sections (prototype § Module). */
 /* Kicker over title, nothing beside them: the status tag the header used to
-   balance on its baseline went with the Exit Gate (#157), and with it the
+   balance on its baseline went with the gated model (#157), and with it the
    flex row that placed it. */
 .module-header {
   padding-bottom: 8px;
@@ -605,7 +604,7 @@ a.curriculum-row:hover {
 /* ── Exercise screen (#15) — design/README.md § Screens › 3 ───────────────
    Header, the Exercise Spec grid, the immutable Target Interface block, and
    the practice-material link — one column, top to bottom. The 400px aside
-   went with the Behavioral Checklist (#157): the Module's questions are its
+   went with the gated model's questions (#157): they are the Module's
    Self-Check now, answered on the Module screen, and nothing else ever sat
    in that column. */
 

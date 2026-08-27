@@ -10,8 +10,8 @@ import { interpolate, useStrings } from '../strings/strings';
  * so there is no Kata to run without it — but a blank page tells the learner
  * nothing, and the browser is the only place that can fix it.
  *
- * It carries the shell's own chrome (nav lockup, container) minus the
- * Checkpoint count, which is exactly the number nobody can read right now.
+ * It carries the shell's own chrome (nav lockup, container) and nothing
+ * that would need the storage nobody can read right now.
  * No router and no contexts: this renders when the bootstrap never got far
  * enough to build them.
  */

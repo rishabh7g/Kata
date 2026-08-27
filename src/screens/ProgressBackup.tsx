@@ -17,9 +17,10 @@ import { interpolate, useStrings } from '../strings/strings';
  * verbatim); import parses + validates the picked file (progress/backup.ts),
  * always shows a confirm summary before overwriting, and only then calls
  * importState — invalid or foreign JSON shows an error line and changes
- * nothing. After a confirmed import the screen re-navigates to `/` so the
- * always-mounted nav count and the rows' lock chain re-read the new state
- * (useModuleSummaries refetches per location.key, #18).
+ * nothing. What the file holds is the reader's Self-Check answers and nothing
+ * else (#159), so that is what the confirm and the announcement count. After
+ * a confirmed import the screen re-navigates to `/` so the rows re-read the
+ * new state (useModuleSummaries refetches per location.key, #18).
  *
  * The confirm is the one destructive step in Kata, and it says `alertdialog`,
  * so it behaves like one (#78): opening it moves focus into it, Escape and
@@ -110,10 +111,9 @@ export function ProgressBackup() {
       setPendingImport(null);
       setAnnouncement(
         interpolate(s['backup.importReplacedAnnouncement'], {
-          checkpoints: count(pendingImport.checkpoints.length, s['backup.checkpointNoun']),
-          checklists: count(
-            pendingImport.submittedChecklists.length,
-            s['backup.checklistNoun'],
+          selfChecks: count(
+            pendingImport.selfCheckAnswers.length,
+            s['backup.selfCheckNoun'],
           ),
         }),
       );
@@ -177,10 +177,9 @@ export function ProgressBackup() {
         >
           <p className="curriculum-backup-summary" id={SUMMARY_ID}>
             {interpolate(s['backup.confirmSummary'], {
-              checkpoints: count(pendingImport.checkpoints.length, s['backup.checkpointNoun']),
-              checklists: count(
-                pendingImport.submittedChecklists.length,
-                s['backup.checklistNoun'],
+              selfChecks: count(
+                pendingImport.selfCheckAnswers.length,
+                s['backup.selfCheckNoun'],
               ),
             })}
           </p>

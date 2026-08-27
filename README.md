@@ -19,7 +19,7 @@ or grades anywhere in the system.
 | Doc | What it is |
 |---|---|
 | [`docs/design.md`](docs/design.md) | Product intent — the one principle, pedagogy, the editorial standard every Concept Page meets, Categories and Modules, non-goals |
-| [`docs/engineering.md`](docs/engineering.md) | Architecture, the two Target Interfaces (`ICurriculum`, `IProgress`), content schema, storage, build order — still describes the pre-Library contract; it is re-cut with the code issues that re-copy it |
+| [`docs/engineering.md`](docs/engineering.md) | Architecture, the two Target Interfaces (`ICurriculum`, `IProgress`), content schema, storage, build order — normative: its § 2 code block is the single source the code copies |
 | [`docs/ubiquitous-language.md`](docs/ubiquitous-language.md) | Vocabulary contract — Library, Category, Module, Self-Check; every UI label uses these terms exactly |
 | [`design/README.md`](design/README.md) | Frontend design handoff spec — read before building any screen |
 | [`design/DevGym.dc.html`](design/DevGym.dc.html) | Interactive prototype (historical filename, visual reference only) — open in a browser as-is |

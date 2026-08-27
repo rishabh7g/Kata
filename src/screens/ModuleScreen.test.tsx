@@ -387,7 +387,7 @@ describe('Module screen', () => {
     // The old header tag flipped to `In progress` off exactly this draft
     // (#30). Answering is not a state the screen reports any more.
     const progress = await createProgress();
-    await progress.saveChecklistDraft('m01', { q1: 'a' });
+    await progress.saveSelfCheckAnswers('m01', { q1: 'a' });
 
     const { container } = await renderAt('/modules/m01', progress);
     await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
@@ -531,7 +531,7 @@ describe('Module screen', () => {
   });
 
   // ── The Self-Check aside (#157): the Module's optional questions, in the
-  // 350px column the Exit Gate panel used to hold.
+  // 350px column the gated model's panel used to hold.
   it('renders the three questions in the aside, unanswered and unsubmittable', async () => {
     const { container } = await renderAt('/modules/m01');
     await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
@@ -554,7 +554,7 @@ describe('Module screen', () => {
     await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
 
     fireEvent.click(screen.getAllByRole('radio')[1]!);
-    expect((await progress.getChecklistDraft('m01'))?.answers).toEqual({
+    expect((await progress.getSelfCheckAnswers('m01'))?.answers).toEqual({
       q1: 'b',
     });
 
@@ -593,9 +593,8 @@ describe('Module screen', () => {
     const { container } = await renderAt('/modules/m01');
     await screen.findByText('Model Examples');
 
-    // The read-once "Checkpoint-based — advance when the gate is passed…"
-    // reassurance note was deleted (#113): it carried no live data, was not
-    // an instruction, and guarded nothing.
+    // The read-once reassurance note about advancing was deleted (#113): it
+    // carried no live data, was not an instruction, and guarded nothing.
     const text = container.textContent ?? '';
     // Nothing calendar-shaped anywhere on the screen.
     expect(text).not.toMatch(/timeline|streak|schedule|deadline|per week/i);
@@ -642,7 +641,7 @@ describe('Module screen', () => {
 /**
  * The repro from #69: online once (so the app shell is precached), offline
  * before this Module was ever read. The index is in the service worker cache
- * — the nav still counts Checkpoints — but the content JSON is not, so its
+ * — so the Curriculum still renders — but the content JSON is not, so its
  * fetch rejects and `getModule` rejects with it.
  */
 function offlineSource(failures = Number.POSITIVE_INFINITY): ContentSource {
@@ -684,7 +683,7 @@ describe('Module content that will not load (#69)', () => {
     // The browser's own words for the failure.
     expect(notice).toHaveTextContent('TypeError: Failed to fetch');
     expect(notice).toHaveClass('app-notice');
-    // Nothing pretends the Module loaded: no header, no Exit Gate aside.
+    // Nothing pretends the Module loaded: no header, no aside.
     expect(container.querySelector('.module-header')).not.toBeInTheDocument();
     expect(container.querySelector('.module-aside')).not.toBeInTheDocument();
   });

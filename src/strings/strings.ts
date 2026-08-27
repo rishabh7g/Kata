@@ -86,10 +86,11 @@ export function useStrings(): Strings {
 const PLACEHOLDER = /\{([^{}]*)\}/g;
 
 /**
- * Fills a value's `{placeholders}` — `interpolate(s['gate.checkpointLine'], {
- * date }))`. A placeholder with no value is left VERBATIM (and warned), never
- * blanked: `{date}` on screen is ugly and fixable, while a silent gap reads
- * as finished copy that has quietly lost the data it was showing.
+ * Fills a value's `{placeholders}` — `interpolate(s['backup.confirmSummary'],
+ * { selfChecks })`. A placeholder with no value is left VERBATIM (and
+ * warned), never blanked: `{selfChecks}` on screen is ugly and fixable, while
+ * a silent gap reads as finished copy that has quietly lost the data it was
+ * showing.
  */
 export function interpolate(
   template: string,

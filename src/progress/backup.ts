@@ -1,17 +1,19 @@
 // The backup file (#29): `kata-progress.json` is ProgressState serialized as
-// JSON — Checkpoints + checklist answers + schemaVersion, nothing else. This
-// module owns the file shape at both ends: serialize for the download, and a
-// strict parse that rejects garbage/foreign JSON with a clear reason BEFORE
-// importState is ever called, so an invalid file changes nothing. The parse
-// also rebuilds every record from the documented fields only, so a
-// hand-edited file cannot smuggle extra keys into IndexedDB.
+// JSON — the reader's Self-Check answers and a schemaVersion, nothing else
+// (#159). This module owns the file shape at both ends: serialize for the
+// download, and a strict parse that rejects garbage/foreign JSON with a clear
+// reason BEFORE importState is ever called, so an invalid file changes
+// nothing. The parse also rebuilds every record from the documented fields
+// only, so a hand-edited file cannot smuggle extra keys into IndexedDB.
+//
+// v2 is the only shape read or written. A v1 file — the gated model's export,
+// carrying records the Library no longer has a store for — is rejected by the
+// same unknown-schemaVersion path as any other foreign JSON.
 import type {
-  ChecklistDraft,
-  Checkpoint,
   IsoDateTime,
-  PartialChecklistAnswers,
+  ModuleSelfCheck,
   ProgressState,
-  SubmittedChecklist,
+  SelfCheckAnswers,
 } from './contract';
 
 export const PROGRESS_FILE_NAME = 'kata-progress.json';
@@ -35,20 +37,18 @@ export function parseProgressState(text: string): ProgressState {
   if (!isRecord(data)) {
     throw new Error('the file is not a JSON object');
   }
-  if (data.schemaVersion !== 1) {
+  if (data.schemaVersion !== 2) {
     throw new Error(
-      `unknown schemaVersion ${JSON.stringify(data.schemaVersion ?? null)} (expected 1)`,
+      `unknown schemaVersion ${JSON.stringify(data.schemaVersion ?? null)} (expected 2)`,
     );
   }
   return {
-    schemaVersion: 1,
-    checkpoints: parseArray(data, 'checkpoints', parseCheckpoint),
-    submittedChecklists: parseArray(
+    schemaVersion: 2,
+    selfCheckAnswers: parseArray(
       data,
-      'submittedChecklists',
-      parseSubmittedChecklist,
+      'selfCheckAnswers',
+      parseModuleSelfCheck,
     ),
-    checklistDrafts: parseArray(data, 'checklistDrafts', parseChecklistDraft),
   };
 }
 
@@ -102,10 +102,7 @@ function requireIsoDateTime(
   return value;
 }
 
-function parseAnswers(
-  value: unknown,
-  where: string,
-): PartialChecklistAnswers {
+function parseAnswers(value: unknown, where: string): SelfCheckAnswers {
   if (!isRecord(value)) {
     throw new Error(`${where}: 'answers' is missing or not an object`);
   }
@@ -119,37 +116,11 @@ function parseAnswers(
   return answers;
 }
 
-function parseCheckpoint(value: unknown, where: string): Checkpoint {
+function parseModuleSelfCheck(value: unknown, where: string): ModuleSelfCheck {
   if (!isRecord(value)) throw new Error(`${where} is not an object`);
   return {
     moduleId: requireString(value, 'moduleId', where),
-    passedAt: requireIsoDateTime(value, 'passedAt', where),
-  };
-}
-
-function parseSubmittedChecklist(
-  value: unknown,
-  where: string,
-): SubmittedChecklist {
-  if (!isRecord(value)) throw new Error(`${where} is not an object`);
-  const answers = parseAnswers(value.answers, where);
-  // An export can never hold a submitted checklist without answers:
-  // submitChecklist refuses an empty submission.
-  if (Object.keys(answers).length === 0) {
-    throw new Error(`${where}: a submitted checklist has no answers`);
-  }
-  return {
-    moduleId: requireString(value, 'moduleId', where),
-    answers: answers as SubmittedChecklist['answers'],
-    submittedAt: requireIsoDateTime(value, 'submittedAt', where),
-  };
-}
-
-function parseChecklistDraft(value: unknown, where: string): ChecklistDraft {
-  if (!isRecord(value)) throw new Error(`${where} is not an object`);
-  return {
-    moduleId: requireString(value, 'moduleId', where),
-    // Drafts are autosaves and may be partial — even empty.
+    // Answers are autosaved picks and may be partial — even empty.
     answers: parseAnswers(value.answers, where),
     savedAt: requireIsoDateTime(value, 'savedAt', where),
   };

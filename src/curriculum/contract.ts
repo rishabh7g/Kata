@@ -10,7 +10,7 @@ export type ModuleId = string;
 /** Exercise id, unique app-wide, equal to its repo folder name: 'm01-e1'. */
 export type ExerciseId = string;
 
-/** Behavioral Checklist question id, unique within its Module: 'q1' … 'q3'. */
+/** Self-Check question id, unique within its Module: 'q1' … 'q3'. */
 export type ChecklistQuestionId = string;
 
 /** ISO-8601 instant in UTC, e.g. '2026-08-12T09:41:00.000Z'. */
@@ -74,46 +74,25 @@ export interface ModuleContent {
   ]; // exactly 3
 }
 
-// ── Learner progress (the only data Kata ever persists) ──────────────────
+// ── Reader answers (the only data Kata ever persists) ────────────────────
 
-export interface Checkpoint {
-  readonly moduleId: ModuleId;
-  readonly passedAt: IsoDateTime; // written once at the pass; never updated
-}
-
-/** Complete answers: one chosen option value per checklist question id. */
-export type ChecklistAnswers = Readonly<Record<ChecklistQuestionId, string>>;
-
-/** Autosaved answers, possibly incomplete. Never part of the Exit Gate. */
-export type PartialChecklistAnswers = Readonly<
+/** A Module's Self-Check picks: one option value per question id. Always
+ *  partial — none, some, or all three answered are equally normal. */
+export type SelfCheckAnswers = Readonly<
   Partial<Record<ChecklistQuestionId, string>>
 >;
 
-export interface SubmittedChecklist {
+/** One Module's stored Self-Check answers; at most one record per Module. */
+export interface ModuleSelfCheck {
   readonly moduleId: ModuleId;
-  readonly answers: ChecklistAnswers;
-  readonly submittedAt: IsoDateTime;
-}
-
-export interface ChecklistDraft {
-  readonly moduleId: ModuleId;
-  readonly answers: PartialChecklistAnswers;
-  readonly savedAt: IsoDateTime;
-}
-
-export interface GateStatus {
-  readonly moduleId: ModuleId;
-  readonly passed: boolean; // true iff the Behavioral Checklist is submitted
-  readonly checklistSubmittedAt: IsoDateTime | null;
-  readonly checkpointAt: IsoDateTime | null; // null while the gate is not passed
+  readonly answers: SelfCheckAnswers;
+  readonly savedAt: IsoDateTime; // when the last pick was autosaved
 }
 
 /** The whole persisted state, in one value: backup file and test fixture. */
 export interface ProgressState {
-  readonly schemaVersion: 1;
-  readonly checkpoints: readonly Checkpoint[];
-  readonly submittedChecklists: readonly SubmittedChecklist[];
-  readonly checklistDrafts: readonly ChecklistDraft[];
+  readonly schemaVersion: 2;
+  readonly selfCheckAnswers: readonly ModuleSelfCheck[];
 }
 
 // ── What ICurriculum hands to the screens ────────────────────────────────
@@ -156,21 +135,13 @@ export declare function createCurriculum(content: ContentSource): ICurriculum;
 // ── Target Interface 2 of 2: IProgress ───────────────────────────────────
 
 export interface IProgress {
-  /** Passes the Exit Gate and writes this Module's one Checkpoint. */
-  submitChecklist(
+  /** Autosave of a Module's Self-Check picks; replaces what was stored. */
+  saveSelfCheckAnswers(
     moduleId: ModuleId,
-    answers: ChecklistAnswers,
-  ): Promise<GateStatus>;
-  /** Autosave of unsubmitted answers. Never affects the Exit Gate. */
-  saveChecklistDraft(
-    moduleId: ModuleId,
-    partialAnswers: PartialChecklistAnswers,
+    answers: SelfCheckAnswers,
   ): Promise<void>;
-  getChecklistDraft(moduleId: ModuleId): Promise<ChecklistDraft | null>;
-  getSubmittedChecklist(moduleId: ModuleId): Promise<SubmittedChecklist | null>;
-  getGateStatus(moduleId: ModuleId): Promise<GateStatus>;
-  listCheckpoints(): Promise<readonly Checkpoint[]>;
-  getCheckpoint(moduleId: ModuleId): Promise<Checkpoint | null>;
+  /** One Module's stored answers; null when that Module has none. */
+  getSelfCheckAnswers(moduleId: ModuleId): Promise<ModuleSelfCheck | null>;
   /** Whole state out, for the backup file and for test fixtures. */
   exportState(): Promise<ProgressState>;
   /** Whole state in: replaces everything stored. All-or-nothing. */

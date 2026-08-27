@@ -1,26 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useProgress } from '../app/ProgressContext';
 import type { ChecklistQuestion } from '../curriculum';
-import type { PartialChecklistAnswers } from '../progress';
+import type { SelfCheckAnswers } from '../progress';
 import { useStrings } from '../strings/strings';
 
 /**
  * The Self-Check panel — a Module's optional questions, answered in place
  * while reading (docs/ubiquitous-language.md § Self-Check, #157).
  *
- * It is the same three questions the Behavioral Checklist used to carry, with
- * the purpose flipped: nothing is sent, nothing is judged, nothing is
- * recorded but the answers themselves. So there is no submit control, no
- * submitted state, no completeness rule and no state text — picking an option
- * writes it and changes nothing else on the screen.
+ * It is the same three questions the gated model asked, with the purpose
+ * flipped: nothing is sent, nothing is judged, nothing is recorded but the
+ * answers themselves. So there is no control to send them, no sent state, no
+ * completeness rule and no state text — picking an option writes it and
+ * changes nothing else on the screen.
  *
  * Per Module, not per Exercise: it lives on the Module screen, beside the
  * prose it belongs to, and is the only place these questions are reachable
  * (the interaction-depth question, design/issue-guide.md).
  *
  * Every write still goes through IProgress: picking an option autosaves the
- * draft (`saveChecklistDraft`), and the picks restore from it on the next
- * visit. The contract's names still say "checklist" — renaming them is #159's.
+ * Module's answers (`saveSelfCheckAnswers`), and the picks restore from them
+ * on the next visit — the only data Kata persists at all (#159).
  */
 export function SelfCheck({
   moduleId,
@@ -33,17 +33,15 @@ export function SelfCheck({
   const progress = useProgress();
   // undefined = the stored answers are still loading; render nothing rather
   // than flash three empty questions over answers that exist.
-  const [picks, setPicks] = useState<PartialChecklistAnswers | undefined>(
-    undefined,
-  );
+  const [picks, setPicks] = useState<SelfCheckAnswers | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
     setPicks(undefined);
     progress
-      .getChecklistDraft(moduleId)
-      .then((draft) => {
-        if (!cancelled) setPicks(draft?.answers ?? {});
+      .getSelfCheckAnswers(moduleId)
+      .then((stored) => {
+        if (!cancelled) setPicks(stored?.answers ?? {});
       })
       .catch((error: unknown) => {
         // IndexedDB refusing to open is the only real cause; nothing sensible
@@ -101,7 +99,7 @@ export function SelfCheck({
                       // condition for anything, so a lost write costs at most
                       // re-picking a radio.
                       progress
-                        .saveChecklistDraft(moduleId, next)
+                        .saveSelfCheckAnswers(moduleId, next)
                         .catch((error: unknown) => {
                           console.error(
                             `Failed to save the Self-Check answer for ${moduleId}`,
