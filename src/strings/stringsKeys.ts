@@ -217,7 +217,8 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'exercise.sectionLabel.practiceMaterial': [],
   'exercise.practiceMaterial.pending': [],
   'exercise.practiceMaterial.linkLabel': [],
-  'exercise.practiceMaterial.noteBefore': [],
+  /** The reader's name for the Category's language — `C#`, `Python` (#164). */
+  'exercise.practiceMaterial.noteBefore': ['{language}'],
   'exercise.practiceMaterial.noteAfter': [],
 
   'backup.exportLabel': [],

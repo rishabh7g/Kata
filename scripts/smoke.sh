@@ -206,9 +206,16 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # C# block, so its class is the whole surface to check.
   has "$WORK/app.js" 'exercise-interface-definition' 'the Target Interface definition (#136)'
   # The practice-material prerequisites (#141): the note's class shipped with
-  # #15, so the clause naming the .NET SDK is what proves the two facts a
-  # learner needs BEFORE cloning are live in the deployed pack.
-  has "$WORK/app.js" 'needs the .NET SDK installed on your own machine' 'the practice-material prerequisite note (#141)'
+  # #15, so the clause naming the toolchain is what proves the two facts a
+  # learner needs BEFORE cloning are live in the deployed pack. Since #164 the
+  # clause is a template — {language} and the command below both follow the
+  # Module's Category language.
+  has "$WORK/app.js" 'needs the {language} toolchain installed on your own machine' 'the practice-material prerequisite note (#141, #164)'
+  # Both commands ship (#164): `dotnet test` alone would still be there with
+  # the command hardcoded, so `pytest` in the deployed bundle is what proves
+  # the language table — not the screen — decides what a learner runs.
+  has "$WORK/app.js" 'dotnet test' 'the C# practice command (#164)'
+  has "$WORK/app.js" 'pytest' 'the Python practice command (#164)'
   # Nothing is submitted and nothing is passed (#157): the submit action, the
   # gate panels, the poster and the Exercise banner all left the pack, so
   # their absence is what proves the deployed build is the un-gated one.

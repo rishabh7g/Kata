@@ -150,16 +150,22 @@ const en = {
       // clause (design/issue-guide.md § UI copy ban list): nothing else on
       // the screen tells the learner how to get the Test Suite running, and
       // the two facts that decide whether it runs at all lived nowhere the
-      // learner could read them BEFORE cloning. The .NET SDK is theirs to
-      // install (Kata never runs anything, so a missing SDK is silence with
-      // no explanation on screen), and `dotnet test` only works from the
+      // learner could read them BEFORE cloning. The toolchain is theirs to
+      // install (Kata never runs anything, so a missing one is silence with
+      // no explanation on screen), and the command only works from the
       // Exercise folder's `tests/` directory — a fact that until now
       // appeared solely in the cloned folder's own README, one step too
       // late. Split around the one inline `<code>` the note carries;
-      // `tests/` stays prose so the shell keeps exactly one allowed literal
-      // (`src/shellPurity.test.ts` § ALLOWED_LITERALS).
+      // `tests/` stays prose.
+      //
+      // {language} and the command both follow the Module's Category
+      // language (#164): naming the .NET SDK outright was true only while
+      // every Category was C#, and would be a false prerequisite on the
+      // first Python Module. One sentence, two substitutions — the reader's
+      // name for the language from `LANGUAGE_LABEL_KEY`, the command itself
+      // from `LANGUAGE_TEST_COMMAND` (`src/strings/language.ts`).
       noteBefore:
-        "Clone or copy the folder and review its Test Suite before starting. Running the Test Suite needs the .NET SDK installed on your own machine — from the Exercise folder's tests/ directory, run",
+        "Clone or copy the folder and review its Test Suite before starting. Running the Test Suite needs the {language} toolchain installed on your own machine — from the Exercise folder's tests/ directory, run",
       noteAfter: 'in your own IDE.',
     },
   },
