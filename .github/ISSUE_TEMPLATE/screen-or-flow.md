@@ -21,8 +21,8 @@ The exact slice: screen, states covered, data source (which Target Interface / I
 **Kata's UI copy ban list** — words and constructions this app does not ship
 (source: `design/issue-guide.md` § UI copy ban list; the two must not disagree):
 
-- *streak*, *daily goal*, *days left*, *% complete*, *XP*, *score* — Kata is
-  checkpoint-based and says so; none of these exist in its model.
+- *streak*, *daily goal*, *days left*, *% complete*, *XP*, *score* — Kata is a
+  self-paced Library and says so; none of these exist in its model.
 - *just*, *simply*, *easy* — reassurance words in instructional copy.
 - Any string implying the app judges the learner's code. Kata is read-only
   and never runs anything.
@@ -46,7 +46,7 @@ question is the only gate it has.
 
 ## Acceptance criteria
 - [ ] Behavioral, checkable statements only (design/issue-guide.md ground rule 3)
-- [ ] Include the negative cases (locked, empty, pending)
+- [ ] Include the negative cases (empty, unanswered, pending)
 - [ ] No copy from the ban list above; any new copy passes the keeper test
 - [ ] A scripts/smoke.sh line for any new route, asset, or content file
 

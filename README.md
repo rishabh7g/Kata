@@ -1,28 +1,29 @@
 # Kata
 
-A personal app for learning software design fundamentals through authored C#
-exercises. Three screens only — Curriculum → Module → Exercise — with no
-in-browser editor: a read-only React (Vite, TypeScript) PWA served as static
-files from GitHub Pages, reading content committed to this repo and keeping the
-learner's progress in the browser's IndexedDB. No backend, no accounts, and no
-code execution — the learner clones an Exercise folder and runs `dotnet test`
-in their own IDE.
+A personal, self-paced Library for learning software design fundamentals, written
+under one principle: **explain it to me like a novice**. Three screens only —
+Curriculum → Module → Exercise — with no in-browser editor: a read-only React
+(Vite, TypeScript) PWA served as static files from GitHub Pages, reading content
+committed to this repo and keeping the learner's Self-Check answers in the
+browser's IndexedDB. No backend, no accounts, and no code execution — the
+learner clones an Exercise folder and runs its tests in their own IDE.
 
-Progression is Checkpoint-based. A Module's Exit Gate opens on one thing:
-Behavioral Checklist submitted — the sole condition, self-assessed. Passing
-records a Checkpoint and unlocks the next Module. There are no timelines,
-streaks, schedules, scores, or grades anywhere in the system.
+Every Module is open from the first visit. Nothing is submitted, nothing is
+judged, and nothing unlocks: a Module's questions are an optional Self-Check
+answered while reading and autosaved in place. Stored progress is the
+Self-Check answers and nothing else — no timelines, streaks, schedules, scores,
+or grades anywhere in the system.
 
 ## Start here
 
 | Doc | What it is |
 |---|---|
-| [`docs/design.md`](docs/design.md) | Product intent — thesis, pedagogy, curriculum, non-goals |
-| [`docs/engineering.md`](docs/engineering.md) | Architecture, the two Target Interfaces (`ICurriculum`, `IProgress`), content schema, storage, build order |
-| [`docs/ubiquitous-language.md`](docs/ubiquitous-language.md) | Vocabulary contract — every UI label uses these terms exactly |
+| [`docs/design.md`](docs/design.md) | Product intent — the one principle, pedagogy, the editorial standard every Concept Page meets, Categories and Modules, non-goals |
+| [`docs/engineering.md`](docs/engineering.md) | Architecture, the two Target Interfaces (`ICurriculum`, `IProgress`), content schema, storage, build order — still describes the pre-Library contract; it is re-cut with the code issues that re-copy it |
+| [`docs/ubiquitous-language.md`](docs/ubiquitous-language.md) | Vocabulary contract — Library, Category, Module, Self-Check; every UI label uses these terms exactly |
 | [`design/README.md`](design/README.md) | Frontend design handoff spec — read before building any screen |
 | [`design/DevGym.dc.html`](design/DevGym.dc.html) | Interactive prototype (historical filename, visual reference only) — open in a browser as-is |
-| [`design/screens/`](design/screens/) | Captured states 01–06 (Curriculum, Module, Exercise) |
+| [`design/screens/`](design/screens/) | Captured states 01–06 (Curriculum, Module, Exercise) — historical: taken before the Library reframe |
 | [`design/issue-guide.md`](design/issue-guide.md) | How to write issues against this design |
 | [`design/tokens.json`](design/tokens.json) + [`design/styles.css`](design/styles.css) | Design tokens and the shipping stylesheet |
 
@@ -44,18 +45,22 @@ Every push to `main` runs the same steps in
 
 ## Status
 
-All three screens are live on GitHub Pages. Curriculum lists the five Modules
-with the lock chain; Module carries its Concept Page, Model Examples and
-Exercises; Exercise shows the Exercise Spec, the immutable Target Interface, the
-link to the committed practice folder, and the Module's Behavioral Checklist.
-All five Modules are authored — a Concept Page, three Model Examples, and two
-Exercises whose folder and Test Suite are committed under `exercises/`.
+All three screens are live on GitHub Pages. Curriculum lists the Modules, all of
+them open to read; Module carries its Concept Page, Model Examples, Self-Check
+and Exercises; Exercise shows the Exercise Spec, the immutable Target Interface,
+and the link to the committed practice folder. All five Software Design Modules
+are authored — a Concept Page, three Model Examples, and two Exercises whose
+folder and Test Suite are committed under `exercises/`.
 
-The progression loop closes: submitting a Module's Behavioral Checklist opens
-its Exit Gate — self-assessed, the sole condition — records a Checkpoint, and
-unlocks the next Module. Progress is kept in this browser's IndexedDB, and
-export/import moves it to a file and back. It is an installable PWA — the shell
-is precached, so it loads and renders offline.
+Reading is never blocked: nothing is submitted, nothing is judged, and no Module
+waits on another. The only thing the app stores is the reader's Self-Check
+answers, autosaved in this browser's IndexedDB, and export/import moves them to
+a file and back. It is an installable PWA — the shell is precached, so it loads
+and renders offline.
+
+The Library reframe lands doc-first (`design/issue-guide.md` ground rule 5): the
+docs above are the contract, and the screens, contracts and content are being
+brought to it one issue at a time.
 
 ## Naming
 
