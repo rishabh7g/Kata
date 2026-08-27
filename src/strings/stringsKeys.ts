@@ -53,14 +53,15 @@ export const STRINGS_KEYS = [
   'notice.moduleUnavailable.body2',
   'notice.moduleUnavailable.retry',
 
-  // The back link every drill-down screen offers to the Curriculum, and the
-  // nav's live Checkpoint count (#18).
+  // The back link every drill-down screen offers to the Curriculum. The nav's
+  // live Checkpoint count went with the lock chain (#156): the Library never
+  // measures the reader, so permanent chrome has nothing to count.
   'shell.backToCurriculum',
-  'shell.checkpointCount',
 
-  // The three status tags shared verbatim by the Curriculum rows and the
-  // Module header, and the Checkpoint date line shared by the Curriculum
-  // rows and the Module poster.
+  // The status tags. `inProgress` and `readyToStart` are shared verbatim by
+  // the Curriculum rows and the Module header; `gatePassed` and the
+  // Checkpoint date line are the Module screen's alone since the Curriculum
+  // rows dropped their passed decorations (#156).
   'status.gatePassed',
   'status.inProgress',
   'status.readyToStart',
@@ -80,7 +81,9 @@ export const STRINGS_KEYS = [
   'curriculum.orientation.module',
   'curriculum.orientation.ownIde',
   'curriculum.orientation.browserOnly',
-  'curriculum.row.locked',
+  // `curriculum.row.locked` — the reason an inert row was inert — went with
+  // the rows' lock states (#156): every row is a link, so there is no reason
+  // left to give.
 
   // Module screen.
   'module.ordinalLabel',
@@ -101,8 +104,8 @@ export const STRINGS_KEYS = [
   'gate.label',
   // The two definitions the panel carries (#135) — what an Exit Gate is and
   // what a Checkpoint is, kept by the keeper test's fourth clause: the first
-  // use of two terms the UI then uses as labels (the nav's Checkpoint count,
-  // the `Exit Gate passed` tag, `Checkpoint · {date}`).
+  // use of two terms the UI then uses as labels (the `Exit Gate passed` tag,
+  // `Checkpoint · {date}`).
   'gate.definition',
   'gate.checkpointDefinition',
   'gate.passedLine',
@@ -194,8 +197,6 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'notice.moduleUnavailable.retry': [],
 
   'shell.backToCurriculum': [],
-  /** Checkpoints recorded / total Modules — counted, never a percentage. */
-  'shell.checkpointCount': ['{passed}', '{total}'],
 
   'status.gatePassed': [],
   'status.inProgress': [],
@@ -207,7 +208,6 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'curriculum.orientation.module': [],
   'curriculum.orientation.ownIde': [],
   'curriculum.orientation.browserOnly': [],
-  'curriculum.row.locked': [],
 
   /** The zero-padded ordinal — `Module {ordinal}` reads `Module 03`. */
   'module.ordinalLabel': ['{ordinal}'],

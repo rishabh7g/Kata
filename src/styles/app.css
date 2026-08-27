@@ -84,14 +84,6 @@ html, body {
   font-size: 18px;
 }
 
-/* design/README.md § Brand: CHECKPOINTS n / 5 — 12px uppercase, 55% ink
-   (the 55% comes from .text-muted in design/styles.css). */
-.app-nav-checkpoints {
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 /* The one scroll area (#104): min-height: 0 is load-bearing — without it a
    flex child refuses to scroll and grows instead. overscroll-behavior:
    contain means no pull-to-refresh and no scroll chaining out of the app. */
@@ -250,15 +242,9 @@ html, body {
   text-decoration: none;
 }
 
-/* Unlocked rows only: the 4%-ink hover tint. */
+/* The 4%-ink hover tint. Every row is a link (#156), so this is every row. */
 a.curriculum-row:hover {
   background: color-mix(in srgb, var(--color-text) 4%, transparent);
-}
-
-/* tokens.json semantics.locked: 0.5 opacity, lock icon, cursor not-allowed. */
-.curriculum-row-locked {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* tokens.json typeScale.app.moduleOrdinal: 30 / 800 / -0.02em. */
@@ -286,25 +272,6 @@ a.curriculum-row:hover {
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-}
-
-/* The locked row's reason, visible in the status column (#140). It used to be
-   `.visually-hidden`, so only a screen reader was told why the row is inert —
-   this is the same string, in the same column, now on screen for everyone.
-   Body-text size (the 16px floor, #108) and it deliberately does NOT take
-   `.text-muted`: the row already sits at 0.5 opacity (tokens.json
-   semantics.locked), and muted ink under that opacity is no longer legible —
-   full ink at 0.5 is. It wraps inside the existing 230px status column and,
-   at <= 767px, inside that column's reflowed slot under the text cell, so the
-   row grid (104px 1fr 230px 36px / 56px 1fr 36px) is untouched. */
-.curriculum-row-locked-reason {
-  font-size: 16px;
-  max-width: 34ch;
-}
-
-/* tokens.json typeScale.app.caption: raised to the 16px body-text floor (#108). */
-.curriculum-checkpoint-date {
-  font-size: 16px;
 }
 
 .curriculum-row-icon {

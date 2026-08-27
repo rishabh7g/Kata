@@ -30,7 +30,6 @@ const en = {
 
   shell: {
     backToCurriculum: 'Curriculum',
-    checkpointCount: 'Checkpoints {passed} / {total}',
   },
 
   status: {
@@ -76,9 +75,6 @@ const en = {
       ownIde:
         'You write and run the C# in your own IDE. Kata never runs or sees your code.',
       browserOnly: 'Your progress is stored in this browser only.',
-    },
-    row: {
-      locked: "Locked — pass the previous Module's Exit Gate to unlock it.",
     },
   },
 

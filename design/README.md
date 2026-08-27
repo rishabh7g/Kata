@@ -21,7 +21,7 @@ Every string the app renders clears **WCAG 2.1 AA (SC 1.4.3)** against the backg
 - **4.5:1** for body text — anything under 18.66px/700 or 24px.
 - **3:1** for large text (≥ 24px, or ≥ 18.66px at weight 700).
 - **3:1 for meaningful non-text (SC 1.4.11)** — not just the focus ring: every icon or marker that *is* the state it reports answers to this, and so does every **form control's indicator**. The Exit Gate's empty square is what says "not yet submitted", so it clears 3:1 the same way the ring does; drawn in `neutral-400` it read **1.80:1** (#93). The Behavioral Checklist's radio dot is the control — the `input` behind it is 0×0 — and unanswered, in `--color-divider`, it read **2.41:1** (#97). Both take `--color-text-muted`.
-- **Only two exemptions,** both WCAG's own: text inside an *inactive* component (a locked Curriculum row at 0.5 opacity, a disabled button), and purely decorative rules and dividers — `--color-divider` draws those, and only those.
+- **Only two exemptions,** both WCAG's own: text inside an *inactive* component (a disabled button), and purely decorative rules and dividers — `--color-divider` draws those, and only those.
 
 So:
 
@@ -34,7 +34,7 @@ A new token that carries text — or that draws an icon or marker with a meaning
 ## Brand
 - **Name: Kata** — the owner's decision, chosen from the three brand explorations in `design/brand/` (DevGym · Praxis · Kata). `brand/Brand Kata.dc.html` is the adopted brand card.
 - **Mark:** `assets/kata-mark.svg` — three steps climbing (ink) to an accent square: the TDD speed limit, the accent square is the gate passed. Ink + accent only; never recolor, never round.
-- **Nav lockup:** 18px mark + "Kata" in Archivo 800 / 18px, flush left. Right side: `CHECKPOINTS n / 5` in 12px uppercase, muted (`--color-text-muted`).
+- **Nav lockup:** 18px mark + "Kata" in Archivo 800 / 18px, flush left — and nothing on the right (#156). The nav used to carry a `CHECKPOINTS n / 5` readout there; the Library never measures the reader, so permanent chrome has nothing to count and the nav is a way back to the Curriculum, not a readout.
 - **Historical reference:** `DevGym.dc.html`, `brand/Brand DevGym.dc.html` / `Brand Praxis.dc.html`, `assets/devgym-mark.svg`, and `screens/*.png` keep the old name — not re-captured or edited, kept only as visual reference to prior states.
 
 ## Screens
@@ -47,10 +47,10 @@ Container: max-width 1200px, 40px gutters, sticky nav (2px bottom rule). Everyth
 **The tab names the screen (#77).** `document.title` is `<screen> · Kata`, set by `useDocumentTitle` from the screen's own data: Curriculum plain `Kata`, Module `Module 03 — Testing at Boundaries + TDD loop · Kata`, Exercise `m01-e2 Build a recent-values cache behind a two-method surface · Kata`. While a screen's content is still loading it is plain `Kata` — never the previous screen's name — and the title is how a screen-reader user learns that a hash route changed at all.
 
 ### 1. Curriculum (`screens/01-state.png`)
-- **Purpose:** the fixed, ordered Module list with lock state. Data: `ICurriculum.getModules()`.
+- **Purpose:** the Library's index — every Module in reading order, all of them open. Data: `ICurriculum.getModules()`.
 - **Header:** kicker (13px uppercase `--color-accent-text`) + 54px title, with a 340px muted intro column aligned to the baseline (grid `1fr 340px`, gap 48).
-- **Rows:** one per Module. Grid `104px 1fr 230px 36px`, gap 24, padding-block 24, 2px top rule per row + closing 2px rule after the last. Cells: ordinal (30px/800), title (22px, marked up `h2` — one level under the page `h1`) over one-line description (16px muted, the body-text floor #108), status column (tag + optional `Checkpoint · date` 16px), trailing icon.
-- **Row states:** unlocked → pointer cursor, hover tint (4% ink), arrow-right icon · locked → 0.5 opacity, `not-allowed` cursor, lock icon, click inert, and the reason in the status column as **visible** text — "Locked — pass the previous Module's Exit Gate to unlock it." All three visual cues are invisible to a screen reader, so the row would otherwise read exactly like an unlocked one (#74); that text was first added `.visually-hidden` to keep `screens/01-state.png` exact (#73), which left the explanation backwards — only assistive technology was told why the row is inert. It is on screen now (#140), one node, announced once, and the capture is the historical part. The row gains text, never an affordance: nothing in it is focusable or activatable · passed → `Exit Gate passed` accent tag + Checkpoint date · in progress → outline tag · fresh → neutral `Ready to start` tag.
+- **Rows:** one per Module. Grid `104px 1fr 230px 36px`, gap 24, padding-block 24, 2px top rule per row + closing 2px rule after the last. Cells: ordinal (30px/800), title (22px, marked up `h2` — one level under the page `h1`) over one-line description (16px muted, the body-text floor #108), status column (tag), trailing icon.
+- **Row states:** every row is a link (#156) — pointer cursor, hover tint (4% ink), arrow-right icon, always. The inert state is gone with the lock chain: no 0.5 opacity, no `not-allowed` cursor, no lock icon and no reason to give, because reading is never blocked. The row's one tag is about the reader's own Self-Check answers: in progress → outline tag · fresh → neutral `Ready to start` tag. (Historical: the row once had a locked state whose reason lived in the status column, `.visually-hidden` at first (#73, #74) and on screen from #140, plus an `Exit Gate passed` tag with a Checkpoint date. `screens/01-state.png` still shows them.)
 
 ### 2. Module (`screens/02` passed · `screens/03` in progress)
 - **Purpose:** Concept Page, Model Examples, Exercise list, Exit Gate status. Data: `ICurriculum.getModule(id)` + `IProgress.getGateStatus(id)`.
