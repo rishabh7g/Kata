@@ -118,8 +118,8 @@ export function ProgressBackup() {
         }),
       );
       importButton.current?.focus();
-      // Same route, new location key: the nav Checkpoint count and the rows
-      // re-read the imported state without a reload.
+      // Same route, new location key: the rows re-read the imported state
+      // without a reload.
       navigate('/', { replace: true });
     } catch (cause) {
       setPendingImport(null);

@@ -78,8 +78,10 @@ describe('draft-concept.mjs', () => {
     // docs/ubiquitous-language.md embedded verbatim (docs/engineering.md § 8).
     expect(result.stdout).toContain('Ubiquitous Language — Kata');
     expect(result.stdout).toContain('**Target Interface**');
-    // docs/design.md § Pedagogy rules.
-    expect(result.stdout).toContain('Generative Exit Gate');
+    // docs/design.md § Pedagogy rules. The marker is one of the section's own
+    // sentences; it moved to this one when the reframe (#155) retired the
+    // gated-course pedagogy the old marker named.
+    expect(result.stdout).toContain('The Self-Check is a mirror');
     // The Module being drafted.
     expect(result.stdout).toContain('Dependency Direction');
     expect(existsSync(join(DRAFTS, 'm02-concept.md'))).toBe(false);

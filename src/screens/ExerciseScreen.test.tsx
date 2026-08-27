@@ -765,39 +765,6 @@ describe('Behavioral Checklist (#16)', () => {
     );
   });
 
-  it('moves the nav Checkpoint count in the same render as the submit — no navigation needed (#30)', async () => {
-    // Full App (the always-mounted shell owns the count) over main.tsx's real
-    // wiring: ICurriculum reads Checkpoints straight from IProgress.
-    const progress = await createProgress();
-    const curriculum = createCurriculum(source, {
-      listCheckpoints: () => progress.listCheckpoints(),
-    });
-    const { container } = render(
-      <CurriculumProvider curriculum={curriculum}>
-        <ProgressProvider progress={progress}>
-          <MemoryRouter initialEntries={['/modules/m01/exercises/m01-e1']}>
-            <App />
-          </MemoryRouter>
-        </ProgressProvider>
-      </CurriculumProvider>,
-    );
-    expect(await screen.findByText('Checkpoints 0 / 2')).toBeInTheDocument();
-    await screen.findByText('Behavioral Checklist');
-
-    pickAnswer(container, 0, 'a');
-    pickAnswer(container, 1, 'a');
-    pickAnswer(container, 2, 'a');
-    fireEvent.click(submitButton());
-
-    // screens/06-state.png: the count has already moved while still on the
-    // Exercise screen — the submit bumps the location key so the shell
-    // re-reads (#18's seam), no reload and no route change.
-    expect(await screen.findByText('Checkpoints 1 / 2')).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Deepen a shallow document store' }),
-    ).toBeInTheDocument();
-  });
-
   it("shows the banner on the Module's other Exercise screen after the pass — per Module, not per Exercise (#19)", async () => {
     const first = await renderAt('/modules/m01/exercises/m01-e1');
     await screen.findByText('Behavioral Checklist');
