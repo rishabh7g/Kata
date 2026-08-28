@@ -347,15 +347,18 @@ else
         'data.modules.filter((m) => m.categoryId === "agentic-ai").every((m, i) => m.ordinal === i + 1) && data.modules.filter((m) => m.categoryId === "agentic-ai").length === 6' \
         'six Agentic AI Modules, ordinals 1-6 (#165)'
       # The Category shipped every row pending (#165); #166 authored the
-      # first pack and #167 the second, so what the deployed index has to say
-      # now is that ai01 and ai02 are readable — the remaining four stay
-      # pending until their own issues.
+      # first pack, #167 the second and #168 the third, so what the deployed
+      # index has to say now is that ai01, ai02 and ai03 are readable — the
+      # remaining three stay pending until their own issues.
       json "$WORK/content/index.json" \
         'data.modules.find((m) => m.id === "ai01").pending === false' \
         'ai01 is no longer pending (#166)'
       json "$WORK/content/index.json" \
         'data.modules.find((m) => m.id === "ai02").pending === false' \
         'ai02 is no longer pending (#167)'
+      json "$WORK/content/index.json" \
+        'data.modules.find((m) => m.id === "ai03").pending === false' \
+        'ai03 is no longer pending (#168)'
       MODULES="$(node -e '
         const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
         console.log(data.modules.filter((m) => !m.pending).map((m) => m.id).join(" "));
@@ -409,6 +412,13 @@ else
       else
         bad "ai02 is pending in the deployed index — Ingestion content (#167) is missing"
       fi
+      # Module ai03 shipped in #168 — the Category's centerpiece: the loop
+      # below must also fetch and validate content/modules/ai03.json.
+      if [[ " $MODULES " == *" ai03 "* ]]; then
+        note "ai03 is non-pending — Retrieval-Augmented Generation content (#168) is live"
+      else
+        bad "ai03 is pending in the deployed index — Retrieval-Augmented Generation content (#168) is missing"
+      fi
       for id in $MODULES; do
         get "${URL}content/modules/${id}.json" "$WORK/content/modules/${id}.json"
       done
@@ -427,6 +437,13 @@ else
         json "$WORK/content/modules/ai02.json" \
           'data.id === "ai02" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
           'the served ai02 pack: explain-only, three Self-Check questions (#167)'
+      fi
+      # The served ai03.json parses the same way, and carries the two Model
+      # Examples the Retrieval-Augmented Generation pack reads with (#168).
+      if [[ -f "$WORK/content/modules/ai03.json" ]]; then
+        json "$WORK/content/modules/ai03.json" \
+          'data.id === "ai03" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
+          'the served ai03 pack: explain-only, three Self-Check questions (#168)'
       fi
       if [[ -n "$MODULES" ]]; then
         if ! out="$(node "$REPO/scripts/validate-content.mjs" "$CONTENT_SCHEMA" "$WORK/content/modules" 2>&1)"; then
