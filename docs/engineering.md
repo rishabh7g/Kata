@@ -474,8 +474,13 @@ at runtime**:
    nothing). Every prompt embeds `docs/ubiquitous-language.md` verbatim plus
    the relevant rules from `docs/design.md`. Drafts land in a gitignored
    `drafts/` folder and are never shipped.
-2. **Human edit** — one editing pass, then the text is frozen. The Concept Page
-   carries the `LLM first draft · human-edited once · frozen` note on screen.
+2. **Human edit** — one editing pass over the draft. The Concept Page's first
+   line is an emphasis-only provenance note recording the stages it has been
+   through and who made each one. It lives in the markdown source, where
+   provenance belongs, and no screen renders it (#139). A page edited again
+   later says so rather than claiming to be finished: the five Software Design
+   packs read `LLM first draft · human-edited once · LLM novice pass ·
+   human-reviewed` after the novice pass of #173 and the review that followed.
 3. **Commit** — the edited text is committed as content JSON (§ 3) and must
    pass schema validation in CI before it can deploy.
 

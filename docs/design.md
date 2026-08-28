@@ -58,7 +58,7 @@ Deliberately cut: CLEAN architecture and design-pattern catalogs as standalone M
 
 Each Module contains:
 
-- Concept Page (LLM first draft → human edit once, then frozen), written to the editorial standard above
+- Concept Page, written to the editorial standard above; its first line is the provenance note recording which editing stages it has been through (`docs/engineering.md` § 5), and no screen renders that line
 - 2–3 Model Examples (before/after code pairs in the Category's language, ≤40 lines each side)
 - A Self-Check — a few optional questions, answered while reading, autosaved, never submitted
 - Exercises: none, one, or several. A Module that only explains is a complete Module. Where a Software Design Module ships them, the convention is two — one refactor-type (fix a planted Smell) and one construct-type (implement behind a given Target Interface) — each a committed folder the learner clones. The Agentic AI Category explains only, with one exception: Retrieval-Augmented Generation carries a single construct-type Python Exercise, the pilot that proves practice material works in a second language (#172). Whether the other five get one is decided after that Exercise has been used, not before.
