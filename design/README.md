@@ -88,7 +88,7 @@ Screen-local state maps 1:1 onto the **two** Target Interfaces (`docs/engineerin
 The two Target Interfaces do not touch each other: `createCurriculum(content)` reads no progress data, so there is nothing to derive per reader (#158). Compute nothing else client-side, and never persist it.
 
 ## Design tokens
-`styles.css` (ship it) and `tokens.json` (mirror + app-layer values: layout grids, type scale, code sizes, semantics). Key semantics: red = emphasis and attention — primary action (field red `--color-accent`; any red *string* uses `--color-accent-text`); passing = ink + check. Never a green/red traffic pair. (`semantics.failing` in `tokens.json` has no rendered use now that no screen reports test results; `semantics.locked` is gone with the lock chain, #158.)
+`styles.css` (ship it) and `tokens.json` (mirror + app-layer values: layout grids, type scale, code sizes, semantics). Key semantics: red = emphasis and attention — primary action (field red `--color-accent`; any red *string* uses `--color-accent-text`); passing = ink + check. Never a green/red traffic pair. (`semantics.failing` is gone with the read-only decision, #200 — it described how a screen would present a failed test run, and Kata reports no test results; `semantics.locked` is gone with the lock chain, #158.)
 
 ## Assets
 - `assets/kata-mark.svg` — brand mark (also the app-icon/favicon source). `assets/devgym-mark.svg` stays in place as a historical artifact, no longer used.
