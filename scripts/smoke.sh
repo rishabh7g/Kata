@@ -17,7 +17,8 @@
 #             12 stylesheet · 13 font · 14 manifest · 15 service worker ·
 #             16 icons · 17 content · 18 exercise folders ·
 #             19 m02 exercise folders · 20 m03 exercise folders ·
-#             21 m04 exercise folders · 22 m05 exercise folders
+#             21 m04 exercise folders · 22 m05 exercise folders ·
+#             23 ai03 exercise folder
 #
 set -uo pipefail
 
@@ -474,12 +475,18 @@ else
           'data.id === "ai02" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
           'the served ai02 pack: explain-only, three Self-Check questions (#167)'
       fi
-      # The served ai03.json parses the same way, and carries the two Model
-      # Examples the Retrieval-Augmented Generation pack reads with (#168).
+      # The served ai03.json carries the two Model Examples the
+      # Retrieval-Augmented Generation pack reads with (#168) and, since #172,
+      # the Category's one Exercise: the Python pilot, with its folder URL
+      # filled in. ai03 is the only Agentic AI Module with practice material,
+      # so "one Exercise, non-null folderUrl" is the whole claim.
       if [[ -f "$WORK/content/modules/ai03.json" ]]; then
         json "$WORK/content/modules/ai03.json" \
-          'data.id === "ai03" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
-          'the served ai03 pack: explain-only, three Self-Check questions (#168)'
+          'data.id === "ai03" && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
+          'the served ai03 pack: three Self-Check questions, two Model Examples (#168)'
+        json "$WORK/content/modules/ai03.json" \
+          'data.exercises.length === 1 && data.exercises[0].id === "ai03-e1" && typeof data.exercises[0].folderUrl === "string"' \
+          'the served ai03 pack carries one Exercise with a folderUrl (#172)'
       fi
       # The served ai04.json parses the same way, and carries the two Model
       # Examples the Agents & Tool Use pack reads with (#169).
@@ -637,6 +644,32 @@ else
     for folder_url in $FOLDER_URLS; do
       n=$((n + 1))
       get "$folder_url" "$WORK/m05-exercise-folder-$n.html" || true
+    done
+  fi
+fi
+end
+
+# ─── 14. ai03 exercise folder (#172) ───────────────────────────────────────
+# The Agentic AI Category's one Exercise folder is committed (#172): the
+# deployed ai03.json must carry its GitHub folder URL — the Exercise screen's
+# practice-material link points there — and that URL must return 200.
+begin exercise-folder-ai03 23
+AI03_JSON="$WORK/content/modules/ai03.json"
+if [[ ! -f "$AI03_JSON" ]]; then
+  bad "the deployed ai03.json was not fetched (content step failed?) — cannot read folderUrl"
+else
+  FOLDER_URLS="$(node -e '
+    const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+    console.log(data.exercises.map((e) => e.folderUrl).filter(Boolean).join(" "));
+  ' "$AI03_JSON" 2>>"$LOG")"
+  COUNT=$(wc -w <<<"$FOLDER_URLS")
+  if ((COUNT < 1)); then
+    bad "deployed ai03.json has $COUNT non-null folderUrl values (expected 1: #172)"
+  else
+    n=0
+    for folder_url in $FOLDER_URLS; do
+      n=$((n + 1))
+      get "$folder_url" "$WORK/ai03-exercise-folder-$n.html" || true
     done
   fi
 fi

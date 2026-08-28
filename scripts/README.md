@@ -5,10 +5,10 @@ detail to a file. Read the log only when a line says FAIL.**
 
 | Script | What it checks | Success line |
 |---|---|---|
-| `scripts/smoke.sh` | the **deployed** site (`$KATA_URL`, default <https://rishabh7g.github.io/Kata/>) | `SMOKE 13/13 ok \| <url>` |
+| `scripts/smoke.sh` | the **deployed** site (`$KATA_URL`, default <https://rishabh7g.github.io/Kata/>) | `SMOKE 14/14 ok \| <url>` |
 | `scripts/test-scoped.sh <file…>` | Vitest over just the files a change touched | `TEST ok \| 2 passed (2) \| 12 passed (12) \| <files>` |
 | `scripts/validate-content.mjs [<schema> <file\|dir>]` | content JSON against its JSON Schema | `CONTENT ok (1 file)` |
-| `scripts/build-exercises.sh` | every committed `exercises/**/` folder compiles (`dotnet build`, build only) | `EXERCISES ok \| 2/2 Test Suites compile` |
+| `scripts/build-exercises.sh` | every committed `exercises/**/` folder is intact — C# compiles (`dotnet build`), Python collects (`pytest --collect-only`), neither runs | `EXERCISES ok \| 3/3 Test Suites ready` |
 
 ```sh
 scripts/smoke.sh                                    # after a deploy
@@ -30,10 +30,10 @@ scripts/build-exercises.sh                          # exercise folders; also run
 
 | Script | Codes |
 |---|---|
-| `smoke.sh` | 0 ok · 2 usage/precondition · 10 shell · 11 app bundle · 12 stylesheet · 13 font · 14 manifest · 15 service worker · 16 icons · 17 content · 18 exercise folders · 19 m02 exercise folders · 20 m03 exercise folders · 21 m04 exercise folders · 22 m05 exercise folders |
+| `smoke.sh` | 0 ok · 2 usage/precondition · 10 shell · 11 app bundle · 12 stylesheet · 13 font · 14 manifest · 15 service worker · 16 icons · 17 content · 18 exercise folders · 19 m02 exercise folders · 20 m03 exercise folders · 21 m04 exercise folders · 22 m05 exercise folders · 23 ai03 exercise folder |
 | `test-scoped.sh` | 0 ok · 2 usage/precondition (including no args without `FULL=1`) · 3 recursion guard (see below) · otherwise Vitest's own status |
 | `validate-content.mjs` | 0 ok or SKIP · 2 usage · 3 invalid content · 4 missing schema/content path |
-| `build-exercises.sh` | 0 ok (including the explicit zero-folders pass) · 2 usage/precondition (dotnet missing) · 3 one or more folders failed to build |
+| `build-exercises.sh` | 0 ok (including the explicit zero-folders pass) · 2 usage/precondition (dotnet or pytest missing, and only for a language actually committed) · 3 one or more folders failed to build or collect |
 | `draft-concept.mjs` | 0 ok · 2 usage (bad flag/module id) · 3 draft exists without `--force` · 4 claude CLI missing/failed · 5 non-JSON or empty CLI output |
 | `draft-exercise.mjs` | 0 ok · 2 usage (bad flag/brief) · 3 exercise folder exists (new Exercise id, no `--force`) · 4 claude CLI missing/failed · 5 CLI output breaks the JSON contract |
 
@@ -127,15 +127,22 @@ npm run icons
   manifest's own `icons` array — they're read by `index.html`'s `<link>`
   tags instead (`src/pwa/manifest.test.ts` covers both).
 
-## CI: exercise Test Suites must compile (#22)
+## CI: exercise Test Suites must hold together (#22, #172)
 
 `build-exercises.sh` also runs in `.github/workflows/exercises.yml` — its own
 workflow, separate from the Pages deploy, path-filtered to `exercises/**` (plus
 the script and the workflow file). One `ok <folder>` line per Exercise folder
-and a final count go to the job log; the full dotnet transcript is uploaded as
-the `exercise-build-logs` artifact. With zero folders committed the job passes
-with the explicit `0 Test Suites (none committed yet)` line. Build only — Kata
-never runs `dotnet test` in CI (`docs/engineering.md` § 6).
+and a final count go to the job log; the full dotnet/pytest transcript is
+uploaded as the `exercise-build-logs` artifact. With zero folders committed the
+job passes with the explicit `0 Test Suites (none committed yet)` line.
+
+The check follows what is IN the folder, so material in a new language cannot
+be silently skipped (#172): a folder with a `.csproj` is built with
+`dotnet build`, and a folder with `.py` files is collected with
+`pytest --collect-only`. Neither runs a test — Kata never gates on test
+execution (`docs/engineering.md` § 6), and collection is the honest Python
+analogue of a build: the imports resolve and the tests are discoverable, which
+is all a learner cloning the folder needs to be true.
 
 ## Content checks are live (#7)
 

@@ -132,6 +132,30 @@ const explainOnlySource: ContentSource = {
     id === 'm03' ? explainOnlyContent : id === 'm01' ? content : null,
 };
 
+// A one-Exercise Module (#172): ai03 pilots a single Python Exercise, so the
+// shape the Agentic AI Category ships is neither zero nor the Software Design
+// pair. Exercises are 0..n (#161) and the screen must read as naturally with
+// one card as with two.
+const pilotContent: ModuleContent = {
+  ...content,
+  id: 'm04',
+  conceptPageMarkdown: '# Pilot Module\n\n## One Exercise is a whole Module too\n\nJust the one.',
+  exercises: [content.exercises[0]!],
+};
+
+const pilotIndex: ModuleIndex = {
+  ...index,
+  modules: [
+    ...index.modules,
+    { id: 'm04', categoryId: 'software-design', ordinal: 4, title: 'Pilot Module', description: 'A Module with one Exercise.', pending: false },
+  ],
+};
+
+const pilotSource: ContentSource = {
+  loadIndex: async () => pilotIndex,
+  loadModuleContent: async (id) => (id === 'm04' ? pilotContent : id === 'm01' ? content : null),
+};
+
 beforeEach(() => {
   // A brand-new browser profile per test (#14's prescribed environment).
   globalThis.indexedDB = new IDBFactory();
@@ -467,6 +491,39 @@ describe('Module screen', () => {
     await screen.findByText('Exercises');
 
     // The whole card is the link; its title is inside it.
+    fireEvent.click(screen.getByText('Deepen a shallow document store'));
+
+    expect(await screen.findByText('exercise probe')).toBeInTheDocument();
+  });
+
+  // ── One-Exercise Module (#172): the shape the Agentic AI Category's
+  // Python pilot ships in — a full Exercises section with a single card.
+  it('renders a Module carrying exactly one Exercise as one card under the heading (#172)', async () => {
+    const { container } = await renderAt('/modules/m04', undefined, pilotSource);
+    await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
+
+    const cards = [...container.querySelectorAll('.module-exercise-card')];
+    expect(cards).toHaveLength(1);
+    expect(cards[0]?.querySelector('.module-exercise-title')?.textContent).toBe(
+      'Deepen a shallow document store',
+    );
+    // No empty slot beside it and no placeholder: one Exercise is the whole
+    // section, not a half-filled pair.
+    expect(container.querySelector('.module-pending-copy')).toBeNull();
+    expect(expectWellFormedOutline(container)).toEqual([
+      'h1 Pilot Module',
+      'h2 Concept Page',
+      'h3 One Exercise is a whole Module too',
+      'h2 Model Examples',
+      'h2 Exercises',
+      'h2 Self-Check',
+    ]);
+  });
+
+  it('navigates to the Exercise route from the single card (#172)', async () => {
+    await renderAt('/modules/m04', undefined, pilotSource);
+    await screen.findByRole('heading', { level: 2, name: 'Exercises' });
+
     fireEvent.click(screen.getByText('Deepen a shallow document store'));
 
     expect(await screen.findByText('exercise probe')).toBeInTheDocument();
