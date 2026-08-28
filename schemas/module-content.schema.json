@@ -71,9 +71,9 @@
       ],
       "properties": {
         "id": {
-          "description": "Unique app-wide, equal to its repo folder name: 'm01-e1'.",
+          "description": "Unique app-wide, equal to its repo folder name: the Module id, a dash, 'e', an ordinal — 'm01-e1', 'ai03-e1'.",
           "type": "string",
-          "pattern": "^m\\d{2}-e\\d+$"
+          "pattern": "^[a-z]+\\d{2}-e\\d+$"
         },
         "type": { "enum": ["refactor", "construct"] },
         "title": { "type": "string", "minLength": 1 },
@@ -84,7 +84,7 @@
           "minLength": 1
         },
         "targetInterfaceCode": {
-          "description": "The C# interface the learner must end up behind; rendered read-only.",
+          "description": "The boundary the learner must end up behind, written in the Category’s practice language; rendered read-only.",
           "type": "string",
           "minLength": 1
         },

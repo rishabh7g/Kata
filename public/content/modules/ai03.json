@@ -14,7 +14,18 @@
       "caption": "What moved: what decides which text the model sees. Before, the folder decides — every document goes, so the prompt runs past the model's context limit, and where it would fit it is paid for and re-sent on every question with the useful passage lost in the middle. After, a retriever picks the k nearest chunks, so a few thousand characters arrive, chosen by nearness to this question. Same documents, same model, same instruction: the choosing is the whole difference, and k is the dial on it."
     }
   ],
-  "exercises": [],
+  "exercises": [
+    {
+      "id": "ai03-e1",
+      "type": "construct",
+      "title": "Fetch the chunk that answers the question",
+      "concept": "Retrieval-Augmented Generation",
+      "smell": "The stub tempts two hidden decisions: a SCORE_FLOOR that silently drops weak chunks — a retrieval miss the caller cannot see — and a LAST_SCORES global that turns a pure fetch into shared state.",
+      "targetInterfaceCode": "def chunk(text: str, size: int, overlap: int) -> list[str]:\n    \"\"\"Cut `text` into pieces of `size` characters overlapping by `overlap`.\"\"\"\n\n\ndef retrieve(query: str, chunks: list[str], k: int) -> list[str]:\n    \"\"\"Return the `k` chunks nearest `query`, nearest first.\"\"\"\n",
+      "sizeBudgetLoc": 150,
+      "folderUrl": "https://github.com/rishabh7g/Kata/tree/main/exercises/ai03/ai03-e1"
+    }
+  ],
   "selfCheckQuestions": [
     {
       "id": "q1",

@@ -493,20 +493,33 @@ Consequences that are not negotiable:
 ## 6. Exercises in the repo
 
 Practice material is committed under `exercises/<moduleId>/<exerciseId>/`, one
-folder per Exercise brief, targeting `net10.0`:
+folder per Exercise brief, written in the practice language of the Module's
+Category (§ 3): C# on `net10.0` for Software Design, Python for Agentic AI.
 
 ```
 exercises/
   m01/
-    m01-e1/            # refactor type
+    m01-e1/            # refactor type, C#
       README.md        # goal, `dotnet test`, the immutable-Target-Interface rule
       src/             # the Target Interface + deliberately flawed C# behind it
       tests/           # the xUnit Test Suite
-    m01-e2/            # construct type
+    m01-e2/            # construct type, C#
       README.md
       src/             # the Target Interface + a stub only, no implementation
       tests/           # the xUnit Test Suite
+  ai03/
+    ai03-e1/           # construct type, Python (#172)
+      README.md        # goal, `pytest`, the immutable-Target-Interface rule
+      smell-notes.md   # the reviewer's notes, as in every folder
+      src/             # the signatures to implement + provided helpers
+      tests/           # the pytest Test Suite (conftest.py puts src/ on the path)
 ```
+
+The layout is the same in both languages, and so is everything below except
+the command. A Python folder needs `pip install pytest` and nothing else: the
+material is standard-library only, so it runs offline with no API key — an
+Exercise that needed a vendor account would be practice nobody could do on a
+plane.
 
 - **Refactor type**: the planted Smell lives in `src/`; the learner refactors
   behind the fixed C# `interface` until the Test Suite is green.
@@ -519,11 +532,16 @@ exercises/
 - The Target Interface is **immutable during the Exercise**. Wanting to change
   it is a signal to record and discuss, not an allowed move.
 - The learner clones or copies the folder into their own IDE and runs
-  `dotnet test` there. **Kata never runs it, never sees the result, and never
-  gates on it.** The Exercise screen simply links to the folder on GitHub via
-  the brief's `folderUrl`.
-- CI compiles every committed exercise folder (`dotnet build`, build only) so a
-  cloned folder is never broken.
+  `dotnet test` (C#) or `pytest` (Python) there. **Kata never runs it, never
+  sees the result, and never gates on it.** The Exercise screen simply links to
+  the folder on GitHub via the brief's `folderUrl`, and names the command from
+  the Category's language (`src/strings/language.ts`).
+- CI checks every committed exercise folder so a cloned folder is never broken,
+  and the check follows what is in the folder — no language is silently skipped
+  (#172). C# folders are compiled (`dotnet build`, build only); Python folders
+  are collected (`pytest --collect-only`), which proves the imports resolve and
+  the tests are discoverable. Neither runs a test: a construct Exercise's
+  skeleton is red by design, so a gate on execution could never be honest.
 
 ---
 

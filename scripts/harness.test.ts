@@ -252,6 +252,14 @@ describe('content schema + Module index (#7)', () => {
     expect(readIndex().modules.some((m) => m.pending)).toBe(false);
   });
 
+  const readPack = (id: string) =>
+    JSON.parse(readFileSync(join(REPO, `public/content/modules/${id}.json`), 'utf8')) as {
+      id: string;
+      modelExamples: { before: string; after: string; caption: string }[];
+      exercises: { id: string; type: string; folderUrl: string | null; targetInterfaceCode: string }[];
+      selfCheckQuestions: { explanation?: string }[];
+    };
+
   it.each([
     ['ai01', '#166'],
     ['ai02', '#167'],
@@ -259,21 +267,10 @@ describe('content schema + Module index (#7)', () => {
     ['ai04', '#169'],
     ['ai05', '#170'],
     ['ai06', '#171'],
-  ])('ships %s as an explain-only pack with three explained Self-Check questions (%s)', (id) => {
-    const pack = JSON.parse(
-      readFileSync(join(REPO, `public/content/modules/${id}.json`), 'utf8'),
-    ) as {
-      id: string;
-      modelExamples: { before: string; after: string; caption: string }[];
-      exercises: unknown[];
-      selfCheckQuestions: { explanation?: string }[];
-    };
+  ])('ships %s with two Model Examples and three explained Self-Check questions (%s)', (id) => {
+    const pack = readPack(id);
 
-    // docs/design.md § Module anatomy — a Module that only explains is a
-    // complete Module (#161), and the Agentic AI packs are explain-only: the
-    // practice folders are a separate decision, not a missing piece here.
     expect(pack.id).toBe(id);
-    expect(pack.exercises).toEqual([]);
     // Each Model Example side stays inside the ≤ 40-line authoring rule
     // (docs/design.md § Module anatomy), which no schema can state.
     for (const example of pack.modelExamples) {
@@ -285,6 +282,102 @@ describe('content schema + Module index (#7)', () => {
     // nothing at all.
     expect(pack.selfCheckQuestions).toHaveLength(3);
     expect(pack.selfCheckQuestions.every((q) => (q.explanation ?? '').length > 0)).toBe(true);
+  });
+
+  // Five of the six Agentic AI Modules only explain, which is a complete
+  // Module (#161). ai03 is the exception and the pilot (#172): one Python
+  // Exercise, the only practice material in the Category.
+  it.each([['ai01'], ['ai02'], ['ai04'], ['ai05'], ['ai06']])(
+    'ships %s as an explain-only pack (#161)',
+    (id) => {
+      expect(readPack(id).exercises).toEqual([]);
+    },
+  );
+
+  it('ships ai03 with the one Python Exercise, folder committed (#172)', () => {
+    const [exercise, ...rest] = readPack('ai03').exercises;
+
+    expect(rest).toEqual([]);
+    expect(exercise?.id).toBe('ai03-e1');
+    expect(exercise?.type).toBe('construct');
+    // The folder is committed, so the brief links it rather than holding the
+    // null placeholder — the Exercise screen's practice-material link.
+    expect(exercise?.folderUrl).toBe(
+      'https://github.com/rishabh7g/Kata/tree/main/exercises/ai03/ai03-e1',
+    );
+    // The Target Interface is rendered read-only, so it is the signatures the
+    // learner implements — Python, because the Category is (#163).
+    expect(exercise?.targetInterfaceCode).toContain('def chunk(text: str, size: int, overlap: int)');
+    expect(exercise?.targetInterfaceCode).toContain('def retrieve(query: str, chunks: list[str], k: int)');
+  });
+});
+
+/**
+ * The pilot Python Exercise folder (#172). The Test Suite the learner clones
+ * is committed material, so the facts that make it usable — it exists, it is
+ * offline, and its skeleton is the thing they implement — are pinned here
+ * rather than left to a reviewer's eye. Nothing in this block RUNS pytest:
+ * `scripts/build-exercises.sh` collects the folder in CI, and Kata never gates
+ * on test execution (docs/engineering.md § 6).
+ */
+describe('exercises/ai03/ai03-e1 (#172)', () => {
+  const FOLDER = join(REPO, 'exercises/ai03/ai03-e1');
+  const read = (path: string) => readFileSync(join(FOLDER, path), 'utf8');
+
+  it('ships the folder convention: README, smell notes, src/ and tests/', () => {
+    for (const path of [
+      'README.md',
+      'smell-notes.md',
+      'src/retrieval.py',
+      'tests/conftest.py',
+      'tests/test_chunk.py',
+      'tests/test_retrieve.py',
+    ]) {
+      expect(readFileSync(join(FOLDER, path), 'utf8').length).toBeGreaterThan(0);
+    }
+  });
+
+  it('names pytest as the one thing to install, and no other toolchain', () => {
+    expect(read('README.md')).toContain('pip install pytest');
+    expect(read('README.md')).toContain('pytest');
+  });
+
+  // The Exercise is offline by construction: no vendor client, no key, no
+  // network. A folder that reached for either would need an API account to
+  // practise with, which is the whole thing this pilot avoids.
+  it('imports no network client and reads no API key', () => {
+    const sources = ['src/retrieval.py', 'tests/conftest.py', 'tests/test_chunk.py', 'tests/test_retrieve.py'];
+    const forbidden = [
+      'requests',
+      'httpx',
+      'urllib',
+      'http.client',
+      'socket',
+      'openai',
+      'langchain',
+      'os.environ',
+      'getenv',
+      'API_KEY',
+    ];
+
+    for (const source of sources) {
+      const text = read(source);
+      for (const needle of forbidden) {
+        expect(`${source}: ${text}`).not.toContain(needle);
+      }
+    }
+  });
+
+  // A construct Exercise ships a stub, not an answer: the two functions the
+  // brief names raise until the learner writes them.
+  it('ships both functions as stubs and the embedding as provided code', () => {
+    const source = read('src/retrieval.py');
+
+    expect(source).toContain('def chunk(text: str, size: int, overlap: int) -> list[str]:');
+    expect(source).toContain('def retrieve(query: str, chunks: list[str], k: int) -> list[str]:');
+    expect(source.match(/raise NotImplementedError/g)).toHaveLength(2);
+    expect(source).toContain('def embed(text: str)');
+    expect(source).toContain('def cosine_similarity(');
   });
 });
 
@@ -366,7 +459,7 @@ describe('smoke.sh', () => {
     const result = run('scripts/smoke.sh', [], { KATA_URL: 'http://127.0.0.1:9/' });
 
     expect(result.status).toBe(10); // 10 = app shell, per scripts/README.md
-    expect(result.lines[0]).toMatch(/^SMOKE FAIL 0\/13 \| step shell \(exit 10\)/);
+    expect(result.lines[0]).toMatch(/^SMOKE FAIL 0\/14 \| step shell \(exit 10\)/);
     expect(result.lines.length).toBeLessThanOrEqual(25);
     expect(result.stdout).toContain('log: ');
   }, 30_000);
@@ -384,13 +477,14 @@ describe('smoke.sh', () => {
       '20 m03 exercise folders',
       '21 m04 exercise folders',
       '22 m05 exercise folders',
+      '23 ai03 exercise folder',
     ]) {
       expect(help.stdout).toContain(code);
     }
   });
 });
 
-describe('build-exercises.sh (#22)', () => {
+describe('build-exercises.sh (#22, #172)', () => {
   // A fake `dotnet` first on PATH keeps these hermetic: no SDK, no NuGet, and
   // the same behavior on this host and in CI.
   function fakeDotnet(exitCode: number) {
@@ -403,11 +497,40 @@ describe('build-exercises.sh (#22)', () => {
     return bin;
   }
 
+  // The Python folders' check is `python -m pytest --collect-only`, so a fake
+  // python answers both the precondition (`--version`) and the collect run —
+  // pytest is not installed on every host that runs this suite, and the point
+  // under test is the SCRIPT's branching, not pytest itself.
+  function fakePython(exitCode: number) {
+    const bin = mkdtempSync(join(tmpdir(), 'kata-python-'));
+    writeFileSync(
+      join(bin, 'python3'),
+      // `--version` is the precondition probe and always answers yes; the
+      // collect run is what the exit code under test belongs to.
+      `#!/usr/bin/env bash\nfor arg in "$@"; do [[ "$arg" == "--version" ]] && exit 0; done\necho "fake python $*"\nexit ${exitCode}\n`,
+      { mode: 0o755 },
+    );
+    return join(bin, 'python3');
+  }
+
   function exerciseTree(...folders: string[]) {
     const dir = mkdtempSync(join(tmpdir(), 'kata-exercises-'));
     for (const folder of folders) {
       mkdirSync(join(dir, folder, 'src'), { recursive: true });
       writeFileSync(join(dir, folder, 'src', 'Exercise.csproj'), '<Project />\n');
+    }
+    return dir;
+  }
+
+  // A Python Exercise folder is the same layout with .py files and no csproj
+  // (#172): exercises/<module>/<exercise>/{src,tests}.
+  function pythonExerciseTree(...folders: string[]) {
+    const dir = mkdtempSync(join(tmpdir(), 'kata-exercises-py-'));
+    for (const folder of folders) {
+      mkdirSync(join(dir, folder, 'src'), { recursive: true });
+      mkdirSync(join(dir, folder, 'tests'), { recursive: true });
+      writeFileSync(join(dir, folder, 'src', 'retrieval.py'), 'def chunk():\n    ...\n');
+      writeFileSync(join(dir, folder, 'tests', 'test_chunk.py'), 'def test_it():\n    ...\n');
     }
     return dir;
   }
@@ -433,7 +556,87 @@ describe('build-exercises.sh (#22)', () => {
     expect(result.lines).toEqual([
       'ok exercises/m01/m01-e1',
       'ok exercises/m01/m01-e2',
-      'EXERCISES ok | 2/2 Test Suites compile',
+      'EXERCISES ok | 2/2 Test Suites ready',
+    ]);
+  });
+
+  // The silent-skip guard (#172): discovery used to key on .csproj alone, so
+  // a Python folder was passed over — new material with no CI coverage at
+  // all. It is found by its .py files and checked with pytest instead.
+  it('finds a Python Exercise folder and collects it instead of building (#172)', () => {
+    const exercises = pythonExerciseTree('ai03/ai03-e1');
+    const result = build({
+      KATA_EXERCISES_DIR: exercises,
+      KATA_PYTHON: fakePython(0),
+    });
+    rmSync(exercises, { recursive: true, force: true });
+
+    expect(result.status).toBe(0);
+    expect(result.lines).toEqual([
+      'ok exercises/ai03/ai03-e1',
+      'EXERCISES ok | 1/1 Test Suites ready',
+    ]);
+  });
+
+  it('checks C# and Python folders in one run (#172)', () => {
+    const exercises = exerciseTree('m01/m01-e1');
+    mkdirSync(join(exercises, 'ai03/ai03-e1/tests'), { recursive: true });
+    writeFileSync(join(exercises, 'ai03/ai03-e1/tests/test_chunk.py'), 'def test_it():\n    ...\n');
+    const result = build({
+      KATA_EXERCISES_DIR: exercises,
+      KATA_PYTHON: fakePython(0),
+      PATH: `${fakeDotnet(0)}:${process.env.PATH}`,
+    });
+    rmSync(exercises, { recursive: true, force: true });
+
+    expect(result.status).toBe(0);
+    expect(result.lines).toEqual([
+      'ok exercises/ai03/ai03-e1',
+      'ok exercises/m01/m01-e1',
+      'EXERCISES ok | 2/2 Test Suites ready',
+    ]);
+  });
+
+  it('exits 3 when a Python folder fails to collect (#172)', () => {
+    const exercises = pythonExerciseTree('ai03/ai03-e1');
+    const result = build({
+      KATA_EXERCISES_DIR: exercises,
+      KATA_PYTHON: fakePython(1),
+    });
+    rmSync(exercises, { recursive: true, force: true });
+
+    expect(result.status).toBe(3);
+    expect(result.lines[0]).toBe('FAIL exercises/ai03/ai03-e1');
+    expect(result.stdout).toContain('EXERCISES FAIL 0/1 | broken: ai03/ai03-e1');
+  });
+
+  it('exits 2 when a Python folder is committed and pytest is missing (#172)', () => {
+    const exercises = pythonExerciseTree('ai03/ai03-e1');
+    const result = build({
+      KATA_EXERCISES_DIR: exercises,
+      KATA_PYTHON: join(tmpdir(), 'kata-no-python'),
+    });
+    rmSync(exercises, { recursive: true, force: true });
+
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain('EXERCISES PRECONDITION FAIL');
+  });
+
+  // The precondition follows the material: a repo with only C# folders must
+  // not demand a Python toolchain, and the other way round (#172).
+  it('demands no Python toolchain when only C# folders are committed (#172)', () => {
+    const exercises = exerciseTree('m01/m01-e1');
+    const result = build({
+      KATA_EXERCISES_DIR: exercises,
+      KATA_PYTHON: join(tmpdir(), 'kata-no-python'),
+      PATH: `${fakeDotnet(0)}:${process.env.PATH}`,
+    });
+    rmSync(exercises, { recursive: true, force: true });
+
+    expect(result.status).toBe(0);
+    expect(result.lines).toEqual([
+      'ok exercises/m01/m01-e1',
+      'EXERCISES ok | 1/1 Test Suites ready',
     ]);
   });
 
@@ -455,7 +658,11 @@ describe('build-exercises.sh (#22)', () => {
     const help = run('scripts/build-exercises.sh', ['--help']);
 
     expect(help.status).toBe(0);
-    for (const code of ['0 ok (including zero folders)', '2 usage/precondition', '3 one or more']) {
+    for (const code of [
+      '0 ok (including zero folders)',
+      '2 usage/precondition',
+      '3 one or more folders failed to build or collect',
+    ]) {
       expect(help.stdout).toContain(code);
     }
   });
