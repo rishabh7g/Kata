@@ -16,9 +16,9 @@
   "properties": {
     "schemaVersion": { "const": 1 },
     "id": {
-      "description": "Matches the file name and an index entry: 'm01' … 'm05'.",
+      "description": "Matches the file name and an index entry: 'm01' … 'm05', 'ai01' … 'ai06'.",
       "type": "string",
-      "pattern": "^m\\d{2}$"
+      "pattern": "^[a-z]+\\d{2}$"
     },
     "conceptPageMarkdown": {
       "description": "Non-empty markdown, ~1 page of prose.",

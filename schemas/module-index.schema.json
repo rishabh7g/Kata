@@ -57,9 +57,9 @@
         "required": ["id", "categoryId", "ordinal", "title", "description", "pending"],
         "properties": {
           "id": {
-            "description": "Module id exactly as committed in the content files, unique app-wide: 'm01', 'm02', …",
+            "description": "Module id exactly as committed in the content files, unique app-wide: a short Category prefix and a 2-digit position — 'm01' in Software Design, 'ai01' in Agentic AI.",
             "type": "string",
-            "pattern": "^m\\d{2}$"
+            "pattern": "^[a-z]+\\d{2}$"
           },
           "categoryId": {
             "description": "The one Category this Module belongs to — must equal the id of an entry in categories.",
