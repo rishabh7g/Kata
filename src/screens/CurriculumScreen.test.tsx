@@ -270,8 +270,8 @@ describe('Curriculum screen', () => {
       ...container.querySelectorAll('.curriculum-orientation-line'),
     ].map((line) => line.textContent);
     expect(lines).toEqual([
-      'A Module is one concept: read it, then do its Exercises.',
-      'You write and run the C# in your own IDE. Kata never runs or sees your code.',
+      'A Module is one concept: read it, then do any Exercises it has.',
+      'You write and run the code in your own IDE — Kata never runs or sees your code.',
       'Your progress is stored in this browser only.',
     ]);
 
@@ -290,6 +290,31 @@ describe('Curriculum screen', () => {
     // Static text only: no second way into a Module (the interaction-depth
     // question, design/issue-guide.md).
     expect(block?.querySelector('a, button, details, [role]')).toBeNull();
+  });
+
+  // #185: the block renders once, above every Category, so both of its
+  // first-use definitions have to hold for the whole Library — not just for
+  // the C# Software Design Category they were written against.
+  it('states nothing the orientation block only holds for one Category', async () => {
+    const { container } = await renderScreen({ content: twoCategorySource });
+    await screen.findByText('Agentic AI');
+
+    const block = container.querySelector('.curriculum-orientation');
+    const text = block?.textContent ?? '';
+
+    // Naming a language above a shelf that holds two of them is wrong for
+    // whichever one it does not name. The headings below still name each
+    // Category's own language (#163) — that is the one place it belongs.
+    expect(text).not.toMatch(/C#|Python/);
+    expect(
+      container.querySelectorAll('.curriculum-category-language'),
+    ).toHaveLength(2);
+
+    // A Module may have no Exercises at all (`"exercises": []`, #161), so the
+    // line may not tell every reader to go and do them.
+    expect(text).not.toContain('do its Exercises');
+    // Still a definition of the word the rows below use as a label.
+    expect(text).toContain('A Module is one concept');
   });
 
   it('renders the orientation block before the Modules load, and unchanged after', async () => {
