@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { IDBFactory } from 'fake-indexeddb';
 import {
   MemoryRouter,
@@ -257,8 +257,15 @@ describe('Exercise screen', () => {
 
     release();
     await screen.findByText('Exercise Spec');
-    expect(document.title).toBe(
-      'm01-e1 Deepen a shallow document store · Kata',
+    // The brief's text and the title come from two different moments: the
+    // text lands with the commit, the title with the effect that follows it
+    // (src/app/useDocumentTitle.ts). Waiting is what ModuleScreen's own title
+    // tests do — asserting straight after findByText reads the loading
+    // render's plain `Kata` whenever the effect has not flushed yet (#193).
+    await waitFor(() =>
+      expect(document.title).toBe(
+        'm01-e1 Deepen a shallow document store · Kata',
+      ),
     );
   });
 
