@@ -230,12 +230,14 @@ describe('content schema + Module index (#7)', () => {
     }
   });
 
-  it('lists the six Agentic AI Modules, ai01 to ai05 authored and ai06 pending (#165, #166, #167, #168, #169, #170)', () => {
+  it('lists the six Agentic AI Modules, in Curriculum order, all six authored (#165, #166, #167, #168, #169, #170, #171)', () => {
     const modules = readIndex().modules.filter((m) => m.categoryId === 'agentic-ai');
 
     // docs/design.md § Categories and Modules — the Category shipped as six
-    // pending rows (#165); #166–#171 author one content pack each, and #166
-    // authored ai01, #167 ai02, #168 ai03, #169 ai04, #170 ai05.
+    // pending rows (#165); #166–#171 authored one content pack each, and #171
+    // closed the Category with ai06. No Module in the Library is pending now,
+    // which is why every pending-Module assertion in the suite is
+    // fixture-driven (src/App.test.tsx, src/curriculum/curriculum.test.ts).
     expect(modules.map((m) => m.id)).toEqual(['ai01', 'ai02', 'ai03', 'ai04', 'ai05', 'ai06']);
     expect(modules.map((m) => m.title)).toEqual([
       'Embeddings',
@@ -246,7 +248,8 @@ describe('content schema + Module index (#7)', () => {
       'LangSmith',
     ]);
     expect(modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(modules.map((m) => m.pending)).toEqual([false, false, false, false, false, true]);
+    expect(modules.map((m) => m.pending)).toEqual([false, false, false, false, false, false]);
+    expect(readIndex().modules.some((m) => m.pending)).toBe(false);
   });
 
   it.each([
@@ -255,6 +258,7 @@ describe('content schema + Module index (#7)', () => {
     ['ai03', '#168'],
     ['ai04', '#169'],
     ['ai05', '#170'],
+    ['ai06', '#171'],
   ])('ships %s as an explain-only pack with three explained Self-Check questions (%s)', (id) => {
     const pack = JSON.parse(
       readFileSync(join(REPO, `public/content/modules/${id}.json`), 'utf8'),

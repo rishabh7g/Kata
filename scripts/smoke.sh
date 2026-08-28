@@ -347,9 +347,11 @@ else
         'data.modules.filter((m) => m.categoryId === "agentic-ai").every((m, i) => m.ordinal === i + 1) && data.modules.filter((m) => m.categoryId === "agentic-ai").length === 6' \
         'six Agentic AI Modules, ordinals 1-6 (#165)'
       # The Category shipped every row pending (#165); #166 authored the
-      # first pack, #167 the second, #168 the third, #169 the fourth and
-      # #170 the fifth, so what the deployed index has to say now is that
-      # ai01 to ai05 are readable — ai06 stays pending until its own issue.
+      # first pack, #167 the second, #168 the third, #169 the fourth, #170
+      # the fifth and #171 the sixth, so what the deployed index has to say
+      # now is that all six are readable and NO Module in the Library is
+      # pending — the pending-Module placeholder above is fixture-driven for
+      # exactly that reason.
       json "$WORK/content/index.json" \
         'data.modules.find((m) => m.id === "ai01").pending === false' \
         'ai01 is no longer pending (#166)'
@@ -365,6 +367,12 @@ else
       json "$WORK/content/index.json" \
         'data.modules.find((m) => m.id === "ai05").pending === false' \
         'ai05 is no longer pending (#170)'
+      json "$WORK/content/index.json" \
+        'data.modules.find((m) => m.id === "ai06").pending === false' \
+        'ai06 is no longer pending (#171)'
+      json "$WORK/content/index.json" \
+        'data.modules.every((m) => m.pending === false)' \
+        'no Module in the deployed Library is pending (#171)'
       MODULES="$(node -e '
         const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
         console.log(data.modules.filter((m) => !m.pending).map((m) => m.id).join(" "));
@@ -439,6 +447,14 @@ else
       else
         bad "ai05 is pending in the deployed index — LangGraph content (#170) is missing"
       fi
+      # Module ai06 shipped in #171 — tracing and evaluation, the pack that
+      # closes the Agentic AI Category: the loop below must also fetch and
+      # validate content/modules/ai06.json.
+      if [[ " $MODULES " == *" ai06 "* ]]; then
+        note "ai06 is non-pending — LangSmith content (#171) is live"
+      else
+        bad "ai06 is pending in the deployed index — LangSmith content (#171) is missing"
+      fi
       for id in $MODULES; do
         get "${URL}content/modules/${id}.json" "$WORK/content/modules/${id}.json"
       done
@@ -478,6 +494,13 @@ else
         json "$WORK/content/modules/ai05.json" \
           'data.id === "ai05" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
           'the served ai05 pack: explain-only, three Self-Check questions (#170)'
+      fi
+      # The served ai06.json parses the same way, and carries the two Model
+      # Examples the LangSmith pack reads with (#171).
+      if [[ -f "$WORK/content/modules/ai06.json" ]]; then
+        json "$WORK/content/modules/ai06.json" \
+          'data.id === "ai06" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
+          'the served ai06 pack: explain-only, three Self-Check questions (#171)'
       fi
       if [[ -n "$MODULES" ]]; then
         if ! out="$(node "$REPO/scripts/validate-content.mjs" "$CONTENT_SCHEMA" "$WORK/content/modules" 2>&1)"; then
