@@ -230,12 +230,12 @@ describe('content schema + Module index (#7)', () => {
     }
   });
 
-  it('lists the six Agentic AI Modules, ai01 authored and the rest pending (#165, #166)', () => {
+  it('lists the six Agentic AI Modules, ai01 and ai02 authored and the rest pending (#165, #166, #167)', () => {
     const modules = readIndex().modules.filter((m) => m.categoryId === 'agentic-ai');
 
     // docs/design.md § Categories and Modules — the Category shipped as six
     // pending rows (#165); #166–#171 author one content pack each, and #166
-    // authored ai01.
+    // authored ai01, #167 ai02.
     expect(modules.map((m) => m.id)).toEqual(['ai01', 'ai02', 'ai03', 'ai04', 'ai05', 'ai06']);
     expect(modules.map((m) => m.title)).toEqual([
       'Embeddings',
@@ -246,12 +246,15 @@ describe('content schema + Module index (#7)', () => {
       'LangSmith',
     ]);
     expect(modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(modules.map((m) => m.pending)).toEqual([false, true, true, true, true, true]);
+    expect(modules.map((m) => m.pending)).toEqual([false, false, true, true, true, true]);
   });
 
-  it('ships ai01 as an explain-only pack with three explained Self-Check questions (#166)', () => {
+  it.each([
+    ['ai01', '#166'],
+    ['ai02', '#167'],
+  ])('ships %s as an explain-only pack with three explained Self-Check questions (%s)', (id) => {
     const pack = JSON.parse(
-      readFileSync(join(REPO, 'public/content/modules/ai01.json'), 'utf8'),
+      readFileSync(join(REPO, `public/content/modules/${id}.json`), 'utf8'),
     ) as {
       id: string;
       modelExamples: { before: string; after: string; caption: string }[];
@@ -262,7 +265,7 @@ describe('content schema + Module index (#7)', () => {
     // docs/design.md § Module anatomy — a Module that only explains is a
     // complete Module (#161), and the Agentic AI packs are explain-only: the
     // practice folders are a separate decision, not a missing piece here.
-    expect(pack.id).toBe('ai01');
+    expect(pack.id).toBe(id);
     expect(pack.exercises).toEqual([]);
     // Each Model Example side stays inside the ≤ 40-line authoring rule
     // (docs/design.md § Module anatomy), which no schema can state.
