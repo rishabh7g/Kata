@@ -87,7 +87,7 @@
       "ordinal": 4,
       "title": "Agents & Tool Use",
       "description": "The reason–act loop: a model that decides which tool to call next.",
-      "pending": true
+      "pending": false
     },
     {
       "id": "ai05",
