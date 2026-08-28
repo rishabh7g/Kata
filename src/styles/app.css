@@ -451,9 +451,10 @@ a.curriculum-row:hover {
   margin: 0 0 14px;
 }
 
-/* The Concept Page label row (#30) — the label + the pack's
-   draft/edited/frozen note on one baseline — is gone with the note it
-   existed to carry (#139): the Concept Page label is now the same plain
+/* The Concept Page label row (#30) — the label + the pack's provenance note
+   on one baseline — is gone with the note it existed to carry (#139): that
+   note is an emphasis-only opening paragraph the screen never renders, and
+   its wording differs per pack. The Concept Page label is now the same plain
    `.module-section-label` every other section uses, so
    `.module-concept-heading`, `.module-section-label-inline` and
    `.module-concept-note` have no markup left to style. */
@@ -472,7 +473,9 @@ a.curriculum-row:hover {
 }
 
 /* Concept Page prose, capped at 66ch (design/README.md § Screens › 2). The
-   markdown carries its own title and the draft/edited/frozen note. */
+   markdown carries its own title and its provenance note; neither reaches
+   this rule, because `stripLeadingTitle` and `stripConceptNote` drop them
+   before the body is parsed (src/screens/ModuleScreen.tsx, #139). */
 .module-concept {
   max-width: 66ch;
 }

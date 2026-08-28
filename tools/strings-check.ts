@@ -12,8 +12,8 @@
  *   1. every canonical key is present — flattened on `.`, because the
  *      authored pack is nested;
  *   2. every value is a non-empty string;
- *   3. no extra keys — the typo tripwire: `gate.condition.notsubmitted`
- *      sitting quietly beside a missing real `notSubmitted` is caught here,
+ *   3. no extra keys — the typo tripwire: `module.sectionLabel.conceptpage`
+ *      sitting quietly beside a missing real `conceptPage` is caught here,
  *      not shipped as a silent English-language leak;
  *   4. placeholder parity — a value carries exactly its canonical
  *      `{placeholders}`, so a future translation cannot silently drop
@@ -35,8 +35,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Nested object -> dot-paths: `{"gate":{"condition":{"title":"…"}}}` becomes
- * `gate.condition.title`.
+ * Nested object -> dot-paths: `{"module":{"sectionLabel":{"exercises":"…"}}}`
+ * becomes `module.sectionLabel.exercises`.
  *
  * Only non-empty plain objects are containers. An empty one and an array are
  * kept as leaf values, so they surface as "must be a non-empty string" or

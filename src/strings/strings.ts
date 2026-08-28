@@ -31,7 +31,7 @@ export class StringsError extends Error {
   }
 }
 
-/** Reads a dot-path out of a nested pack: `gate.condition.title` → `{gate:{condition:…}}`. */
+/** Reads a dot-path out of a nested pack: `module.sectionLabel.exercises` → `{module:{sectionLabel:…}}`. */
 function readPath(root: unknown, key: string): unknown {
   let node: unknown = root;
   for (const part of key.split('.')) {

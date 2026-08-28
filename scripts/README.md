@@ -72,8 +72,11 @@ node scripts/draft-concept.mjs m02 --force     # overwrite an existing draft
   from `docs/design.md` § Pedagogy, and the renderer's markdown limits
   (headings, `-`/`1.` lists, strong/em/inline code — nothing else).
 - **Modules 2–5 (#24–#27):** run it for the module, edit the draft by hand,
-  then paste the frozen text into `public/content/modules/mNN.json` as
+  then paste the edited text into `public/content/modules/mNN.json` as
   `conceptPageMarkdown` and check it with `node scripts/validate-content.mjs`.
+  A page is never finished by being pasted: it can be edited again later, and
+  its own first line — the provenance note (`docs/engineering.md` § 5) —
+  records which stages it has been through.
   `public/content/modules/m01.json` is the canonical example of tone and shape.
 
 ## Authoring: `draft-exercise.mjs` (#21)
