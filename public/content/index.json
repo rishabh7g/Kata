@@ -95,7 +95,7 @@
       "ordinal": 5,
       "title": "LangGraph",
       "description": "Agents as graphs: explicit state, nodes, and edges instead of tangled loops.",
-      "pending": true
+      "pending": false
     },
     {
       "id": "ai06",
