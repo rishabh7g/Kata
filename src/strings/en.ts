@@ -50,10 +50,19 @@ const en = {
     // The orientation block (#134): three first-use definitions, each the
     // first place the UI explains a word it then uses as a label — the
     // keeper test's fourth clause (design/issue-guide.md).
+    //
+    // This block renders once, above every Category, so each line has to be
+    // true of all of them at once — it can take no per-Category mapping the
+    // way the Exercise practice copy does (#164). Two were only ever true of
+    // the C# Software Design Category, and were reworded, not dropped (#185):
+    // `module` no longer promises Exercises, which a Module may have none of
+    // (`"exercises": []`, valid since #161, and the shape every Agentic AI
+    // Module ships in); `ownIde` no longer names C#, which stopped being the
+    // Library's only practice language with the Python Category.
     orientation: {
-      module: 'A Module is one concept: read it, then do its Exercises.',
+      module: 'A Module is one concept: read it, then do any Exercises it has.',
       ownIde:
-        'You write and run the C# in your own IDE. Kata never runs or sees your code.',
+        'You write and run the code in your own IDE — Kata never runs or sees your code.',
       browserOnly: 'Your progress is stored in this browser only.',
     },
   },

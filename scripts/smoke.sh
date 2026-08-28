@@ -171,6 +171,9 @@ elif get "$JS_URL" "$WORK/app.js"; then
   # The orientation block (#134): its container class ships in the bundle —
   # static copy, so the class is the whole surface to check.
   has "$WORK/app.js" 'curriculum-orientation' 'the Curriculum orientation block (#134)'
+  # The block sits above every Category, so it may name no single practice
+  # language (#185). The C#-only sentence is the one that shipped before.
+  lacks "$WORK/app.js" 'You write and run the C# in your own IDE' 'the C#-only orientation line (#185)'
   # Category headings (#163). The heading TEXT ("Software Design") is authored
   # content, not shell copy, so it is checked in the content step below; what
   # the client-rendered bundle has to ship is the markup that groups the rows
