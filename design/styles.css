@@ -201,8 +201,9 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 /* Unchecked, the dot IS the control — meaningful non-text, so 3:1 (SC 1.4.11),
    not the decorative divider role: ink at 40% composites to #9f9d9d and read
-   2.41:1 on the ground (#97). --color-text-muted is the outline role the unmet
-   Exit Gate marker already takes (#93): 5.83:1 on bg, 5.38:1 on surface. */
+   2.41:1 on the ground (#97). --color-text-muted is this design system's
+   outline role for a meaningful non-text marker (#93): 5.83:1 on bg, 5.38:1
+   on surface. */
 .radio .dot {
   width: 16px; height: 16px; flex: none; border-radius: 50%;
   border: 1.5px solid var(--color-text-muted);

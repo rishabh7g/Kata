@@ -50,8 +50,8 @@ function buildPrompt(module) {
 
   return [
     'You are drafting the Concept Page for one Module of Kata, a read-only app',
-    'for learning software design fundamentals. This is an LLM first draft that',
-    'a human will edit once and freeze.',
+    'for learning software design fundamentals. This is an LLM first draft; a',
+    'human edits it before anything is committed, and may edit it again later.',
     '',
     '## The Module',
     '',
