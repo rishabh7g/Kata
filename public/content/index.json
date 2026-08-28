@@ -71,7 +71,7 @@
       "ordinal": 2,
       "title": "Ingestion",
       "description": "From documents to searchable chunks: load, split, embed, store.",
-      "pending": true
+      "pending": false
     },
     {
       "id": "ai03",

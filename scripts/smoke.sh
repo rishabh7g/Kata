@@ -346,12 +346,16 @@ else
       json "$WORK/content/index.json" \
         'data.modules.filter((m) => m.categoryId === "agentic-ai").every((m, i) => m.ordinal === i + 1) && data.modules.filter((m) => m.categoryId === "agentic-ai").length === 6' \
         'six Agentic AI Modules, ordinals 1-6 (#165)'
-      # The Category shipped every row pending (#165); #166 authored the first
-      # pack, so what the deployed index has to say now is that ai01 alone is
-      # readable — the remaining five stay pending until their own issues.
+      # The Category shipped every row pending (#165); #166 authored the
+      # first pack and #167 the second, so what the deployed index has to say
+      # now is that ai01 and ai02 are readable — the remaining four stay
+      # pending until their own issues.
       json "$WORK/content/index.json" \
         'data.modules.find((m) => m.id === "ai01").pending === false' \
         'ai01 is no longer pending (#166)'
+      json "$WORK/content/index.json" \
+        'data.modules.find((m) => m.id === "ai02").pending === false' \
+        'ai02 is no longer pending (#167)'
       MODULES="$(node -e '
         const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
         console.log(data.modules.filter((m) => !m.pending).map((m) => m.id).join(" "));
@@ -398,6 +402,13 @@ else
       else
         bad "ai01 is pending in the deployed index — Embeddings content (#166) is missing"
       fi
+      # Module ai02 shipped in #167 — the second Agentic AI content pack: the
+      # loop below must also fetch and validate content/modules/ai02.json.
+      if [[ " $MODULES " == *" ai02 "* ]]; then
+        note "ai02 is non-pending — Ingestion content (#167) is live"
+      else
+        bad "ai02 is pending in the deployed index — Ingestion content (#167) is missing"
+      fi
       for id in $MODULES; do
         get "${URL}content/modules/${id}.json" "$WORK/content/modules/${id}.json"
       done
@@ -409,6 +420,13 @@ else
         json "$WORK/content/modules/ai01.json" \
           'data.id === "ai01" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3' \
           'the served ai01 pack: explain-only, three Self-Check questions (#166)'
+      fi
+      # The served ai02.json parses the same way, and carries the two Model
+      # Examples the Ingestion pack reads with (#167).
+      if [[ -f "$WORK/content/modules/ai02.json" ]]; then
+        json "$WORK/content/modules/ai02.json" \
+          'data.id === "ai02" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
+          'the served ai02 pack: explain-only, three Self-Check questions (#167)'
       fi
       if [[ -n "$MODULES" ]]; then
         if ! out="$(node "$REPO/scripts/validate-content.mjs" "$CONTENT_SCHEMA" "$WORK/content/modules" 2>&1)"; then
