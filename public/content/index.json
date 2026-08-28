@@ -103,7 +103,7 @@
       "ordinal": 6,
       "title": "LangSmith",
       "description": "Seeing what the agent did: tracing runs and evaluating outputs.",
-      "pending": true
+      "pending": false
     }
   ]
 }
