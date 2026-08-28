@@ -335,6 +335,17 @@ else
       json "$WORK/content/index.json" \
         'data.categories.some((c) => c.title === "Software Design" && c.language === "csharp")' \
         'the Software Design heading and its language (#163)'
+      # The Agentic AI Category (#165): the second shelf ships as six pending
+      # rows, so the deployed index is the whole surface — a client-rendered
+      # SPA serves the heading and the rows from this file, not from HTML.
+      has "$WORK/content/index.json" '"agentic-ai"' 'the Agentic AI Category (#165)'
+      has "$WORK/content/index.json" '"ai06"' 'the sixth Agentic AI Module (#165)'
+      json "$WORK/content/index.json" \
+        'data.categories.some((c) => c.title === "Agentic AI" && c.language === "python")' \
+        'the Agentic AI heading and its language (#165)'
+      json "$WORK/content/index.json" \
+        'data.modules.filter((m) => m.categoryId === "agentic-ai").every((m, i) => m.ordinal === i + 1 && m.pending) && data.modules.filter((m) => m.categoryId === "agentic-ai").length === 6' \
+        'six pending Agentic AI Modules, ordinals 1-6 (#165)'
       MODULES="$(node -e '
         const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
         console.log(data.modules.filter((m) => !m.pending).map((m) => m.id).join(" "));

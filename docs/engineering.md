@@ -306,7 +306,8 @@ Rules, in the order a reviewer should check them:
 - Records are **per Module**: writing one Module's answers never touches
   another's, and the key is the `moduleId` itself, so a Module has at most one.
 - `exportState()` returns everything stored, ordered by `moduleId` ascending —
-  the Module's ordinal, given the `m01`…`m05` id shape. `importState(state)`
+  within a Category that is the Module's ordinal, given the `m01`/`ai01` id
+  shape. `importState(state)`
   **replaces** the store wholesale in one transaction, after rejecting a state
   with a `schemaVersion` it does not know. A rejected import changes nothing.
 - Every write records the instant it happened and nothing else. There is no
@@ -375,7 +376,7 @@ Each entry of `modules` requires:
 
 | Field | Type | Rule |
 |---|---|---|
-| `id` | string | `^m\d{2}$`, unique app-wide |
+| `id` | string | `^[a-z]+\d{2}$`, unique app-wide — a short Category prefix and a 2-digit position (`m01`, `ai01`) |
 | `categoryId` | string | equals the `id` of one entry of `categories` |
 | `ordinal` | integer | ≥ 1, unique and contiguous from 1 **within its Category** |
 | `title` | string | non-empty; matches `docs/design.md` § Curriculum verbatim |

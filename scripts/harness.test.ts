@@ -174,49 +174,78 @@ describe('content schema + Module index (#7)', () => {
     expect(result.stdout).toContain('must be unique within the question');
   });
 
-  it('lists all five Modules, in Curriculum order, titles verbatim, all five authored', () => {
-    const index = JSON.parse(
-      readFileSync(join(REPO, 'public/content/index.json'), 'utf8'),
-    ) as {
+  /** The shipping index, read fresh — the Modules of one Category at a time. */
+  function readIndex() {
+    return JSON.parse(readFileSync(join(REPO, 'public/content/index.json'), 'utf8')) as {
       schemaVersion: number;
       categories: { id: string; ordinal: number; title: string; language: string }[];
-      modules: { id: string; categoryId: string; ordinal: number; title: string; pending: boolean }[];
+      modules: {
+        id: string;
+        categoryId: string;
+        ordinal: number;
+        title: string;
+        pending: boolean;
+      }[];
     };
+  }
 
-    // docs/design.md § Curriculum — fixed order, foundations-down.
-    expect(index.modules.map((m) => m.title)).toEqual([
+  it('lists all five Software Design Modules, in Curriculum order, titles verbatim, all five authored', () => {
+    const modules = readIndex().modules.filter((m) => m.categoryId === 'software-design');
+
+    // docs/design.md § Categories and Modules — fixed order, foundations-down.
+    expect(modules.map((m) => m.title)).toEqual([
       'Deep Modules & Information Hiding',
       'Dependency Direction',
       'Testing at Boundaries + TDD loop',
       'Naming & Ubiquitous Language',
       'Error Design',
     ]);
-    expect(index.modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5]);
-    expect(index.modules.map((m) => m.id)).toEqual(['m01', 'm02', 'm03', 'm04', 'm05']);
+    expect(modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5]);
+    expect(modules.map((m) => m.id)).toEqual(['m01', 'm02', 'm03', 'm04', 'm05']);
     // A Module is pending until its content pack is authored: #8 shipped m01,
     // #24 shipped m02, #25 shipped m03, #26 shipped m04, #27 shipped m05 —
-    // the Curriculum is complete, no pending Module remains.
-    expect(index.modules.map((m) => m.pending)).toEqual([false, false, false, false, false]);
+    // the Software Design Category is complete, no pending Module remains.
+    expect(modules.map((m) => m.pending)).toEqual([false, false, false, false, false]);
   });
 
-  it('files all five Modules under the Software Design Category, in C# (#160)', () => {
-    const index = JSON.parse(
-      readFileSync(join(REPO, 'public/content/index.json'), 'utf8'),
-    ) as {
-      schemaVersion: number;
-      categories: { id: string; ordinal: number; title: string; language: string }[];
-      modules: { categoryId: string; ordinal: number }[];
-    };
+  it('declares the two Categories with their practice languages (#160, #165)', () => {
+    const index = readIndex();
 
     // docs/design.md § Categories and Modules — the language belongs to the
-    // shelf: Software Design practises in C#.
+    // shelf: Software Design practises in C#, Agentic AI in Python.
     expect(index.schemaVersion).toBe(2);
     expect(index.categories.map((c) => [c.id, c.ordinal, c.title, c.language])).toEqual([
       ['software-design', 1, 'Software Design', 'csharp'],
+      ['agentic-ai', 2, 'Agentic AI', 'python'],
     ]);
-    // A Module's ordinal is 1-based and contiguous WITHIN its Category.
-    expect(index.modules.map((m) => m.categoryId)).toEqual(Array(5).fill('software-design'));
-    expect(index.modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5]);
+    // Every Module is filed under a Category the same index declares, and a
+    // Module's ordinal is 1-based and contiguous WITHIN its Category.
+    const declared = new Set(index.categories.map((c) => c.id));
+    expect(index.modules.every((m) => declared.has(m.categoryId))).toBe(true);
+    for (const category of declared) {
+      const ordinals = index.modules
+        .filter((m) => m.categoryId === category)
+        .map((m) => m.ordinal);
+      expect(ordinals).toEqual(ordinals.map((_, position) => position + 1));
+    }
+  });
+
+  it('lists the six Agentic AI Modules, all pending until authored (#165)', () => {
+    const modules = readIndex().modules.filter((m) => m.categoryId === 'agentic-ai');
+
+    // docs/design.md § Categories and Modules — the Category ships as pending
+    // rows first; #166–#171 author one content pack each.
+    expect(modules.map((m) => m.id)).toEqual(['ai01', 'ai02', 'ai03', 'ai04', 'ai05', 'ai06']);
+    expect(modules.map((m) => m.title)).toEqual([
+      'Embeddings',
+      'Ingestion',
+      'Retrieval-Augmented Generation',
+      'Agents & Tool Use',
+      'LangGraph',
+      'LangSmith',
+    ]);
+    expect(modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(modules.map((m) => m.pending)).toEqual(Array(6).fill(true));
   });
 });
 

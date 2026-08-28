@@ -7,6 +7,13 @@
       "title": "Software Design",
       "description": "Five design fundamentals in C#, ordered foundations-down.",
       "language": "csharp"
+    },
+    {
+      "id": "agentic-ai",
+      "ordinal": 2,
+      "title": "Agentic AI",
+      "description": "How LLM apps retrieve, reason, and act — explained from zero.",
+      "language": "python"
     }
   ],
   "modules": [
@@ -49,6 +56,54 @@
       "title": "Error Design",
       "description": "Define errors out of existence — API design for backend .NET work.",
       "pending": false
+    },
+    {
+      "id": "ai01",
+      "categoryId": "agentic-ai",
+      "ordinal": 1,
+      "title": "Embeddings",
+      "description": "Meaning as geometry: how text becomes vectors you can compare.",
+      "pending": true
+    },
+    {
+      "id": "ai02",
+      "categoryId": "agentic-ai",
+      "ordinal": 2,
+      "title": "Ingestion",
+      "description": "From documents to searchable chunks: load, split, embed, store.",
+      "pending": true
+    },
+    {
+      "id": "ai03",
+      "categoryId": "agentic-ai",
+      "ordinal": 3,
+      "title": "Retrieval-Augmented Generation",
+      "description": "Retrieve first, then generate — grounding answers in your own data.",
+      "pending": true
+    },
+    {
+      "id": "ai04",
+      "categoryId": "agentic-ai",
+      "ordinal": 4,
+      "title": "Agents & Tool Use",
+      "description": "The reason–act loop: a model that decides which tool to call next.",
+      "pending": true
+    },
+    {
+      "id": "ai05",
+      "categoryId": "agentic-ai",
+      "ordinal": 5,
+      "title": "LangGraph",
+      "description": "Agents as graphs: explicit state, nodes, and edges instead of tangled loops.",
+      "pending": true
+    },
+    {
+      "id": "ai06",
+      "categoryId": "agentic-ai",
+      "ordinal": 6,
+      "title": "LangSmith",
+      "description": "Seeing what the agent did: tracing runs and evaluating outputs.",
+      "pending": true
     }
   ]
 }

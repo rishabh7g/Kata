@@ -41,6 +41,17 @@ The Software Design Category holds five Modules, ordered foundations-down. The o
 4. **Naming & Ubiquitous Language** — cheapest, highest leverage; also directly improves every AI collaboration.
 5. **Error Design** — define errors out of existence; API design for backend .NET work.
 
+The Agentic AI Category holds six Modules, practised in Python, in the same
+suggested reading order — each one leans on the one before, and none of them
+blocks another:
+
+1. **Embeddings** — meaning as geometry: how text becomes vectors you can compare.
+2. **Ingestion** — from documents to searchable chunks: load, split, embed, store.
+3. **Retrieval-Augmented Generation** — retrieve first, then generate, so answers stay grounded in your own data.
+4. **Agents & Tool Use** — the reason–act loop: a model that decides which tool to call next.
+5. **LangGraph** — agents as graphs: explicit state, nodes, and edges instead of tangled loops.
+6. **LangSmith** — seeing what the agent did: tracing runs and evaluating outputs.
+
 Deliberately cut: CLEAN architecture and design-pattern catalogs as standalone Modules. After Modules 1–2 they compress to short reads; add them as Concept-Page appendices only.
 
 ## Module anatomy
