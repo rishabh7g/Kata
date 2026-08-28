@@ -230,11 +230,12 @@ describe('content schema + Module index (#7)', () => {
     }
   });
 
-  it('lists the six Agentic AI Modules, all pending until authored (#165)', () => {
+  it('lists the six Agentic AI Modules, ai01 authored and the rest pending (#165, #166)', () => {
     const modules = readIndex().modules.filter((m) => m.categoryId === 'agentic-ai');
 
-    // docs/design.md § Categories and Modules — the Category ships as pending
-    // rows first; #166–#171 author one content pack each.
+    // docs/design.md § Categories and Modules — the Category shipped as six
+    // pending rows (#165); #166–#171 author one content pack each, and #166
+    // authored ai01.
     expect(modules.map((m) => m.id)).toEqual(['ai01', 'ai02', 'ai03', 'ai04', 'ai05', 'ai06']);
     expect(modules.map((m) => m.title)).toEqual([
       'Embeddings',
@@ -245,7 +246,35 @@ describe('content schema + Module index (#7)', () => {
       'LangSmith',
     ]);
     expect(modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(modules.map((m) => m.pending)).toEqual(Array(6).fill(true));
+    expect(modules.map((m) => m.pending)).toEqual([false, true, true, true, true, true]);
+  });
+
+  it('ships ai01 as an explain-only pack with three explained Self-Check questions (#166)', () => {
+    const pack = JSON.parse(
+      readFileSync(join(REPO, 'public/content/modules/ai01.json'), 'utf8'),
+    ) as {
+      id: string;
+      modelExamples: { before: string; after: string; caption: string }[];
+      exercises: unknown[];
+      selfCheckQuestions: { explanation?: string }[];
+    };
+
+    // docs/design.md § Module anatomy — a Module that only explains is a
+    // complete Module (#161), and the Agentic AI packs are explain-only: the
+    // practice folders are a separate decision, not a missing piece here.
+    expect(pack.id).toBe('ai01');
+    expect(pack.exercises).toEqual([]);
+    // Each Model Example side stays inside the ≤ 40-line authoring rule
+    // (docs/design.md § Module anatomy), which no schema can state.
+    for (const example of pack.modelExamples) {
+      expect(example.before.split('\n').length).toBeLessThanOrEqual(40);
+      expect(example.after.split('\n').length).toBeLessThanOrEqual(40);
+    }
+    // Every question teaches after a pick (#162): the explanation is the same
+    // text whichever option was chosen, so a pack that omits one reveals
+    // nothing at all.
+    expect(pack.selfCheckQuestions).toHaveLength(3);
+    expect(pack.selfCheckQuestions.every((q) => (q.explanation ?? '').length > 0)).toBe(true);
   });
 });
 

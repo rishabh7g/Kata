@@ -344,8 +344,14 @@ else
         'data.categories.some((c) => c.title === "Agentic AI" && c.language === "python")' \
         'the Agentic AI heading and its language (#165)'
       json "$WORK/content/index.json" \
-        'data.modules.filter((m) => m.categoryId === "agentic-ai").every((m, i) => m.ordinal === i + 1 && m.pending) && data.modules.filter((m) => m.categoryId === "agentic-ai").length === 6' \
-        'six pending Agentic AI Modules, ordinals 1-6 (#165)'
+        'data.modules.filter((m) => m.categoryId === "agentic-ai").every((m, i) => m.ordinal === i + 1) && data.modules.filter((m) => m.categoryId === "agentic-ai").length === 6' \
+        'six Agentic AI Modules, ordinals 1-6 (#165)'
+      # The Category shipped every row pending (#165); #166 authored the first
+      # pack, so what the deployed index has to say now is that ai01 alone is
+      # readable — the remaining five stay pending until their own issues.
+      json "$WORK/content/index.json" \
+        'data.modules.find((m) => m.id === "ai01").pending === false' \
+        'ai01 is no longer pending (#166)'
       MODULES="$(node -e '
         const data = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
         console.log(data.modules.filter((m) => !m.pending).map((m) => m.id).join(" "));
@@ -385,9 +391,25 @@ else
       else
         bad "m05 is pending in the deployed index — Module 5 content (#27) is missing"
       fi
+      # Module ai01 shipped in #166 — the first Agentic AI content pack: the
+      # loop below must also fetch and validate content/modules/ai01.json.
+      if [[ " $MODULES " == *" ai01 "* ]]; then
+        note "ai01 is non-pending — Embeddings content (#166) is live"
+      else
+        bad "ai01 is pending in the deployed index — Embeddings content (#166) is missing"
+      fi
       for id in $MODULES; do
         get "${URL}content/modules/${id}.json" "$WORK/content/modules/${id}.json"
       done
+      # The served ai01.json parses, and says what an explain-only pack says:
+      # no Exercises at all (#161) and the three Self-Check questions the
+      # Module reads with. The schema run below covers its shape; this line is
+      # what proves the DEPLOYED file is the authored pack (#166).
+      if [[ -f "$WORK/content/modules/ai01.json" ]]; then
+        json "$WORK/content/modules/ai01.json" \
+          'data.id === "ai01" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3' \
+          'the served ai01 pack: explain-only, three Self-Check questions (#166)'
+      fi
       if [[ -n "$MODULES" ]]; then
         if ! out="$(node "$REPO/scripts/validate-content.mjs" "$CONTENT_SCHEMA" "$WORK/content/modules" 2>&1)"; then
           bad "a deployed Module content file does not match its schema"

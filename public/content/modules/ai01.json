@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "id": "ai01",
+  "conceptPageMarkdown": "# Embeddings\n\n*LLM first draft · unedited*\n\n## A search that finds nothing\n\nSomeone types **my car will not start** into a help desk search box. The\nhelp desk holds exactly the right article. It is called **Automobile\nengine fails to turn over in cold weather**. The search comes back\nempty.\n\nNothing is broken. The search looked for the typed words inside the\nstored text, and the two sentences share no words. `car` is not\n`automobile`. `start` is not `turn over`. A search that compares\nwords has no way to see that the two sentences are about the same\nthing.\n\nWhat the reader wanted was a search that compares **meaning**. This\nModule is about the one move that makes that possible: turning a piece\nof text into numbers, so that \"means something similar\" becomes \"sits\nclose by\".\n\n## An embedding is a list of numbers that stands for a text\n\nTake the sentence \"my car will not start\". Hand it to a program and\nget this back:\n\n`[0.83, 0.12]`\n\nThat list is an **embedding**: a fixed-length list of numbers made from\na piece of text, arranged so that texts with similar meaning come back\nwith similar numbers. The short word for a list of numbers like this is\na **vector** — same thing, fewer syllables, and the word the tools use.\n\nTwo things to notice about it.\n\n- The words are gone. An embedding is not a squashed copy of the\n  sentence, and you cannot read the sentence back out of it.\n- The length never changes. A three-word question and a three-page\n  document both come back as lists of the same length. Real ones are\n  long — 1536 numbers is a common size — but everything on this page\n  works the same with two.\n\n## The numbers are coordinates\n\nTwo numbers make a point on a map: across, then up. Pretend, for this\npage only, that the first number means \"how much this text is about\nvehicles\" and the second means \"how much it is about food\". Real\nembeddings have no such tidy meaning per number, but the map picture\nholds, and the map picture is the point.\n\n- \"my car will not start\" → `[3, 1]`\n- \"automobile engine fails to turn over\" → `[2, 1]`\n- \"banana bread recipe with walnuts\" → `[0, 4]`\n\nDraw those three points. The two car sentences land beside each other,\nover to the right. The recipe lands far away, up top. They landed there\nwithout sharing a single word, because the numbers came from meaning\nrather than spelling. That is the whole idea. **Meaning became a\nposition, so \"related\" became \"nearby\"** — and everything after this is\narithmetic.\n\n## Cosine similarity: do two arrows point the same way?\n\nDraw an arrow from the corner of the map out to each point. Now the\nquestion \"are these two texts about the same thing?\" has become \"do\nthese two arrows point the same way?\".\n\n**Cosine similarity** is the number that answers it. It runs from 1\n(the arrows point the same way) through 0 (they sit at a right angle,\nso the texts have nothing to do with each other) down to -1 (they point\nopposite ways). Three steps, worked here by hand.\n\n1. Multiply the matching numbers and add the results. That total is\n   called the **dot product**.\n2. Measure each arrow's length: square its numbers, add them, take the\n   square root.\n3. Divide the dot product by the two lengths multiplied together.\n\nFor `[3, 1]` and `[2, 1]` — the two car sentences:\n\n- dot product: `(3 × 2) + (1 × 1) = 7`\n- lengths: `√(9 + 1) = √10 ≈ 3.16` and `√(4 + 1) = √5 ≈ 2.24`\n- `7 ÷ (3.16 × 2.24) ≈ 0.99`\n\nFor `[3, 1]` and `[0, 4]` — a car sentence and the recipe:\n\n- dot product: `(3 × 0) + (1 × 4) = 4`\n- lengths: `3.16` and `√(0 + 16) = 4`\n- `4 ÷ (3.16 × 4) ≈ 0.32`\n\n0.99 against 0.32. Rank a pile of documents by that number and the\nnearest ones come out on top — which is a meaning-based search, built\nout of multiplying and adding.\n\nWhy the angle rather than the plain distance between the two points? A\nlong document tends to produce a long arrow, so distance partly\nmeasures how much text there is. Direction does not care how much you\nwrote, and topic is what direction carries.\n\n## Where the numbers come from\n\nNobody writes embeddings by hand. You call an **embedding model**: a\nprogram that takes text in and gives a vector back. **Trained** means\nit was shown an enormous pile of text until texts that people use in\nsimilar ways came out with similar numbers. You do not train one. You\ncall one, the way you call a weather service.\n\nTwo rules that bite beginners:\n\n- Every vector you compare has to come from the same model. Numbers\n  from two different models are not comparable, in the way two people's\n  private shorthand is not.\n- One model gives the same text the same vector every time, so you can\n  work the vectors out once and store them.\n\nIn Python the usual way to call one is through **LangChain**, a library\nthat puts many AI providers behind one shared set of calls. Its\n`Embeddings` piece has two methods worth knowing: `embed_query(text)`\nfor the single text you are searching with, and\n`embed_documents(texts)` for the pile you are searching through. Which\ncompany's model actually runs is one line of setup; the code that does\nthe comparing never mentions it.\n\n## What people build on top of this\n\nTwo things, named here and explained in their own Modules — come back\nfor them whenever you want them, in any order:\n\n- **Semantic search** — the help desk case above. \"Semantic\" means\n  meaning-based, as opposed to word-based: embed the question, embed\n  the documents, return the nearest ones.\n- **Retrieval-Augmented Generation** — search your own documents first,\n  then hand what you found to a chat model so its answer is grounded in\n  them rather than made up.\n\n## The short version\n\n- An embedding is a fixed-length list of numbers made from a text by a\n  trained model, and the text's words are not in it.\n- Similar meaning lands nearby. Cosine similarity says how nearby, from\n  1 (same direction) down through 0 (unrelated).\n- Word-matching search misses \"car\" against \"automobile\" because it\n  compares spelling; embedding search finds it because it compares\n  position.\n- Compare only vectors from one model, and store them, because the same\n  text always comes back with the same numbers.\n",
+  "modelExamples": [
+    {
+      "before": "# Exact-word search: a document is a hit when it shares a word\n# with the question. Run this and the list comes back empty.\n\nDOCS = [\n    \"Automobile engine fails to turn over in cold weather\",\n    \"Banana bread recipe with walnuts\",\n    \"How to reset your account password\",\n]\n\n\ndef keyword_search(question, docs):\n    \"\"\"Every document sharing at least one word with the question.\"\"\"\n    asked = set(question.lower().split())\n    hits = []\n    for doc in docs:\n        if asked & set(doc.lower().split()):\n            hits.append(doc)\n    return hits\n\n\nprint(keyword_search(\"my car will not start\", DOCS))\n# []\n\n# The right article is sitting in DOCS the whole time. The reader's\n# words and the article's words do not overlap: \"car\" is not\n# \"automobile\" and \"start\" is not \"turn over\". Comparing spelling\n# cannot see that the two sentences mean the same thing.\n",
+      "after": "# The same search, over meaning. Every document becomes a vector (a\n# list of numbers), the question becomes one too, and the answer is\n# the document whose arrow points most nearly the same way.\nfrom langchain_openai import OpenAIEmbeddings\n\nDOCS = [\n    \"Automobile engine fails to turn over in cold weather\",\n    \"Banana bread recipe with walnuts\",\n    \"How to reset your account password\",\n]\n\nembedder = OpenAIEmbeddings(model=\"text-embedding-3-small\")\n\n\ndef length(vector):\n    return sum(number * number for number in vector) ** 0.5\n\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    return dot / (length(a) * length(b))\n\n\ndef meaning_search(question, docs):\n    \"\"\"Documents ranked by how near their meaning is to the question.\"\"\"\n    asked = embedder.embed_query(question)\n    stored = embedder.embed_documents(docs)\n    ranked = sorted(\n        zip(docs, stored),\n        key=lambda pair: cosine(asked, pair[1]),\n        reverse=True,\n    )\n    return [doc for doc, _ in ranked]\n\n\nprint(meaning_search(\"my car will not start\", DOCS)[0])\n# Automobile engine fails to turn over in cold weather\n",
+      "caption": "What moved: what the word \"match\" means. Before, the two sentences are compared as spelling — a shared word or no hit — so the one right article is unreachable and no amount of tuning finds it. After, both sides are turned into vectors first and the comparison is one of direction, so \"car\" reaches \"automobile\" with no list of synonyms written anywhere. The documents did not change; the question did not change; only the comparison did."
+    },
+    {
+      "before": "# Two vectors typed in by hand, from the toy map on the Concept\n# Page: across = \"about vehicles\", up = \"about food\".\nCAR_TROUBLE = [3, 1]\nENGINE_FAULT = [2, 1]\nBANANA_BREAD = [0, 4]\n\n\ndef length(vector):\n    return sum(number * number for number in vector) ** 0.5\n\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    return dot / (length(a) * length(b))\n\n\nprint(round(cosine(CAR_TROUBLE, ENGINE_FAULT), 2))   # 0.99\nprint(round(cosine(CAR_TROUBLE, BANANA_BREAD), 2))   # 0.32\n\n# The arithmetic is honest and the numbers are invented. Nobody can\n# hand-write [3, 1] for a real sentence, and no real sentence gets\n# away with two numbers — the models that ship return hundreds.\n",
+      "after": "# The same comparison, on real sentences. One line names the model.\n# The call hands back the vectors.\nfrom langchain_openai import OpenAIEmbeddings\n\nembedder = OpenAIEmbeddings(model=\"text-embedding-3-small\")\n\ncar_trouble, engine_fault, banana_bread = embedder.embed_documents(\n    [\n        \"my car will not start\",\n        \"automobile engine fails to turn over\",\n        \"banana bread recipe with walnuts\",\n    ]\n)\n\n\ndef length(vector):\n    return sum(number * number for number in vector) ** 0.5\n\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    return dot / (length(a) * length(b))\n\n\n# High: the two car sentences point nearly the same way.\nprint(round(cosine(car_trouble, engine_fault), 2))\n# Much lower: the recipe sits off at an angle.\nprint(round(cosine(car_trouble, banana_bread), 2))\n\n# Changing provider is the import plus that one setup line — say\n# HuggingFaceEmbeddings(model_name=...) instead. The vectors come\n# back a different length and cosine() never notices.\n",
+      "caption": "What got hidden: where the numbers come from. Before, the vectors are typed in by hand — fine for checking the arithmetic, useless on real text. After, one Embeddings call turns sentences into vectors, and which company's model produced them is one line of setup. cosine() is identical on both sides: the comparing code never learns which provider ran, which is why swapping models is a one-line change and not a rewrite."
+    }
+  ],
+  "exercises": [],
+  "selfCheckQuestions": [
+    {
+      "id": "q1",
+      "prompt": "Without looking back at the page, write down what the embedding of \"my car will not start\" actually holds. Which comes closest to what you wrote?",
+      "explanation": "An embedding is a list of numbers, and that is all it is. The words do not survive the trip, so you cannot read the sentence back out of its embedding. Its one useful property is that texts meaning similar things come back with similar numbers.",
+      "options": [
+        {
+          "value": "numbers",
+          "label": "A list of numbers, always the same length"
+        },
+        {
+          "value": "words",
+          "label": "The sentence's own words, kept in another order"
+        },
+        {
+          "value": "summary",
+          "label": "A short summary of the sentence in plain English"
+        },
+        {
+          "value": "synonyms",
+          "label": "Related words to search for, such as automobile and engine"
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "prompt": "Work two cosine numbers by hand: [3, 1] against [2, 1], then [3, 1] against [0, 4]. Which pair came out nearer to 1?",
+      "explanation": "Cosine similarity asks one question: do the two arrows point the same way? Near 1 means the same direction, so the texts are about the same thing, and near 0 means a right angle, so they are unrelated. The pair [3, 1] and [2, 1] works out at about 0.99, and [3, 1] against [0, 4] at about 0.32.",
+      "options": [
+        {
+          "value": "first-pair",
+          "label": "[3, 1] and [2, 1]"
+        },
+        {
+          "value": "second-pair",
+          "label": "[3, 1] and [0, 4]"
+        },
+        {
+          "value": "same",
+          "label": "Both came out about the same"
+        },
+        {
+          "value": "not-worked",
+          "label": "I read the steps without working the numbers"
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "prompt": "Count the words shared by \"my car will not start\" and \"automobile engine fails to turn over\". How many did you count?",
+      "explanation": "Those two sentences share no words at all, and they mean the same thing. Word-matching search compares spelling, so it has nothing to work with here. Embedding search compares position on the meaning map, where the two sentences sit side by side.",
+      "options": [
+        {
+          "value": "none",
+          "label": "None"
+        },
+        {
+          "value": "one",
+          "label": "One"
+        },
+        {
+          "value": "two-or-more",
+          "label": "Two or more"
+        }
+      ]
+    }
+  ]
+}

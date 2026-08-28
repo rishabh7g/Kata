@@ -63,7 +63,7 @@
       "ordinal": 1,
       "title": "Embeddings",
       "description": "Meaning as geometry: how text becomes vectors you can compare.",
-      "pending": true
+      "pending": false
     },
     {
       "id": "ai02",
