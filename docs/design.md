@@ -54,6 +54,18 @@ blocks another:
 
 Deliberately cut: CLEAN architecture and design-pattern catalogs as standalone Modules. After Modules 1–2 they compress to short reads; add them as Concept-Page appendices only.
 
+### Exercise coverage across the two Categories
+
+The two Categories carry practice material to different depths, and both depths are chosen. Reading this from the content alone would mislead, so it is written down here rather than inferred from what happens to be authored.
+
+**Software Design ships two Exercises per Module** — one refactor-type, where the behavior is already correct and a Smell is planted in the design, and one construct-type, where a Target Interface is given and the code behind it is not. Two is the convention for this Category, not a schema rule; nothing enforces it.
+
+**Agentic AI is explain-only by design.** Five of its six Modules author `"exercises": []` and are complete Modules in that state: the Category teaches by explaining, and the Concept Page plus Model Examples plus Self-Check is the whole of what it sets out to give. An empty Exercises list here is a finished Module, never an unfinished one.
+
+**`ai03-e1` is the one exception, and it is a pilot.** The single construct-type Python Exercise under Retrieval-Augmented Generation exists to prove one thing: that the offline practice path works in a second language — the learner clones the folder, runs `pytest` in their own IDE, and Kata never sees the result (#172). It is not the first of six.
+
+**Whether more Python Exercises are authored is decided after the pilot has been used in practice, not by default.** Filling the other five in for symmetry is the move this section exists to prevent. If the pilot proves useful, more are authored deliberately; if it does not, the Category stays as it is.
+
 ## Module anatomy
 
 Each Module contains:
@@ -61,7 +73,7 @@ Each Module contains:
 - Concept Page, written to the editorial standard above; its first line is the provenance note recording which editing stages it has been through (`docs/engineering.md` § 5), and no screen renders that line
 - 2–3 Model Examples (before/after code pairs in the Category's language, ≤40 lines each side)
 - A Self-Check — a few optional questions, answered while reading, autosaved, never submitted
-- Exercises: none, one, or several. A Module that only explains is a complete Module. Where a Software Design Module ships them, the convention is two — one refactor-type (fix a planted Smell) and one construct-type (implement behind a given Target Interface) — each a committed folder the learner clones. The Agentic AI Category explains only, with one exception: Retrieval-Augmented Generation carries a single construct-type Python Exercise, the pilot that proves practice material works in a second language (#172). Whether the other five get one is decided after that Exercise has been used, not before.
+- Exercises: none, one, or several, each a committed folder the learner clones. A Module that only explains is a complete Module. How many a Module ships is a per-Category convention rather than a schema rule — see § Exercise coverage across the two Categories above (#161, #172).
 
 ## Exercise design rules
 
