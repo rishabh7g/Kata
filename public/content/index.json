@@ -79,7 +79,7 @@
       "ordinal": 3,
       "title": "Retrieval-Augmented Generation",
       "description": "Retrieve first, then generate — grounding answers in your own data.",
-      "pending": true
+      "pending": false
     },
     {
       "id": "ai04",

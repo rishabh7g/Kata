@@ -230,12 +230,12 @@ describe('content schema + Module index (#7)', () => {
     }
   });
 
-  it('lists the six Agentic AI Modules, ai01 and ai02 authored and the rest pending (#165, #166, #167)', () => {
+  it('lists the six Agentic AI Modules, ai01 to ai03 authored and the rest pending (#165, #166, #167, #168)', () => {
     const modules = readIndex().modules.filter((m) => m.categoryId === 'agentic-ai');
 
     // docs/design.md § Categories and Modules — the Category shipped as six
     // pending rows (#165); #166–#171 author one content pack each, and #166
-    // authored ai01, #167 ai02.
+    // authored ai01, #167 ai02, #168 ai03.
     expect(modules.map((m) => m.id)).toEqual(['ai01', 'ai02', 'ai03', 'ai04', 'ai05', 'ai06']);
     expect(modules.map((m) => m.title)).toEqual([
       'Embeddings',
@@ -246,12 +246,13 @@ describe('content schema + Module index (#7)', () => {
       'LangSmith',
     ]);
     expect(modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(modules.map((m) => m.pending)).toEqual([false, false, true, true, true, true]);
+    expect(modules.map((m) => m.pending)).toEqual([false, false, false, true, true, true]);
   });
 
   it.each([
     ['ai01', '#166'],
     ['ai02', '#167'],
+    ['ai03', '#168'],
   ])('ships %s as an explain-only pack with three explained Self-Check questions (%s)', (id) => {
     const pack = JSON.parse(
       readFileSync(join(REPO, `public/content/modules/${id}.json`), 'utf8'),
