@@ -127,13 +127,14 @@ export function ModuleScreen() {
 /**
  * The Concept Page section: the section label, then the pack's prose.
  *
- * The packs still open with the emphasis-only `*LLM first draft ·
- * human-edited once · frozen*` line, and the label row used to carry it
- * beside the label (#30). That line is authoring provenance, not learning
- * content — it told the learner how the page was made, which is nothing they
- * read the Module for — so it is no longer displayed (#139). It is still
- * stripped, because a line that stops being lifted out would otherwise
- * reappear as the first paragraph of the prose.
+ * The packs still open with a provenance line — one emphasis-only paragraph
+ * naming how the page was drafted — and the label row used to carry it beside
+ * the label (#30). That line is authoring provenance, not learning content —
+ * it told the learner how the page was made, which is nothing they read the
+ * Module for — so it is no longer displayed (#139). It is still stripped,
+ * because a line that stops being lifted out would otherwise reappear as the
+ * first paragraph of the prose. Its wording is the packs' business and has
+ * changed more than once (#173, #201), so nothing here quotes it.
  */
 function ConceptSection({ module }: { module: ModuleDetail }) {
   const s = useStrings();
@@ -226,11 +227,13 @@ function stripLeadingTitle(markdown: string): string {
 }
 
 /**
- * Drops the packs' `*LLM first draft · human-edited once · frozen*` line —
- * an emphasis-only first paragraph — from the prose (#139). It is committed
- * in the markdown source, where provenance belongs, and it is not content a
- * learner reads, so nothing renders it: this used to split it out for the
- * label row (#30) and now simply discards it.
+ * Drops the packs' provenance line — an emphasis-only first paragraph — from
+ * the prose (#139). It is committed in the markdown source, where provenance
+ * belongs, and it is not content a learner reads, so nothing renders it: this
+ * used to split it out for the label row (#30) and now discards it.
+ *
+ * The match is on that shape alone, never on the wording, which differs
+ * between the packs and has been rewritten twice (#173, #201).
  *
  * Stripping stays, rather than the whole function going away, because the
  * packs are unchanged: without it that line would land in the body and read

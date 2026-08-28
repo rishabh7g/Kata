@@ -40,7 +40,7 @@ const index: ModuleIndex = {
 const conceptPageMarkdown = [
   '# Deep Modules & Information Hiding',
   '',
-  '*LLM first draft · human-edited once · frozen*',
+  '*LLM first draft · human-edited once · LLM novice pass · human-reviewed*',
   '',
   '## The trade every module makes',
   '',
@@ -255,10 +255,12 @@ describe('Module screen', () => {
     ]);
   });
 
-  // #139: the packs' `*LLM first draft · human-edited once · frozen*` line
-  // is authoring provenance, not learning content. It stays in the committed
-  // markdown and reaches no part of the screen — neither the label row it
-  // used to sit in (#30) nor, once that display went, the prose body.
+  // #139: the packs' provenance line — one emphasis-only opening paragraph,
+  // worded differently per pack — is authoring provenance, not learning
+  // content. It stays in the committed markdown and reaches no part of the
+  // screen — neither the label row it used to sit in (#30) nor, once that
+  // display went, the prose body. The fixture above carries m01's real
+  // wording, so the substrings asserted below are the ones a pack ships.
   it('renders no provenance note anywhere on an authored Module (#139)', async () => {
     const { container } = await renderAt('/modules/m01');
     await screen.findByRole('heading', { level: 2, name: 'Self-Check' });
