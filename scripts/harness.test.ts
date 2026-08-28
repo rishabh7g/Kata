@@ -284,6 +284,21 @@ describe('content schema + Module index (#7)', () => {
     expect(pack.selfCheckQuestions.every((q) => (q.explanation ?? '').length > 0)).toBe(true);
   });
 
+  // The novice pass over the five Software Design packs (#173) brought the
+  // Library's oldest content to the standard the Agentic AI packs set: every
+  // Self-Check question teaches after a pick, in the same words whichever
+  // option was chosen (#162). Model Examples and Exercise briefs were left
+  // untouched by that pass, so this only pins the explanations.
+  it.each([['m01'], ['m02'], ['m03'], ['m04'], ['m05']])(
+    'ships %s with three explained Self-Check questions (#173)',
+    (id) => {
+      const pack = readPack(id);
+
+      expect(pack.selfCheckQuestions).toHaveLength(3);
+      expect(pack.selfCheckQuestions.every((q) => (q.explanation ?? '').length > 0)).toBe(true);
+    },
+  );
+
   // Five of the six Agentic AI Modules only explain, which is a complete
   // Module (#161). ai03 is the exception and the pilot (#172): one Python
   // Exercise, the only practice material in the Category.
