@@ -3,15 +3,11 @@ import { KataMark } from './KataMark';
 
 /**
  * The chrome every screen sits in: the fixed nav with the Kata lockup, then
- * the one scroll area (.app-main) the screens render into
- * (design/README.md § Brand and § Screens; #104).
+ * the one scroll area the screens render into.
  *
- * The nav carries the lockup and nothing else (#156). It used to carry a
- * count of the reader beside it, which the Library has no place for: reading
- * is self-paced, nothing is recorded but the reader's own Self-Check answers
- * (docs/ubiquitous-language.md § Library), and a running tally in permanent
- * chrome measures the reader on every screen. The nav is a way back to the
- * Curriculum, not a readout.
+ * The nav carries the lockup and nothing else. It is a way back to the
+ * Curriculum, not a readout: a tally in permanent chrome would measure the
+ * reader on every screen, and nothing here measures the reader.
  */
 export function AppShell() {
   return (

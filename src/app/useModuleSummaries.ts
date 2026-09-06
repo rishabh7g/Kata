@@ -8,7 +8,7 @@ import type { ICurriculum, ModuleSummary } from '../curriculum';
  * the data is here rather than a made-up placeholder.
  *
  * Re-reads on every navigation (`location.key`). ICurriculum is a pure
- * function of committed content and caches it in memory (#158), so a return
+ * function of committed content and caches it in memory, so a return
  * to the Curriculum costs one cached call and the screen never has to decide
  * whether its list is still current.
  */

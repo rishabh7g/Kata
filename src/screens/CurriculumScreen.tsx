@@ -13,31 +13,18 @@ import { copy } from '../strings/copy';
 
 /**
  * Curriculum — the Library's index: every Category in order, each with its
- * Modules in order, every row open to read (design/README.md § Screens › 1,
- * design/screens/01-state.png).
+ * Modules in order, every row a link.
  *
- * Renders exactly what `ICurriculum.getCategories()` and `getModules()`
- * return, in their order — which is a suggested reading order and nothing
- * else (docs/ubiquitous-language.md § Curriculum), so every row is a link to
- * its Module screen from the very first visit (#156). The status column is a
- * tag only — no suite-run counts anywhere (verification removed per the
- * read-only decision, #3). The one thing read from IProgress directly is
- * Self-Check draft existence, which ModuleSummary deliberately does not
- * carry: it drives the outline `In progress` tag (#18).
- *
- * Categories are HEADINGS over those rows (#163), not a fourth screen: Kata
- * has three screens, and a Category has no route, no filter and no collapse.
- * A heading is a label — the only way to a Module is still its row — which is
- * the interaction-depth question (design/issue-guide.md) answered in markup:
- * the `<section>`'s header holds an `<h2>`, one line of description and the
- * Category's language once, and not a single anchor.
+ * The order is a suggested reading order and nothing else; no Module waits on
+ * another. A Category is a heading over rows, never a route: the only way
+ * into a Module is its own row.
  */
 export function CurriculumScreen() {
   const curriculum = useCurriculum();
   const modules = useModuleSummaries(curriculum);
   const sections = groupIntoSections(useCategories(curriculum), modules);
   const answeredModuleIds = useAnsweredModuleIds(useProgress(), modules);
-  // The home screen is the app itself: the tab reads plain `Kata` (#77).
+  // The home screen is the app itself: the tab reads plain `Kata`.
   useDocumentTitle(null);
 
   return (
@@ -57,7 +44,6 @@ export function CurriculumScreen() {
               answeredModuleIds={answeredModuleIds}
             />
           ))}
-          {/* The closing 2px rule after the last row (tokens.json layout.rules). */}
           <div className="curriculum-closing-rule" />
         </>
       )}
@@ -72,17 +58,12 @@ interface CategorySectionData {
 }
 
 /**
- * The shelves, in Category-ordinal order, each holding its own Modules in
- * Module-ordinal order (#163). Both orders come from ICurriculum — the
- * Categories are sorted and `getModules()` returns Category ordinal then
- * Module ordinal (docs/engineering.md § ICurriculum — behaviour) — so this
- * only ever files each Module under its Category and never re-sorts either.
+ * Files each Module under its Category. Both orders arrive sorted from
+ * ICurriculum, so nothing here re-sorts.
  *
- * `null` until BOTH reads are in: a heading with no rows under it and rows
- * with no heading over them are each a half-drawn screen.
- *
- * A Category with no Modules renders nothing — an empty heading is furniture
- * over a void.
+ * `null` until both reads are in — a heading with no rows, or rows with no
+ * heading, is a half-drawn screen. A Category with no Modules renders
+ * nothing: an empty heading is furniture over a void.
  */
 function groupIntoSections(
   categories: readonly Category[] | null,
@@ -98,13 +79,10 @@ function groupIntoSections(
 }
 
 /**
- * One Category heading and its rows. The heading is an `<h2>` — one level
- * under the page `<h1>`, with the Module titles an `<h3>` under it, so the
- * outline a screen reader navigates is the shelf and then its Modules
- * (`src/test/headings.ts`). It carries the Category's one-line description
- * and its language ONCE: every Module in a Category practises the same
- * language (docs/ubiquitous-language.md § Category), so repeating it per row
- * would be five copies of one fact.
+ * One Category heading and its rows. The `h2` over `h3` titles is the outline
+ * a screen reader walks: the shelf, then its Modules. The language is named
+ * once here rather than on every row — every Module in a Category practises
+ * the same one.
  */
 function CategorySection({
   section,
@@ -137,15 +115,7 @@ function CategorySection({
   );
 }
 
-/**
- * The Modules carrying saved Self-Check answers (IProgress autosave,
- * docs/engineering.md § 2) — the rows that show the outline `In progress`
- * tag.
- *
- * Asked of every Module in the index, without exception (#156): the Library
- * reads the reader's own answers and nothing else, so a browser still
- * holding data from the old model renders exactly what an empty one does.
- */
+/** The Modules carrying saved Self-Check answers — the rows that show a tag. */
 function useAnsweredModuleIds(
   progress: IProgress,
   modules: readonly ModuleSummary[] | null,
@@ -170,7 +140,7 @@ function useAnsweredModuleIds(
         );
       })
       .catch((error: unknown) => {
-        // Nothing read, no tag — the row falls back to `Ready to start`.
+        // Nothing read, no tag; every row still links.
         console.error('Failed to read the stored Self-Check answers', error);
       });
     return () => {
@@ -182,12 +152,8 @@ function useAnsweredModuleIds(
 }
 
 /**
- * One row, always a link (#156), and still the ONE way into a Module (#163):
- * the Category heading above it is a label, not a second route. There is no
- * inert row state left: nothing in the Library blocks the reader, so the row
- * has no opacity of its own, no `not-allowed` cursor and no icon but the
- * arrow into the Module. Its title is an `<h3>` under the Category's `<h2>` —
- * the level is the outline's, not the 22px type scale's.
+ * One row, always a link: nothing blocks the reader, so there is no inert
+ * state, no disabled cursor and no icon but the arrow into the Module.
  */
 function ModuleRow({
   module,
@@ -214,10 +180,8 @@ function ModuleRow({
 }
 
 /**
- * The row's one tag, and only when there is something to say: a Module the
- * reader has answered anything in. No answers is not a state — every row on a
- * fresh install would carry the same word, which is the shelf saying nothing
- * eleven times.
+ * The row's one tag, and only when there is something to say. No answers is
+ * not a state: on a fresh install it would be the same word on every row.
  */
 function StatusTag({ inProgress }: { inProgress: boolean }) {
   if (!inProgress) return null;

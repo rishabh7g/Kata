@@ -1,12 +1,9 @@
-// ICurriculum — docs/engineering.md § ICurriculum — behaviour.
+// ICurriculum — a pure function of content: reads the committed JSON, writes
+// nothing, and reads no progress data at all. No DOM, no React.
 //
-// A pure function of content: reads the committed content JSON and writes
-// nothing, ever. It reads no progress data at all. Pure TypeScript — no DOM,
-// no React.
-//
-// The HTTP ContentSource lives here too: it is the only one the app builds,
-// and the type stays a seam because the tests' in-memory fake is a real
-// second implementation of it.
+// The HTTP ContentSource lives here too, being the only one the app builds.
+// The type stays a seam because the tests' in-memory fake is a second
+// implementation of it.
 import type {
   Category,
   CategoryId,
@@ -20,16 +17,15 @@ import type {
   ModuleSummary,
 } from './contract';
 
-/** An index entry paired with the Category it was authored under, so both the
- *  sort and the summary read one flat value instead of joining twice. */
+/** An index entry with its Category, so the sort and the summary read one
+ *  flat value instead of joining twice. */
 interface PlacedModule {
   readonly entry: ModuleIndexEntry;
   readonly category: Category;
 }
 
-/** One load of the committed index, in the order everything reads it: the
- *  Categories by their own ordinal, and every placed Module by Category
- *  ordinal then Module ordinal. */
+/** One load of the index, sorted the way everything reads it: Categories by
+ *  ordinal, Modules by Category ordinal then their own. */
 interface LoadedIndex {
   readonly categories: readonly Category[];
   readonly modules: readonly PlacedModule[];
@@ -64,7 +60,7 @@ export function createCurriculum(content: ContentSource): ICurriculum {
             a.category.ordinal - b.category.ordinal || a.entry.ordinal - b.entry.ordinal,
         );
         // The shelves themselves, in their own ordinal order — what the
-        // Curriculum's Category headings read (#163). Sorted here, from a
+        // Curriculum's Category headings read. Sorted here, from a
         // copy, so no caller depends on the authored file order either.
         const shelves = [...index.categories].sort(
           (a, b) => a.ordinal - b.ordinal,
@@ -75,7 +71,7 @@ export function createCurriculum(content: ContentSource): ICurriculum {
         // A failed load is not an answer worth caching: drop it so the next
         // call fetches again instead of replaying the rejection forever —
         // otherwise a screen that offers `Try again` after an offline failure
-        // could never succeed, even back online (#69).
+        // could never succeed, even back online.
         indexPromise = null;
         throw error;
       });
@@ -107,7 +103,7 @@ export function createCurriculum(content: ContentSource): ICurriculum {
   return {
     async getCategories(): Promise<readonly Category[]> {
       // Exactly as authored, in ordinal order — the Curriculum's headings
-      // (#163). A Category is a label over its rows: nothing here is a route
+      //. A Category is a label over its rows: nothing here is a route
       // and nothing here reads the reader.
       const { categories } = await loadedIndex();
       return categories;

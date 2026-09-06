@@ -6,7 +6,7 @@ import type { ICurriculum } from '../curriculum';
  * (src/app/bootstrap.tsx) provides the real ICurriculum (committed content
  * over HTTP); tests provide one built over an in-memory ContentSource.
  * Screens never construct their own — the content and its order are
- * ICurriculum's job (#9), rendering is theirs.
+ * ICurriculum's job, rendering is theirs.
  */
 const CurriculumContext = createContext<ICurriculum | null>(null);
 

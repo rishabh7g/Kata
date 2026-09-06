@@ -1,30 +1,13 @@
 import { useEffect } from 'react';
 
 /**
- * Pinch-zoom off in the installed app, on in a browser tab.
+ * Pinch-zoom off in the installed app, on in a browser tab. "Installed" is
+ * only knowable at runtime, so this amends the viewport tag rather than
+ * replacing it — a hardcoded string would drop `viewport-fit=cover` and with
+ * it every safe-area inset, in exactly the mode this acts on.
  *
- * The static viewport tag (`index.html`) carries no zoom flags, so on the web
- * Kata zooms like any site and stays WCAG 2.1 SC 1.4.4 / 1.4.10 compliant.
- * Detection of "installed" is only possible client-side — the same URL is a
- * tab on one launch and the installed app on the next — so the lock has to be
- * a runtime component that amends the tag after the fact, never a build-time
- * string.
- *
- * It AMENDS the tag's existing content; it never writes a hardcoded
- * replacement. A hardcoded string would pass every other check while
- * silently dropping `viewport-fit=cover` — which turns off every
- * `env(safe-area-inset-*)` in the app in exactly the mode this component acts
- * on. `StandaloneZoomLock.test.tsx` asserts `viewport-fit=cover` survives the
- * lock — that is the assertion that catches a hardcoded rewrite.
- *
- * Accessibility, stated honestly: an installed user who relies on pinch-zoom
- * to enlarge small text cannot. That is a deliberate, declared exception for
- * the installed-app feel — it is why the 16px body-text floor and the 44px
- * tap floor stay in force as compensating obligations. Browser tabs remain
- * fully compliant.
- *
- * Kata is a Vite/React-Router SPA with one shell, not a per-route server
- * render that can restore the tag — mount once, effect runs once.
+ * An installed reader who relies on pinch-zoom to enlarge small text cannot;
+ * that is why the 16px text floor and 44px tap floor stay in force.
  */
 
 /** The two directives this component owns — everything else in the tag is not ours. */

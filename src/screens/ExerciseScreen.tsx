@@ -52,9 +52,8 @@ function ExerciseView({
         <BackArrowIcon />
         {interpolate(copy.module.ordinalLabel, { ordinal })}
       </Link>
-      {/* Header: kicker + 40px title + the one {type}-type outline tag. The
-          captures' "Test Suite · n tests" tag is dropped — a brief carries no
-          test count, and a count would imply the app tracks results (#3). */}
+      {/* Kicker, title, and the one type tag. No test count: a count would
+          imply the app tracks results, and it never sees them. */}
       <header className="exercise-header">
         <p className="exercise-kicker">
           {interpolate(copy.exercise.kicker, { id: exercise.id, ordinal })}
@@ -68,9 +67,8 @@ function ExerciseView({
       </header>
       <section>
         <h2 className="exercise-section-label">{copy.exercise.sectionLabel.spec}</h2>
-        {/* Exactly three rows (tokens.json layout.specGrid: 130px 1fr,
-            1px row rules). The captures' Workbench row is historical —
-            no folder is materialized for the learner (#3). */}
+        {/* Exactly three rows. No folder is materialised for the reader — they
+            clone one themselves. */}
         <div className="exercise-spec-grid">
           <div className="exercise-spec-label">{copy.exercise.spec.concept}</div>
           <div className="exercise-spec-value">{exercise.concept}</div>
@@ -93,8 +91,7 @@ function ExerciseView({
           <span className="tag tag-accent">{copy.exercise.targetInterface.immutableTag}</span>
         </div>
         <TargetInterfaceDefinition />
-        {/* Display-only C# (tokens.json typeScale.app.codeTargetInterface:
-            12.5 / 1.6 mono) — never a textarea, never editable. */}
+        {/* Display-only — never a textarea, never editable. */}
         <pre className="exercise-interface-code">
           {exercise.targetInterfaceCode}
         </pre>
@@ -125,19 +122,13 @@ function TargetInterfaceDefinition() {
 }
 
 /**
- * The practice-material block (design/README.md § Screens › 3): a link out to
- * this Exercise's committed folder on GitHub, new tab. While the brief still
- * carries the `null` placeholder (until #23 commits the folders), it renders
- * a quiet disabled note instead of a dead link. No terminal, no command to
- * copy, no results area — Kata never runs anything.
+ * A link out to this Exercise's committed folder on GitHub. A brief whose
+ * folder is not committed yet renders a quiet note instead of a dead link.
+ * No terminal, no command to copy, no results area — Kata runs nothing.
  *
- * The note follows the Module's Category language (#164): a brief is
- * practised in the one language its Category is written in, so the toolchain
- * the learner installs and the command they run are the Category's, not a
- * hardcoded C# pair. Both come from `src/strings/language.ts` — the same
- * `Record<CategoryLanguage, …>` file the Curriculum's heading reads — so a
- * third language fails `tsc` there instead of silently printing the wrong
- * command here.
+ * The toolchain and the command follow the Module's Category language, from
+ * the one `Record<CategoryLanguage, …>` table, so a third language fails
+ * `tsc` there rather than printing the wrong command here.
  */
 function PracticeMaterial({
   exercise,

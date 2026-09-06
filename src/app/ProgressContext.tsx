@@ -3,9 +3,9 @@ import type { IProgress } from '../progress';
 
 /**
  * The seam the screens write and read learner progress through — the only
- * write path in the app (design/README.md § Interactions). The bootstrap
- * (src/app/bootstrap.tsx) provides the real IProgress (IndexedDB, #14) — and
- * when it cannot open, no app at all (#68); tests provide one over
+ * write path in the app. The bootstrap
+ * (src/app/bootstrap.tsx) provides the real IProgress (IndexedDB) — and
+ * when it cannot open, no app at all; tests provide one over
  * fake-indexeddb.
  * Screens never construct their own: owning what is stored is IProgress's
  * job, rendering is theirs.

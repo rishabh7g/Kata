@@ -43,11 +43,8 @@ function ModuleView({ module }: { module: ModuleDetail }) {
         <BackArrowIcon />
         {copy.shell.backToCurriculum}
       </Link>
-      {/* Header: kicker + 44px title, no rule underneath
-          (design/README.md § Screens › 2 header). The status tag that sat on
-          the shared baseline is gone (#157): its passed state named a removed
-          term, and its other two flipped on the reader's own Self-Check
-          answers — a measure of the reader, which the Library does not keep. */}
+      {/* Kicker and title, no rule underneath and no status tag: a tag here
+          would be a measure of the reader, which the Library does not keep. */}
       <header className="module-header">
         <p className="module-kicker">
           {interpolate(copy.module.ordinalLabel, { ordinal: ordinalLabel(module.ordinal) })}
@@ -88,14 +85,8 @@ function ModuleView({ module }: { module: ModuleDetail }) {
 }
 
 /**
- * The Exercises section, or nothing at all.
- *
- * Exercises are 0..n per Module: how many one carries is an authoring
- * convention (docs/design.md § Exercise coverage), not a schema rule. A
- * Module that only explains gets no heading and no empty-state line — it
- * simply reads shorter, ending on its Model Examples. A section label over
- * nothing is the screen telling the reader something is missing when
- * nothing is.
+ * The Exercises section, or nothing at all. A section label over nothing is
+ * the screen telling the reader something is missing when nothing is.
  */
 function ExercisesSection({ module }: { module: ModuleDetail }) {
   if (module.exercises.length === 0) return null;
@@ -119,10 +110,8 @@ function ExercisesSection({ module }: { module: ModuleDetail }) {
 }
 
 /**
- * One Exercise card: type tag (outline), 16px/800 title + Smell line, arrow.
- * The whole card is the link — the route carries both ids because a brief is
- * only reachable through its Module (docs/engineering.md § 4). No status
- * column and no runs meta, per the read-only decision (#3).
+ * One Exercise card, the whole of it a link. The route carries both ids
+ * because a brief is only reachable through its Module.
  */
 function ExerciseCard({
   moduleId,
@@ -151,10 +140,9 @@ function ExerciseCard({
 }
 
 /**
- * One before/after pair in the 2px-bordered grid: the 2px divider between the
- * cells is the grid gap over the divider-colored background, cells stack when
- * narrow via `repeat(auto-fit, minmax(300px, 1fr))`, and long code lines
- * scroll inside their cell — never the page (all in app.css).
+ * One before/after pair. The divider between the cells is the grid gap over
+ * the divider-coloured background, and long code lines scroll inside their
+ * cell rather than widening the page (app.css).
  */
 function ModelExampleFigure({ example }: { example: ModelExample }) {
   return (

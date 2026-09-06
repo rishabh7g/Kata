@@ -6,26 +6,16 @@ import { copy } from '../strings/copy';
 
 /**
  * The Self-Check panel — a Module's optional questions, answered in place
- * while reading (docs/ubiquitous-language.md § Self-Check, #157).
+ * while reading.
  *
- * It is the same three questions the gated model asked, with the purpose
- * flipped: nothing is sent, nothing is judged, nothing is recorded but the
- * answers themselves. So there is no control to send them, no sent state, no
- * completeness rule and no state text — picking an option writes it and
- * changes nothing else on the screen.
+ * Nothing is sent and nothing is judged, so there is no submit control, no
+ * sent state and no completeness rule: picking an option autosaves it through
+ * IProgress and changes nothing else on the screen. Those answers are the
+ * only data Kata persists.
  *
- * Per Module, not per Exercise: it lives on the Module screen, beside the
- * prose it belongs to, and is the only place these questions are reachable
- * (the interaction-depth question, design/issue-guide.md).
- *
- * Every write still goes through IProgress: picking an option autosaves the
- * Module's answers (`saveSelfCheckAnswers`), and the picks restore from them
- * on the next visit — the only data Kata persists at all (#159).
- *
- * A question may carry an authored `explanation` (#162). Picking any option
- * reveals it, and it is the SAME text whichever option was picked: it teaches
- * what the question was pointing at and never marks the pick right or wrong,
- * because Kata judges nothing. A question without one reveals nothing.
+ * A question may carry an `explanation`. Any pick reveals it and it is the
+ * same text whichever option was picked — it teaches what the question was
+ * pointing at, and never marks a pick right or wrong.
  */
 export function SelfCheck({
   moduleId,
@@ -57,33 +47,26 @@ export function SelfCheck({
     };
   }, [progress, moduleId]);
 
-  // A Module whose content pack is not authored yet carries no questions —
-  // no heading, no definition, nothing at all.
+  // No questions, no panel: no heading and no definition either.
   if (questions.length === 0) return null;
   if (picks === undefined) return null;
 
   return (
     <section className="self-check" aria-label={copy.selfCheck.heading}>
       <h2 className="module-section-label">{copy.selfCheck.heading}</h2>
-      {/* What a Self-Check is (#157) — one clause, under the heading that
-          uses the term as a label and above the questions it describes. That
-          is clause (4) of the keeper test (design/issue-guide.md § UI copy
-          ban list): without it the reader meets a new term as a bare label,
-          and nothing else on the screen says the questions are optional. */}
+      {/* What a Self-Check is: without it the reader meets a new term as a
+          bare label, and nothing else says the questions are optional. */}
       <p className="text-muted self-check-definition">
         {copy.selfCheck.definition}
       </p>
       {questions.map((question) => {
-        // The prompt is the group's label, not loose text beside it (#72):
-        // `role="radiogroup"` + `aria-labelledby` names the group after the
-        // question, so focusing any option announces the question, "group",
-        // and its position among the question's 2–4 options (#162).
+        // The prompt is the group's label, not loose text beside it, so
+        // focusing any option announces the question and the option's
+        // position among the 2–4.
         const promptId = `self-check-${moduleId}-${question.id}-prompt`;
-        // The explanation slot exists from first render whenever the question
-        // authored one, empty until a pick fills it: a live region has to be
-        // in the DOM BEFORE its content changes to be announced at all. That
-        // also makes `aria-describedby` a stable reference. A question with no
-        // explanation gets no slot, no id, and no description.
+        // The slot exists from first render, empty until a pick fills it: a
+        // live region has to be in the DOM before its content changes to be
+        // announced. A question with no explanation gets no slot at all.
         const explanationId = `self-check-${moduleId}-${question.id}-explanation`;
         const hasExplanation = question.explanation !== undefined;
         const answer = picks[question.id];
@@ -108,9 +91,8 @@ export function SelfCheck({
                     onChange={() => {
                       const next = { ...picks, [question.id]: option.value };
                       setPicks(next);
-                      // Autosave, fire-and-forget: an answer is never a
-                      // condition for anything, so a lost write costs at most
-                      // re-picking a radio.
+                      // Fire-and-forget: an answer gates nothing, so a lost
+                      // write costs at most re-picking a radio.
                       progress
                         .saveSelfCheckAnswers(moduleId, next)
                         .catch((error: unknown) => {

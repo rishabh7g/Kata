@@ -1,10 +1,10 @@
 /**
  * The ghost back button's arrow, copied from the design reference
- * (design/DevGym.dc.html § Module / § Exercise): 14px, 2 stroke, decorative
+ * 14px, 2 stroke, decorative
  * — the link text next to it is the accessible name.
  *
  * Shared by every back link: Module → Curriculum, Exercise → Module, and the
- * unavailable-content surface (#69).
+ * unavailable-content surface.
  */
 export function BackArrowIcon() {
   return (

@@ -1,12 +1,9 @@
 /**
- * Every word the shell renders, in one object.
+ * Every word the shell renders, in one object. A key that does not exist is a
+ * `tsc` error at the call site; a key nothing reads is visible dead code. A
+ * second locale would be a second object of this shape.
  *
- * Screens import `copy` and read it by property, so a key that does not exist
- * is a `tsc` error at the call site and a key nothing reads is dead code a
- * reader can see. A second locale is a second object of this shape.
- *
- * Authored content — Concept Pages, Model Examples, Exercise briefs,
- * Self-Check questions — is not here. That comes from the content files.
+ * Authored content is not here — that comes from the content files.
  */
 export const copy = {
   notice: {
@@ -44,9 +41,7 @@ export const copy = {
 
   curriculum: {
     title: 'Curriculum',
-    // The one fact nothing else on the screen says. That a Module is one
-    // concept the rows themselves show, and where progress lives is said by
-    // the notice that raises when the browser refuses to store it.
+    // The one fact the rows cannot show for themselves.
     orientation:
       'You write and run the code in your own IDE — Kata never runs or sees your code.',
   },
@@ -66,9 +61,7 @@ export const copy = {
 
   selfCheck: {
     heading: 'Self-Check',
-    // The first place the app says what a Self-Check is: the heading above it
-    // uses the term as a label, and nothing else on the screen says the
-    // questions are optional or that an answer is kept rather than sent.
+    // The heading uses the term as a label; this is where it is defined.
     definition:
       "The Self-Check is this Module's optional questions — answer them as you read, and each answer is saved in this browser as you pick it.",
   },
@@ -81,9 +74,8 @@ export const copy = {
     sectionLabel: {
       spec: 'Exercise Spec',
       targetInterface: 'Target Interface',
-      // Lower-case, unlike the labels around it. Title case marks a domain
-      // term (docs/ubiquitous-language.md); this section has no term of its
-      // own — what it hands over is an Exercise folder and its Test Suite.
+      // Lower-case on purpose: title case marks a domain term, and this
+      // section has none of its own.
       practiceMaterial: 'Practice material',
     },
     spec: {
@@ -101,9 +93,8 @@ export const copy = {
       pending:
         "This Exercise's folder is not committed yet — the GitHub link appears here once it is.",
       linkLabel: "Open this Exercise's folder on GitHub",
-      // The only instruction on this step: the toolchain is the reader's to
-      // install, and the command only works from the folder's tests/
-      // directory. Both follow the Module's Category language.
+      // The toolchain is the reader's to install, and the command only works
+      // from the folder's tests/ directory.
       noteBefore:
         "Clone or copy the folder and review its Test Suite before starting. Running the Test Suite needs the {language} toolchain installed on your own machine — from the Exercise folder's tests/ directory, run",
       noteAfter: 'in your own IDE.',

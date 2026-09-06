@@ -9,7 +9,7 @@ import type { Category, ICurriculum } from '../curriculum';
  * halves are here, never a heading over a made-up placeholder.
  *
  * Re-reads on every navigation (`location.key`) and costs nothing extra:
- * ICurriculum caches the one index load both reads come from (#158).
+ * ICurriculum caches the one index load both reads come from.
  */
 export function useCategories(
   curriculum: ICurriculum,

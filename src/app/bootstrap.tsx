@@ -11,7 +11,7 @@ import { StandaloneZoomLock } from '../pwa/StandaloneZoomLock';
 
 /**
  * Start Kata into `container`. Lives here rather than in main.tsx so the two
- * outcomes are testable: the app, or — when IndexedDB refuses to open (#68) —
+ * outcomes are testable: the app, or — when IndexedDB refuses to open —
  * the message that says so.
  *
  * The wait is what makes both paths possible: opening the database is async,
@@ -24,8 +24,8 @@ export async function startKata(
 ): Promise<void> {
   const root = createRoot(container);
 
-  // The one real IProgress (#14): the `kata` IndexedDB database. The
-  // Self-Check (#157) writes through this seam and nothing else.
+  // The one real IProgress: the `kata` IndexedDB database. The
+  // Self-Check writes through this seam and nothing else.
   let progress: IProgress;
   try {
     progress = await createProgress();
@@ -44,7 +44,7 @@ export async function startKata(
   }
 
   // The one real ICurriculum: committed content over HTTP and nothing else
-  // (#158). It reads no progress data, so the two Target Interfaces are
+  //. It reads no progress data, so the two Target Interfaces are
   // wired side by side here rather than into each other.
   const curriculum = createCurriculum(createHttpContentSource(baseUrl));
 

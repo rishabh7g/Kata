@@ -1,12 +1,10 @@
-// IProgress — docs/engineering.md § "IProgress — behaviour" and § 4 Storage.
+// IProgress — the app's only write path, and what it writes is the reader's
+// own Self-Check answers: one record per Module, replaced on each autosave.
+// No DOM, no React.
 //
-// The app's only write path, and what it writes is the reader's own Self-Check
-// answers: one record per Module, replaced on each autosave. Pure TypeScript +
-// IndexedDB: no DOM rendering, no React.
-//
-// Database `kata-v2`, version 1, one object store keyed by `moduleId`, so the
-// "at most one per Module" invariant is the key itself. The gated model's
-// database (`kata`) is abandoned, not migrated (#159).
+// One object store keyed by `moduleId`, so "at most one record per Module" is
+// the key itself. An older database is abandoned rather than migrated: what
+// it holds describes a judgement the Library no longer makes.
 import type {
   IProgress,
   ModuleId,
@@ -17,7 +15,7 @@ import type {
 const DATABASE = 'kata-v2';
 const ANSWERS = 'selfCheckAnswers';
 
-/** The gated model's database. Deleted on open; never read. */
+/** The abandoned database. Deleted on open; never read. */
 const ABANDONED_DATABASE = 'kata';
 
 // ── IndexedDB plumbing (requests → promises) ─────────────────────────────
@@ -60,10 +58,9 @@ function committed(tx: IDBTransaction): Promise<void> {
 export async function createProgress(): Promise<IProgress> {
   const db = await openDatabase(DATABASE);
 
-  // Fire-and-forget (§ 4): the gated model's records describe a judgement the
-  // Library no longer makes, so there is nothing to carry forward and nothing
-  // to wait for. A browser that never had one is the normal case, and a
-  // refused delete (another tab holding it open) leaves the app working.
+  // Fire-and-forget: there is nothing to carry forward and nothing to wait
+  // for. A browser that never had one is the normal case, and a refused
+  // delete — another tab holding it open — leaves the app working.
   indexedDB.deleteDatabase(ABANDONED_DATABASE);
 
   return {

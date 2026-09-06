@@ -20,28 +20,25 @@ export type ModuleDetailState = {
   /**
    * What `getModule(id)` rejected with, `null` otherwise. Check this before
    * `detail`: a failure leaves `detail` at `undefined`, which on its own
-   * reads as "still loading" and blanks the screen forever (#69).
+   * reads as "still loading" and blanks the screen forever.
    */
   error: unknown;
-  /** Re-run the load — the unavailable surface's `Try again` (#69). */
+  /** Re-run the load — the unavailable surface's `Try again`. */
   retry: () => void;
 };
 
 /**
- * One Module's full detail, straight from `ICurriculum.getModule(id)` (#9).
+ * One Module's full detail, straight from `ICurriculum.getModule(id)`.
  *
  * The result — resolved or rejected — is kept with the request that produced
  * it and handed back only when it still answers the id being asked for.
- * Clearing in an effect instead would leave one render holding the *previous*
- * Module's detail under the new id — and a child's effect (`<Navigate>`) runs
- * before this hook's, so the Exercise screen's unknown-brief fallback fired on
- * that stale render and bounced a cross-Module hash navigation back to the
- * previous Module (#67).
+ * Clearing in an effect instead leaves one render holding the previous
+ * Module's detail under the new id, and a child's `<Navigate>` effect runs
+ * first: that is what bounced a cross-Module hash navigation backwards.
  *
- * A rejection is kept for the same reason a detail is: content JSON is fetched
- * network-first and cached as it is read (docs/engineering.md § 1 Offline), so
- * a Module never opened online simply fails offline, and the screen has to be
- * able to tell that apart from "still loading".
+ * A rejection is kept because content is fetched network-first, so a Module
+ * never opened online fails offline and the screen has to tell that apart
+ * from "still loading".
  */
 export function useModuleDetail(
   curriculum: ICurriculum,

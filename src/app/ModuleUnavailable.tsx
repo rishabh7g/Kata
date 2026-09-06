@@ -6,7 +6,7 @@ import { copy } from '../strings/copy';
 
 /**
  * What the Module and Exercise screens show when `ICurriculum.getModule(id)`
- * rejects (#69) — in practice a `content/modules/<id>.json` fetch that failed
+ * rejects — in practice a `content/modules/<id>.json` fetch that failed
  * offline. Content JSON is deliberately not precached: it is cached as it is
  * read, so a Module never opened online has nothing to fall back to
  * (docs/engineering.md § 1 Offline). That is a fine trade; a blank screen is

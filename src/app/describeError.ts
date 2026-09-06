@@ -5,7 +5,7 @@
  *
  * Duck-typed rather than `instanceof Error`: what IndexedDB rejects with is a
  * DOMException, which does not inherit from Error everywhere. Shared by the
- * blocked progress store (#68) and a Module whose content will not load (#69).
+ * blocked progress store and a Module whose content will not load.
  */
 export function describeError(error: unknown): string | null {
   if (typeof error !== 'object' || error === null) return null;

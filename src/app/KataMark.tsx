@@ -3,7 +3,7 @@
  * Shape copied from design/assets/kata-mark.svg; the two fills are the token
  * variables rather than the asset's literal hexes, so the mark follows the
  * design system. Ink + accent only; never recolor, never round
- * (design/README.md § Brand).
+ *.
  *
  * Decorative: in the lockup the word "Kata" next to it carries the name, so
  * the mark is hidden from assistive tech rather than announced twice.
