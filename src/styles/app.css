@@ -202,28 +202,18 @@ html, body {
   padding-bottom: 36px;
 }
 
-/* tokens.json typeScale.app.curriculumTitle: 54. The kicker and intro
-   classes that used to sit here (.curriculum-kicker, .curriculum-intro)
-   styled the read-once explainer copy deleted on the copy pass (#113). */
+/* tokens.json typeScale.app.curriculumTitle: 54, and the phone band below
+   takes it down to 32 — 54px of one word is a third of a 740px screen. */
 .curriculum-title {
   font-size: 54px;
   margin: 0;
   max-width: 15ch;
 }
 
-/* The orientation block (#134) — three first-use definitions (what a Module
-   is and the read-then-do order, where the C# is written, where progress
-   lives) in the header's 340px muted column, the column the read-once intro
-   used to fill. Static text, no live data: it never varies with progress.
-   The phone-band `.curriculum-header` rule below already collapses that
-   column to `1fr`, so the block stacks under the title at <= 767px with no
-   new breakpoint and no page-level horizontal scroll. */
+/* The orientation line: the one fact the rows cannot show, in the header's
+   340px muted column. The phone-band rule below collapses that column to
+   `1fr`, so it stacks under the title with no new breakpoint. */
 .curriculum-orientation {
-  display: grid;
-  gap: 8px;
-}
-
-.curriculum-orientation-line {
   margin: 0;
   font-size: 16px;
   max-width: 62ch;
@@ -312,7 +302,12 @@ a.curriculum-row:hover {
 @media (max-width: 767px) {
   .curriculum-header {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 12px;
+    padding-bottom: 20px;
+  }
+
+  .curriculum-title {
+    font-size: 32px;
   }
 
   .curriculum-row {

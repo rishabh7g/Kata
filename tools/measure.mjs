@@ -32,9 +32,22 @@ const ANCHORS = {
   exercises: '.module-exercises',
 };
 
+// Local install first, then a global one — ESM resolution does not look in
+// the global root by itself, so ask npm where it is.
+async function loadPlaywright() {
+  try {
+    return await import('playwright');
+  } catch {
+    const { execFileSync } = await import('node:child_process');
+    const { pathToFileURL } = await import('node:url');
+    const root = execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim();
+    return await import(pathToFileURL(`${root}/playwright/index.mjs`).href);
+  }
+}
+
 let chromium;
 try {
-  ({ chromium } = await import('playwright'));
+  ({ chromium } = await loadPlaywright());
 } catch {
   console.error(
     'tools/measure.mjs needs Playwright: npm i -g playwright, then re-run.',
@@ -51,7 +64,10 @@ try {
     const page = await context.newPage();
     console.log(`\n${width}px x ${VIEWPORT_HEIGHT}`);
     for (const [name, hash] of ROUTES) {
-      await page.goto(BASE + hash, { waitUntil: 'networkidle' });
+      // A hash-only change does not reload the document, so the next route
+      // would be measured against the previous screen's DOM.
+      await page.goto(BASE + hash);
+      await page.reload({ waitUntil: 'networkidle' });
       const measured = await page.evaluate((anchors) => {
         // scrollHeight reads 100vh on this layout, so the page's real extent is
         // the furthest bottom edge any element reaches.

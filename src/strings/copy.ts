@@ -34,7 +34,6 @@ export const copy = {
 
   status: {
     inProgress: 'In progress',
-    readyToStart: 'Ready to start',
   },
 
   /** A Category's practice language, as a reader would name it. */
@@ -44,15 +43,12 @@ export const copy = {
   },
 
   curriculum: {
-    title: 'Learn design by producing code.',
-    // Three first-use definitions, rendered once above every Category, so
-    // each line has to be true of all of them at once.
-    orientation: {
-      module: 'A Module is one concept: read it, then do any Exercises it has.',
-      ownIde:
-        'You write and run the code in your own IDE — Kata never runs or sees your code.',
-      browserOnly: 'Your progress is stored in this browser only.',
-    },
+    title: 'Curriculum',
+    // The one fact nothing else on the screen says. That a Module is one
+    // concept the rows themselves show, and where progress lives is said by
+    // the notice that raises when the browser refuses to store it.
+    orientation:
+      'You write and run the code in your own IDE — Kata never runs or sees your code.',
   },
 
   module: {

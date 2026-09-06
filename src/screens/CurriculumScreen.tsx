@@ -40,29 +40,11 @@ export function CurriculumScreen() {
 
   return (
     <>
-      {/* The kicker ("Curriculum — fixed order, foundations down") and the
-          intro were read-once explainer copy — deleted on the copy pass
-          (#113). What came back in their place (#134) is the orientation
-          block: three first-use definitions, which the keeper test's fourth
-          clause keeps (design/issue-guide.md § UI copy ban list). It sits in
-          the header's 340px muted column — the one the intro used to fill
-          (design/README.md § Screens › 1) — so it reads under the title at
-          phone widths through the header's existing reflow, and nothing
-          about the rows changes. Static text: no link, no disclosure, no
-          second route into a Module. */}
       <header className="curriculum-header">
         <h1 className="curriculum-title">{copy.curriculum.title}</h1>
-        <div className="curriculum-orientation text-muted">
-          <p className="curriculum-orientation-line">
-            {copy.curriculum.orientation.module}
-          </p>
-          <p className="curriculum-orientation-line">
-            {copy.curriculum.orientation.ownIde}
-          </p>
-          <p className="curriculum-orientation-line">
-            {copy.curriculum.orientation.browserOnly}
-          </p>
-        </div>
+        <p className="curriculum-orientation text-muted">
+          {copy.curriculum.orientation}
+        </p>
       </header>
       {sections !== null && (
         <>
@@ -235,14 +217,14 @@ function ModuleRow({
 }
 
 /**
- * The row's one tag. Two states, both about the reader's own Self-Check
- * answers and neither a judgement: answers saved, or none yet.
+ * The row's one tag, and only when there is something to say: a Module the
+ * reader has answered anything in. No answers is not a state — every row on a
+ * fresh install would carry the same word, which is the shelf saying nothing
+ * eleven times.
  */
 function StatusTag({ inProgress }: { inProgress: boolean }) {
-  if (inProgress) {
-    return <span className="tag tag-outline">{copy.status.inProgress}</span>;
-  }
-  return <span className="tag tag-neutral">{copy.status.readyToStart}</span>;
+  if (!inProgress) return null;
+  return <span className="tag tag-outline">{copy.status.inProgress}</span>;
 }
 
 // Icons copied from the design reference (design/DevGym.dc.html § Curriculum).
