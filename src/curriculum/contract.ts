@@ -83,8 +83,10 @@ export interface SelfCheckQuestion {
 }
 
 export interface ModuleContent {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly id: ModuleId;
+  /** Which editing stages the pack has been through. No screen renders it. */
+  readonly provenance: string;
   readonly conceptPageMarkdown: string;
   readonly modelExamples: readonly ModelExample[]; // 2–3
   readonly exercises: readonly ExerciseBrief[]; // 0..n; [] = explains only

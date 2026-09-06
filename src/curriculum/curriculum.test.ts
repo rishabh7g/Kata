@@ -38,9 +38,10 @@ const questions: readonly [SelfCheckQuestion, SelfCheckQuestion, SelfCheckQuesti
 
 function contentFor(id: ModuleId): ModuleContent {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     id,
-    conceptPageMarkdown: `# Module ${id}`,
+    provenance: 'LLM first draft · unedited',
+    conceptPageMarkdown: `## Module ${id}`,
     modelExamples: [
       { before: 'class A {}', after: 'class B {}', caption: 'what moved' },
       { before: 'class C {}', after: 'class D {}', caption: 'what hid' },
@@ -242,7 +243,7 @@ describe('getModule', () => {
     const detail = await curriculum.getModule('m01');
 
     expect(detail).not.toBeNull();
-    expect(detail?.conceptPageMarkdown).toBe('# Module m01');
+    expect(detail?.conceptPageMarkdown).toBe('## Module m01');
     expect(detail?.modelExamples).toHaveLength(2);
     expect(detail?.exercises.map((e) => e.type)).toEqual(['refactor', 'construct']);
     expect(detail?.selfCheckQuestions).toHaveLength(3);
@@ -335,7 +336,7 @@ describe('createHttpContentSource', () => {
   });
 
   it('loads a Module content file from <base>content/modules/<id>.json', async () => {
-    const content = { schemaVersion: 1, id: 'm01' };
+    const content = { schemaVersion: 2, id: 'm01' };
     const fetchMock = stubFetch(() => Response.json(content));
 
     const loaded = await createHttpContentSource('/Kata/').loadModuleContent('m01');

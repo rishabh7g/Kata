@@ -56,7 +56,7 @@ function ModuleView({ module }: { module: ModuleDetail }) {
       </header>
       <div className="module-body">
         <div className="module-concept">
-          <Markdown source={stripConceptNote(stripLeadingTitle(module.conceptPageMarkdown))} />
+          <Markdown source={module.conceptPageMarkdown} />
         </div>
         {/* Beside the prose at 1024 and up, straight after it on a phone —
             which is where "answer them as you read" says it is. */}
@@ -116,36 +116,6 @@ function ExercisesSection({ module }: { module: ModuleDetail }) {
       </div>
     </section>
   );
-}
-
-/**
- * The authored packs open their Concept Page markdown with the Module's own
- * `# title`; the header h1 above already shows it, so that one leading
- * heading is dropped before rendering — otherwise the title would appear
- * twice. Every other heading shifts one level down inside Markdown.
- */
-function stripLeadingTitle(markdown: string): string {
-  return markdown.replace(/^\s*#[^\S\n]+[^\n]*\n?/, '');
-}
-
-/**
- * Drops the packs' provenance line — an emphasis-only first paragraph — from
- * the prose (#139). It is committed in the markdown source, where provenance
- * belongs, and it is not content a learner reads, so nothing renders it: this
- * used to split it out for the label row (#30) and now discards it.
- *
- * The match is on that shape alone, never on the wording, which differs
- * between the packs and has been rewritten twice (#173, #201).
- *
- * Stripping stays, rather than the whole function going away, because the
- * packs are unchanged: without it that line would land in the body and read
- * as the Concept Page's opening paragraph. Only an emphasis-only first
- * paragraph counts — anything else stays in the body untouched, so a pack
- * with no such line renders in full.
- */
-function stripConceptNote(markdown: string): string {
-  const match = /^\s*\*[^*\n]+\*[^\S\n]*(?:\n|$)/.exec(markdown);
-  return match === null ? markdown : markdown.slice(match[0].length);
 }
 
 /**

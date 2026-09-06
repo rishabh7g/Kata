@@ -201,7 +201,7 @@ function validatePair(schemaPath, contentPath, failures) {
     if (validate(data)) {
       const structural = structuralErrors(data);
       if (structural.length === 0) {
-        note(`  ok   ${show(file)}`);
+        note(`  ok   ${show(file)}${conceptPageSize(data)}`);
         continue;
       }
       note(`  FAIL ${show(file)}`);
@@ -215,6 +215,19 @@ function validatePair(schemaPath, contentPath, failures) {
     failures.push({ file: show(file), errors });
   }
   return checked;
+}
+
+/**
+ * A Concept Page's length, for the log only. Reported, never gated: whether a
+ * page is too long is an editorial call made by reading it, and the two
+ * Categories sit far apart on purpose. A number in a log is a prompt to look;
+ * a ceiling in a validator would fail a page nobody had read.
+ */
+function conceptPageSize(data) {
+  const markdown = data.conceptPageMarkdown;
+  if (typeof markdown !== 'string') return '';
+  const words = markdown.split(/\s+/).filter(Boolean).length;
+  return `  (${words} words)`;
 }
 
 function usage(message) {

@@ -2,58 +2,85 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "kata:schemas/module-content.schema.json",
   "title": "Kata Module content pack",
-  "description": "docs/engineering.md § 3 Content schema — the machine-checkable twin of the ModuleContent TypeScript type (§ 2). One file per non-pending Module at public/content/modules/<id>.json, validated by scripts/validate-content.mjs before every deploy. The ≤ 40-line rule on Model Example C# sides is an authoring rule checked in review, not here.",
+  "description": "docs/engineering.md \u00a7 3 Content schema \u2014 the machine-checkable twin of the ModuleContent TypeScript type (\u00a7 2). One file per non-pending Module at public/content/modules/<id>.json, validated by scripts/validate-content.mjs before every deploy. The \u2264 40-line rule on Model Example C# sides is an authoring rule checked in review, not here.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schemaVersion",
     "id",
+    "provenance",
     "conceptPageMarkdown",
     "modelExamples",
     "exercises",
     "selfCheckQuestions"
   ],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": {
+      "const": 2
+    },
     "id": {
-      "description": "Matches the file name and an index entry: 'm01' … 'm05', 'ai01' … 'ai06'.",
+      "description": "Matches the file name and an index entry: 'm01' \u2026 'm05', 'ai01' \u2026 'ai06'.",
       "type": "string",
       "pattern": "^[a-z]+\\d{2}$"
     },
+    "provenance": {
+      "description": "Which editing stages this pack has been through. A fact about the pack, not content: no screen renders it.",
+      "type": "string",
+      "minLength": 1
+    },
     "conceptPageMarkdown": {
-      "description": "Non-empty markdown, ~1 page of prose.",
+      "description": "Non-empty markdown, ~1 page of prose. No title line: the Module screen's h1 is the title. Sections open at `##`.",
       "type": "string",
       "minLength": 1
     },
     "modelExamples": {
-      "description": "2–3 before/after C# pairs with a caption for what moved or got hidden.",
+      "description": "2\u20133 before/after C# pairs with a caption for what moved or got hidden.",
       "type": "array",
       "minItems": 2,
       "maxItems": 3,
-      "items": { "$ref": "#/$defs/modelExample" }
+      "items": {
+        "$ref": "#/$defs/modelExample"
+      }
     },
     "exercises": {
-      "description": "0..n Exercise briefs; [] is valid and means the Module only explains. How many a Module carries is an authoring convention (docs/design.md § Module anatomy: a Software Design Module ships one refactor and one construct), not a schema rule.",
+      "description": "0..n Exercise briefs; [] is valid and means the Module only explains. How many a Module carries is an authoring convention (docs/design.md \u00a7 Module anatomy: a Software Design Module ships one refactor and one construct), not a schema rule.",
       "type": "array",
-      "items": { "$ref": "#/$defs/exerciseBrief" }
+      "items": {
+        "$ref": "#/$defs/exerciseBrief"
+      }
     },
     "selfCheckQuestions": {
-      "description": "Exactly 3 Self-Check questions, each a set of 2–4 radio options.",
+      "description": "Exactly 3 Self-Check questions, each a set of 2\u20134 radio options.",
       "type": "array",
       "minItems": 3,
       "maxItems": 3,
-      "items": { "$ref": "#/$defs/selfCheckQuestion" }
+      "items": {
+        "$ref": "#/$defs/selfCheckQuestion"
+      }
     }
   },
   "$defs": {
     "modelExample": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["before", "after", "caption"],
+      "required": [
+        "before",
+        "after",
+        "caption"
+      ],
       "properties": {
-        "before": { "type": "string", "minLength": 1 },
-        "after": { "type": "string", "minLength": 1 },
-        "caption": { "type": "string", "minLength": 1 }
+        "before": {
+          "type": "string",
+          "minLength": 1
+        },
+        "after": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "exerciseBrief": {
@@ -71,29 +98,49 @@
       ],
       "properties": {
         "id": {
-          "description": "Unique app-wide, equal to its repo folder name: the Module id, a dash, 'e', an ordinal — 'm01-e1', 'ai03-e1'.",
+          "description": "Unique app-wide, equal to its repo folder name: the Module id, a dash, 'e', an ordinal \u2014 'm01-e1', 'ai03-e1'.",
           "type": "string",
           "pattern": "^[a-z]+\\d{2}-e\\d+$"
         },
-        "type": { "enum": ["refactor", "construct"] },
-        "title": { "type": "string", "minLength": 1 },
-        "concept": { "type": "string", "minLength": 1 },
+        "type": {
+          "enum": [
+            "refactor",
+            "construct"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "concept": {
+          "type": "string",
+          "minLength": 1
+        },
         "smell": {
-          "description": "The planted flaw — Exercise Spec row 2.",
+          "description": "The planted flaw \u2014 Exercise Spec row 2.",
           "type": "string",
           "minLength": 1
         },
         "targetInterfaceCode": {
-          "description": "The boundary the learner must end up behind, written in the Category’s practice language; rendered read-only.",
+          "description": "The boundary the learner must end up behind, written in the Category\u2019s practice language; rendered read-only.",
           "type": "string",
           "minLength": 1
         },
-        "sizeBudgetLoc": { "type": "integer", "minimum": 1, "maximum": 300 },
+        "sizeBudgetLoc": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300
+        },
         "folderUrl": {
           "description": "GitHub folder URL, or null until the Exercise folder is committed.",
           "oneOf": [
-            { "type": "string", "pattern": "^https://github\\.com/.+" },
-            { "type": "null" }
+            {
+              "type": "string",
+              "pattern": "^https://github\\.com/.+"
+            },
+            {
+              "type": "null"
+            }
           ]
         }
       }
@@ -101,35 +148,48 @@
     "selfCheckQuestion": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "prompt", "options"],
+      "required": [
+        "id",
+        "prompt",
+        "options"
+      ],
       "properties": {
         "id": {
-          "description": "Unique within its Module: 'q1' … 'q3'.",
+          "description": "Unique within its Module: 'q1' \u2026 'q3'.",
           "type": "string",
           "pattern": "^q\\d+$"
         },
         "prompt": {
-          "description": "Behaviorally answerable — countable or doable (docs/design.md § Pedagogy).",
+          "description": "Behaviorally answerable \u2014 countable or doable (docs/design.md \u00a7 Pedagogy).",
           "type": "string",
           "minLength": 1
         },
         "explanation": {
-          "description": "Optional teaching line, revealed once the reader picks any option and identical whichever one was picked — never a right/wrong marking. 1–3 sentences in the novice voice (docs/design.md § Editorial standard).",
+          "description": "Optional teaching line, revealed once the reader picks any option and identical whichever one was picked \u2014 never a right/wrong marking. 1\u20133 sentences in the novice voice (docs/design.md \u00a7 Editorial standard).",
           "type": "string",
           "minLength": 1
         },
         "options": {
-          "description": "2–4 radio options; their values are unique within the question (checked by scripts/validate-content.mjs).",
+          "description": "2\u20134 radio options; their values are unique within the question (checked by scripts/validate-content.mjs).",
           "type": "array",
           "minItems": 2,
           "maxItems": 4,
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["value", "label"],
+            "required": [
+              "value",
+              "label"
+            ],
             "properties": {
-              "value": { "type": "string", "minLength": 1 },
-              "label": { "type": "string", "minLength": 1 }
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         }

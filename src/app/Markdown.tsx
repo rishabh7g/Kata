@@ -12,8 +12,8 @@ import type { ReactNode } from 'react';
  * Headings render at their authored level, floored at h2: the page h1 is the
  * Module title in the header block, and a pack's `##` sections are that
  * title's sections — the same level as Model Examples, Exercises and the
- * Self-Check beside them. The packs' own `# title` is stripped before this
- * sees it, and a stray one clamps to h2 rather than a second page title.
+ * Self-Check beside them. A stray `#` clamps to h2 rather than becoming a
+ * second page title.
  */
 export function Markdown({ source }: { source: string }) {
   return <>{parseBlocks(source).map(renderBlock)}</>;
