@@ -406,9 +406,14 @@ a.curriculum-row:hover {
     grid-column: 1;
   }
 
+  /* Beside the prose, and pinned while the main column scrolls —
+     .module-body's align-items: start keeps the grid from stretching it
+     full-height, which would kill sticky. */
   .module-aside {
     grid-column: 2;
     grid-row: 1 / span 2;
+    position: sticky;
+    top: var(--layout-aside-sticky-top);
   }
 }
 
@@ -542,12 +547,12 @@ a.curriculum-row:hover {
   flex: none;
 }
 
-/* Self-Check aside (#157): pinned while the main column scrolls
-   ; .module-body's align-items: start
-   keeps the grid from stretching it full-height, which would kill sticky). */
+/* The Self-Check aside. It is in flow here: on a phone it sits between the
+   prose and the sections, and a sticky element there would ride down over the
+   Model Examples and the Exercise cards and swallow their taps. Pinning is a
+   two-column affordance, so it belongs in the laptop band with the rest of
+   that layout, above. */
 .module-aside {
-  position: sticky;
-  top: var(--layout-aside-sticky-top);
   display: flex;
   flex-direction: column;
   gap: 16px;
