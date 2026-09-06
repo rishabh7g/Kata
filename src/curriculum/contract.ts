@@ -110,12 +110,6 @@ export interface ModuleSelfCheck {
   readonly savedAt: IsoDateTime; // when the last pick was autosaved
 }
 
-/** The whole persisted state, in one value: backup file and test fixture. */
-export interface ProgressState {
-  readonly schemaVersion: 2;
-  readonly selfCheckAnswers: readonly ModuleSelfCheck[];
-}
-
 // ── What ICurriculum hands to the screens ────────────────────────────────
 
 export interface ModuleSummary {
@@ -168,10 +162,6 @@ export interface IProgress {
   ): Promise<void>;
   /** One Module's stored answers; null when that Module has none. */
   getSelfCheckAnswers(moduleId: ModuleId): Promise<ModuleSelfCheck | null>;
-  /** Whole state out, for the backup file and for test fixtures. */
-  exportState(): Promise<ProgressState>;
-  /** Whole state in: replaces everything stored. All-or-nothing. */
-  importState(state: ProgressState): Promise<void>;
 }
 
 export declare function createProgress(

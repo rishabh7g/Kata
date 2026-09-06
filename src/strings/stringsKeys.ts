@@ -131,19 +131,6 @@ export const STRINGS_KEYS = [
   'exercise.practiceMaterial.noteBefore',
   'exercise.practiceMaterial.noteAfter',
 
-  // Progress Backup.
-  'backup.exportLabel',
-  'backup.importLabel',
-  'backup.fileInputLabel',
-  'backup.note',
-  'backup.confirmDialogLabel',
-  'backup.confirmSummary',
-  'backup.confirmReplace',
-  'backup.confirmCancel',
-  'backup.selfCheckNoun',
-  'backup.importReplacedAnnouncement',
-  'backup.importParseError',
-  'backup.importFailedError',
 ] as const;
 
 /** A dot-path into a strings pack — the union of the canonical list. */
@@ -221,19 +208,4 @@ export const STRINGS_PLACEHOLDERS: Readonly<Record<StringsKey, readonly string[]
   'exercise.practiceMaterial.noteBefore': ['{language}'],
   'exercise.practiceMaterial.noteAfter': [],
 
-  'backup.exportLabel': [],
-  'backup.importLabel': [],
-  'backup.fileInputLabel': [],
-  /** The fixed backup file name (`kata-progress.json`). */
-  'backup.note': ['{fileName}'],
-  'backup.confirmDialogLabel': [],
-  /** One already-pluralized count: "3 Self-Checks", "1 Self-Check". */
-  'backup.confirmSummary': ['{selfChecks}'],
-  'backup.confirmReplace': [],
-  'backup.confirmCancel': [],
-  'backup.selfCheckNoun': [],
-  'backup.importReplacedAnnouncement': ['{selfChecks}'],
-  /** The parse/validation failure reason, from the thrown error. */
-  'backup.importParseError': ['{reason}'],
-  'backup.importFailedError': ['{reason}'],
 };

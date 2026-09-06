@@ -9,7 +9,6 @@ export type {
   IsoDateTime,
   ModuleId,
   ModuleSelfCheck,
-  ProgressState,
   SelfCheckAnswers,
   SelfCheckQuestionId,
 } from '../curriculum/contract';

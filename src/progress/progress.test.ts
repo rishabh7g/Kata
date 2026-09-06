@@ -8,7 +8,6 @@
 // anything. Every rule those paths must obey is asserted here.
 import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ProgressState } from './contract';
 import { createProgress } from './progress';
 
 const answers = { q1: 'yes', q2: 'one', q3: 'did' } as const;
@@ -42,10 +41,7 @@ describe('empty state', () => {
     const progress = await createProgress('kata-test');
 
     expect(await progress.getSelfCheckAnswers('m01')).toBeNull();
-    expect(await progress.exportState()).toEqual({
-      schemaVersion: 2,
-      selfCheckAnswers: [],
-    });
+    expect(await progress.getSelfCheckAnswers('m01')).toBeNull();
   });
 
   it('returns null for an unknown or pending Module rather than throwing', async () => {
@@ -92,7 +88,6 @@ describe('saveSelfCheckAnswers — the write path', () => {
       answers: { q1: 'no', q2: 'two' },
       savedAt: '2026-08-12T09:42:00.000Z',
     });
-    expect((await progress.exportState()).selfCheckAnswers).toHaveLength(1);
   });
 });
 
@@ -103,17 +98,6 @@ describe('per-Module isolation', () => {
     await progress.saveSelfCheckAnswers('m01', answers);
 
     expect(await progress.getSelfCheckAnswers('m02')).toBeNull();
-  });
-
-  it('exports by moduleId ascending regardless of write order', async () => {
-    const progress = await createProgress('kata-test');
-
-    await progress.saveSelfCheckAnswers('m03', { q1: 'yes' });
-    await progress.saveSelfCheckAnswers('m01', { q1: 'yes' });
-
-    expect(
-      (await progress.exportState()).selfCheckAnswers.map((r) => r.moduleId),
-    ).toEqual(['m01', 'm03']);
   });
 });
 
@@ -165,58 +149,6 @@ describe('the abandoned `kata` database', () => {
     await vi.waitFor(async () => {
       expect(await databaseNames()).toEqual(['kata-v2']);
     });
-    expect(await progress.exportState()).toEqual({
-      schemaVersion: 2,
-      selfCheckAnswers: [],
-    });
-  });
-});
-
-describe('exportState / importState — the backup story', () => {
-  const backup: ProgressState = {
-    schemaVersion: 2,
-    selfCheckAnswers: [
-      {
-        moduleId: 'm01',
-        answers,
-        savedAt: '2026-08-01T10:00:00.000Z',
-      },
-      {
-        moduleId: 'm02',
-        answers: { q1: 'yes' },
-        savedAt: '2026-08-02T11:00:00.000Z',
-      },
-    ],
-  };
-
-  it('round-trips: exportState of an imported state returns it unchanged', async () => {
-    const progress = await createProgress('kata-test');
-
-    await progress.importState(backup);
-
-    expect(await progress.exportState()).toEqual(backup);
-  });
-
-  it('replaces everything stored — nothing from before the import survives', async () => {
-    const progress = await createProgress('kata-test');
-    await progress.saveSelfCheckAnswers('m04', { q1: 'yes' });
-
-    await progress.importState(backup);
-
-    expect(await progress.getSelfCheckAnswers('m04')).toBeNull();
-    expect(await progress.exportState()).toEqual(backup);
-  });
-
-  it('rejects an unknown schemaVersion and changes nothing', async () => {
-    const progress = await createProgress('kata-test');
-    await progress.saveSelfCheckAnswers('m01', answers);
-    const before = await progress.exportState();
-
-    // A v1 file is exactly this case: the gated model's export is foreign
-    // JSON to the Library (#159).
-    const v1 = { schemaVersion: 1, checkpoints: [] } as unknown as ProgressState;
-    await expect(progress.importState(v1)).rejects.toThrow(/schemaVersion/);
-
-    expect(await progress.exportState()).toEqual(before);
+    expect(await progress.getSelfCheckAnswers('m01')).toBeNull();
   });
 });

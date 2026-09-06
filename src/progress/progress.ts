@@ -11,7 +11,6 @@ import type {
   IProgress,
   ModuleId,
   ModuleSelfCheck,
-  ProgressState,
   SelfCheckAnswers,
 } from './contract';
 
@@ -44,18 +43,7 @@ function read<T>(request: IDBRequest): Promise<T | null> {
   });
 }
 
-function readAll<T>(request: IDBRequest): Promise<T[]> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result as T[]);
-    request.onerror = () =>
-      reject(request.error ?? new Error('IndexedDB read failed'));
-  });
-}
-
-/**
- * Resolves when the transaction commits. Every write in this module awaits
- * this, so a multi-record write (the import) is all-or-nothing.
- */
+/** Resolves when the transaction commits; every write here awaits it. */
 function committed(tx: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve();
@@ -64,13 +52,6 @@ function committed(tx: IDBTransaction): Promise<void> {
     tx.onerror = () =>
       reject(tx.error ?? new Error('IndexedDB transaction failed'));
   });
-}
-
-/** Ordered by the Module's ordinal, i.e. by moduleId ascending ('m01'…). */
-function byModuleId<T extends { readonly moduleId: ModuleId }>(
-  records: T[],
-): T[] {
-  return records.sort((a, b) => a.moduleId.localeCompare(b.moduleId));
 }
 
 // ── The Target Interface ─────────────────────────────────────────────────
@@ -110,31 +91,5 @@ export async function createProgress(
       return read<ModuleSelfCheck>(tx.objectStore(ANSWERS).get(moduleId));
     },
 
-    async exportState(): Promise<ProgressState> {
-      const tx = db.transaction(ANSWERS, 'readonly');
-      const all = await readAll<ModuleSelfCheck>(
-        tx.objectStore(ANSWERS).getAll(),
-      );
-      return { schemaVersion: 2, selfCheckAnswers: byModuleId(all) };
-    },
-
-    async importState(state: ProgressState): Promise<void> {
-      // The rejection happens BEFORE the transaction opens, so a rejected
-      // import changes nothing.
-      if (state.schemaVersion !== 2) {
-        throw new Error(
-          `importState: unknown schemaVersion ${String(state.schemaVersion)}`,
-        );
-      }
-
-      // Replace the store wholesale in one transaction. A duplicate moduleId
-      // cannot survive: the key is the moduleId, so the last one simply wins.
-      const tx = db.transaction(ANSWERS, 'readwrite');
-      tx.objectStore(ANSWERS).clear();
-      for (const record of state.selfCheckAnswers) {
-        tx.objectStore(ANSWERS).put(record);
-      }
-      await committed(tx);
-    },
   };
 }
