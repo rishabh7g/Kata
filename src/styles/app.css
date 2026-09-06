@@ -1,27 +1,25 @@
 /* App layer — the frame the screens sit in.
  *
- * design/styles.css is the design system and the single source of styling
- * truth; this file only adds the app-layer layout design/tokens.json § layout
- * carries (container, gutter, nav chrome). Never hard-code a hex or px the
- * tokens already carry — reference the CSS variables styles.css defines.
+ * base.css is the design system and the single source of styling truth; this
+ * file only adds the layout around it: container, gutter, nav chrome and the
+ * screens. Never hard-code a hex or size base.css already defines — use its
+ * custom properties.
  */
 
 :root {
-  /* Mirrors design/tokens.json § layout. */
   --layout-container-max: 1200px;
   --layout-aside-sticky-top: 84px;
   --header-height: 52px;
 
-  /* The house gutter ramp (design/tokens.json § layout.gutter): 16px below
-     768px, 24px from 768–1023px, 32px at 1024px and above. Switched by
-     min-width only — never a max-width around the same value. */
+  /* The house gutter ramp: 16px below 768px, 24px from 768–1023px, 32px at
+     1024px and above. Switched by min-width only — never a max-width around
+     the same value. */
   --gutter-sm: 16px;
   --gutter-md: 24px;
   --gutter-lg: 32px;
   --gutter: var(--gutter-sm);
 
-  /* The prototype's mono stack (design/DevGym.dc.html); tokens.json
-     typeScale.app carries the code sizes, this carries the family once. */
+  /* The mono family, once; the code sizes live with the blocks that set them. */
   --font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
 
   /* The house UI standard's body-text floor (#108): with zoom off once the
@@ -62,7 +60,7 @@ html, body {
   overflow: hidden;
 }
 
-/* tokens.json layout.nav: border-bottom 2px divider, bg ground. The rule and
+/* border-bottom 2px divider, bg ground. The rule and
    the flex row come from .nav in design/styles.css. flex: none in the shell
    column is what makes this fixed now — position: sticky was doing that job
    against page scroll, which no longer exists (#104). */
@@ -139,7 +137,7 @@ html, body {
 }
 
 /* ── Notice (#68) — the app's one failure panel ───────────────────────────
-   A 2px-rule panel (tokens.json layout.rules.major), the same quiet framing
+   A 2px-rule panel ), the same quiet framing
    as the backup panel, capped at the prose measure. Any
    screen can raise one (src/app/Notice.tsx). */
 .app-notice {
@@ -148,7 +146,7 @@ html, body {
   max-width: 62ch;
 }
 
-/* tokens.json typeScale.app.cardTitle: 16 / 800.
+/* 16 / 800.
 
    The tag under this class is an h1 — a notice is the whole screen when it is
    raised (#94) — and this class is what keeps it card-title sized rather than
@@ -190,7 +188,7 @@ html, body {
 
 /* ── Curriculum screen (#10) — design/README.md § Screens › 1 ─────────────
    Header: kicker + 54px title with a 340px muted intro column on the shared
-   baseline. Rows: tokens.json layout.curriculumRow — grid 104px 1fr 230px
+   baseline. Rows: — grid 104px 1fr 230px
    36px, gap 24, padding-block 24 — with a 2px top rule each and a closing
    rule after the last (layout.rules.major). */
 
@@ -202,7 +200,7 @@ html, body {
   padding-bottom: 36px;
 }
 
-/* tokens.json typeScale.app.curriculumTitle: 54, and the phone band below
+/* 54, and the phone band below
    takes it down to 32 — 54px of one word is a third of a 740px screen. */
 .curriculum-title {
   font-size: 54px;
@@ -222,7 +220,7 @@ html, body {
 /* Category headings (#163) — the shelves the rows group under
    (docs/ubiquitous-language.md § Category). A heading, never a route: no
    link, no disclosure, no filter, so the row below it stays the one way into
-   a Module. Title at tokens.json typeScale.base.h2 (32), the one-line
+   a Module. Title at 2 (32), the one-line
    description in the muted body role, and the Category's language ONCE, in
    the neutral tag the design system already ships (design/styles.css .tag) —
    no new token for either. The description takes the full row of the flex
@@ -264,7 +262,7 @@ a.curriculum-row:hover {
   background: color-mix(in srgb, var(--color-text) 4%, transparent);
 }
 
-/* tokens.json typeScale.app.moduleOrdinal: 30 / 800 / -0.02em. */
+/* 30 / 800 / -0.02em. */
 .curriculum-row-ordinal {
   font-family: var(--font-heading);
   font-weight: 800;
@@ -272,7 +270,7 @@ a.curriculum-row:hover {
   letter-spacing: -0.02em;
 }
 
-/* tokens.json typeScale.app.rowTitle: 22. */
+/* 22. */
 .curriculum-row-title {
   font-size: 22px;
   margin: 0 0 4px;
@@ -366,14 +364,14 @@ a.curriculum-row:hover {
   margin: 0 0 10px;
 }
 
-/* tokens.json typeScale.app.moduleTitle: 44. */
+/* 44. */
 .module-title {
   font-size: 44px;
   margin: 0;
   max-width: 22ch;
 }
 
-/* tokens.json layout.moduleGrid: 1fr 350px, gap 56. Single column is the
+/* 1fr 350px, gap 56. Single column is the
    base rule; the two-column form is a laptop-band affordance (#103) added
    below at min-width: 1024px, not a phone-band collapse of a wide default. */
 .module-body {
@@ -420,17 +418,9 @@ a.curriculum-row:hover {
   margin: 0 0 14px;
 }
 
-/* Section separators: the 2px .hr from styles.css at the prototype's 32px. */
+/* Section separators: the 2px .hr from base.css at 32px. */
 .module-rule {
   margin: var(--space-8) 0;
-}
-
-/* Pending-Module placeholder copy (#28): muted lines at tokens.json
-   typeScale.app.desc, raised to the 16px body-text floor (#108), capped at
-   the prototype's 60ch. */
-.module-pending-copy {
-  max-width: 60ch;
-  font-size: 16px;
 }
 
 /* Concept Page prose, capped at 66ch (design/README.md § Screens › 2). The
@@ -455,7 +445,7 @@ a.curriculum-row:hover {
 
 /* One before/after pair. The 2px border and the 2px divider between cells
    come from the divider-colored background showing through the grid gap
-   (tokens.json layout.rules.major, prototype § Module). */
+   prototype § Module). */
 .module-example {
   margin: 0 0 28px;
 }
@@ -490,7 +480,7 @@ a.curriculum-row:hover {
   color: var(--color-accent-text);
 }
 
-/* tokens.json typeScale.app.codeExamples: raised to 16 / 1.65 mono, the
+/* raised to 16 / 1.65 mono, the
    body-text floor (#108). Long lines scroll
    inside the cell — the page never scrolls horizontally. */
 .module-example-code {
@@ -510,7 +500,7 @@ a.curriculum-row:hover {
 }
 
 /* Overrides .card's column layout to the prototype's row; ink, never the
-   accent link underline. Hover raises --shadow-md (tokens.json shadow.md). */
+   accent link underline. Hover raises --shadow-md ). */
 .module-exercise-card {
   flex-direction: row;
   align-items: center;
@@ -535,14 +525,14 @@ a.curriculum-row:hover {
   min-width: 0;
 }
 
-/* tokens.json typeScale.app.cardTitle: 16 / 800. */
+/* 16 / 800. */
 .module-exercise-title {
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 16px;
 }
 
-/* tokens.json typeScale.app.meta: raised to the 16px body-text floor (#108). */
+/* raised to the 16px body-text floor (#108). */
 .module-exercise-smell {
   font-size: 16px;
   margin-top: 3px;
@@ -553,7 +543,7 @@ a.curriculum-row:hover {
 }
 
 /* Self-Check aside (#157): pinned while the main column scrolls
-   (tokens.json layout.asideStickyTop; .module-body's align-items: start
+   ; .module-body's align-items: start
    keeps the grid from stretching it full-height, which would kill sticky). */
 .module-aside {
   position: sticky;
@@ -564,7 +554,7 @@ a.curriculum-row:hover {
 }
 
 /* The Self-Check panel (#157): the same 2px rule border the aside has always
-   carried (tokens.json layout.rules.major), around the Module's optional
+   carried ), around the Module's optional
    questions. */
 .self-check {
   border: 2px solid var(--color-divider);
@@ -579,7 +569,7 @@ a.curriculum-row:hover {
   margin: 0 0 12px;
 }
 
-/* One question: minor 1px rule on top (tokens.json layout.rules.minor). */
+/* One question: minor 1px rule on top ). */
 .self-check-item {
   padding: 14px 0;
   border-top: 1px solid var(--color-divider);
@@ -642,7 +632,7 @@ a.curriculum-row:hover {
   margin: 0 0 10px;
 }
 
-/* tokens.json typeScale.app.exerciseTitle: 40. */
+/* 40. */
 .exercise-title {
   font-size: 40px;
   margin: 0 0 14px;
@@ -664,7 +654,7 @@ a.curriculum-row:hover {
   margin: 28px 0;
 }
 
-/* tokens.json layout.specGrid: 130px 1fr, 1px row rules — exactly three
+/* 130px 1fr, 1px row rules — exactly three
    rows: Concept / Smell / Size budget. No Workbench row (#3). */
 .exercise-spec-grid {
   display: grid;
@@ -713,7 +703,7 @@ a.curriculum-row:hover {
 }
 
 /* The C# block, display-only: surface fill, 2px divider border, 16/18
-   padding (tokens.json typeScale.app.codeTargetInterface: raised to 16 / 1.6
+   padding raised to 16 / 1.6
    mono, the body-text floor (#108)).
    Long lines scroll inside the block — the page never scrolls sideways. */
 .exercise-interface-code {

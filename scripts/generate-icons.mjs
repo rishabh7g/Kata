@@ -6,11 +6,11 @@
 // Generated, not built (house UI standard): icons are committed and this
 // script is the receipt. It does not run in `build` — an icon set
 // regenerating every build is a binary diff nobody reads. Re-run it by hand
-// whenever design/assets/kata-mark.svg or design/tokens.json's color.bg
+// whenever src/styles/kata-mark.svg or --color-bg in src/styles/base.css
 // changes, and commit whatever comes out (a clean tree stays clean).
 //
-// The Kata mark (design/assets/kata-mark.svg) is three axis-aligned squares on
-// the ground colour from design/tokens.json — both are read here, so the icons
+// The Kata mark (src/styles/kata-mark.svg) is three axis-aligned squares on
+// the ground colour the app renders (--color-bg) — both are read here, so the icons
 // stay derived from the design package instead of restating its geometry or its
 // hexes. Squares on integer coordinates need no antialiasing, so the PNGs are
 // written directly (zlib + CRC32, no dependency and no rasterizer on the host);
@@ -27,8 +27,8 @@ import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
-const markPath = join(repoRoot, 'design/assets/kata-mark.svg');
-const tokensPath = join(repoRoot, 'design/tokens.json');
+const markPath = join(repoRoot, 'src/styles/kata-mark.svg');
+const stylesPath = join(repoRoot, 'src/styles/base.css');
 const iconsDir = join(repoRoot, 'public/icons');
 
 const MASKABLE_SCALE = 0.6;
@@ -149,7 +149,15 @@ function encodePng(pixels, size) {
 }
 
 const mark = readMark(readFileSync(markPath, 'utf8'));
-const background = toRgb(JSON.parse(readFileSync(tokensPath, 'utf8')).color.bg);
+// The one definition of the ground colour is the custom property the app
+// paints with; the icons take it from there rather than from a second copy.
+const groundColour = /--color-bg:\s*(#[0-9a-fA-F]{3,8})/.exec(
+  readFileSync(stylesPath, 'utf8'),
+);
+if (groundColour === null) {
+  throw new Error('src/styles/base.css defines no --color-bg');
+}
+const background = toRgb(groundColour[1]);
 
 mkdirSync(iconsDir, { recursive: true });
 for (const icon of ICONS) {

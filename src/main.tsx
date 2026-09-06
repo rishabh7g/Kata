@@ -1,9 +1,9 @@
 import { startKata } from './app/bootstrap';
 import { registerServiceWorker } from './pwa/register';
 
-// design/styles.css is the app stylesheet — the single source of styling truth
-// (docs/engineering.md § 1). app.css only adds the app-layer layout on top.
-import '../design/styles.css';
+// base.css is the design system: tokens, type scale, and the components the
+// prototype shipped. app.css adds the app-layer layout on top.
+import './styles/base.css';
 import './styles/app.css';
 
 const container = document.getElementById('root');
