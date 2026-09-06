@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Kata — a read-only, offline-capable PWA for learning software design fundamentals",
+  "description": "Kata \u2014 a read-only, offline-capable PWA for learning software design fundamentals",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && node tools/strings-check.ts && vite build",
@@ -18,8 +18,6 @@
     "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^7.0.1",
-    "@testing-library/react": "^16.3.2",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
