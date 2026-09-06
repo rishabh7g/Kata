@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useProgress } from '../app/ProgressContext';
 import type { SelfCheckQuestion } from '../curriculum';
 import type { SelfCheckAnswers } from '../progress';
-import { useStrings } from '../strings/strings';
+import { copy } from '../strings/copy';
 
 /**
  * The Self-Check panel — a Module's optional questions, answered in place
@@ -34,7 +34,6 @@ export function SelfCheck({
   moduleId: string;
   questions: readonly SelfCheckQuestion[];
 }) {
-  const s = useStrings();
   const progress = useProgress();
   // undefined = the stored answers are still loading; render nothing rather
   // than flash three empty questions over answers that exist.
@@ -64,15 +63,15 @@ export function SelfCheck({
   if (picks === undefined) return null;
 
   return (
-    <section className="self-check" aria-label={s['selfCheck.heading']}>
-      <h2 className="module-section-label">{s['selfCheck.heading']}</h2>
+    <section className="self-check" aria-label={copy.selfCheck.heading}>
+      <h2 className="module-section-label">{copy.selfCheck.heading}</h2>
       {/* What a Self-Check is (#157) — one clause, under the heading that
           uses the term as a label and above the questions it describes. That
           is clause (4) of the keeper test (design/issue-guide.md § UI copy
           ban list): without it the reader meets a new term as a bare label,
           and nothing else on the screen says the questions are optional. */}
       <p className="text-muted self-check-definition">
-        {s['selfCheck.definition']}
+        {copy.selfCheck.definition}
       </p>
       {questions.map((question) => {
         // The prompt is the group's label, not loose text beside it (#72):

@@ -6,7 +6,7 @@ import { useCurriculum } from '../app/CurriculumContext';
 import { useDocumentTitle } from '../app/useDocumentTitle';
 import { useModuleDetail } from '../app/useModuleDetail';
 import type { ExerciseBrief, ModelExample, ModuleDetail } from '../curriculum';
-import { interpolate, useStrings } from '../strings/strings';
+import { copy, interpolate } from '../strings/copy';
 import { SelfCheck } from './SelfCheck';
 
 /**
@@ -35,7 +35,6 @@ import { SelfCheck } from './SelfCheck';
  * historical and is not built.
  */
 export function ModuleScreen() {
-  const s = useStrings();
   const { id } = useParams();
   const curriculum = useCurriculum();
   const {
@@ -48,7 +47,7 @@ export function ModuleScreen() {
   useDocumentTitle(
     module === undefined || module === null
       ? null
-      : interpolate(s['module.tabTitle'], {
+      : interpolate(copy.module.tabTitle, {
           ordinal: ordinalLabel(module.ordinal),
           title: module.title,
         }),
@@ -75,7 +74,7 @@ export function ModuleScreen() {
     <>
       <Link to="/" className="btn btn-ghost module-back">
         <BackArrowIcon />
-        {s['shell.backToCurriculum']}
+        {copy.shell.backToCurriculum}
       </Link>
       {/* Header: kicker + 44px title, no rule underneath
           (design/README.md § Screens › 2 header). The status tag that sat on
@@ -84,7 +83,7 @@ export function ModuleScreen() {
           answers — a measure of the reader, which the Library does not keep. */}
       <header className="module-header">
         <p className="module-kicker">
-          {interpolate(s['module.ordinalLabel'], { ordinal: ordinalLabel(module.ordinal) })}
+          {interpolate(copy.module.ordinalLabel, { ordinal: ordinalLabel(module.ordinal) })}
         </p>
         <h1 className="module-title">{module.title}</h1>
       </header>
@@ -93,12 +92,12 @@ export function ModuleScreen() {
           <ConceptSection module={module} />
           <div className="hr module-rule" />
           <section>
-            <h2 className="module-section-label">{s['module.sectionLabel.modelExamples']}</h2>
+            <h2 className="module-section-label">{copy.module.sectionLabel.modelExamples}</h2>
             {module.modelExamples.length === 0 ? (
               // Pending copy per the prototype; also the quiet fallback for
               // a pack with no examples — never a blank section.
               <p className="text-muted module-pending-copy">
-                {s['module.pending.modelExamples']}
+                {copy.module.pending.modelExamples}
               </p>
             ) : (
               module.modelExamples.map((example, index) => (
@@ -137,15 +136,14 @@ export function ModuleScreen() {
  * changed more than once (#173, #201), so nothing here quotes it.
  */
 function ConceptSection({ module }: { module: ModuleDetail }) {
-  const s = useStrings();
   if (module.pending) {
     return (
       <section>
-        <h2 className="module-section-label">{s['module.sectionLabel.conceptPage']}</h2>
+        <h2 className="module-section-label">{copy.module.sectionLabel.conceptPage}</h2>
         {/* The pending copy: the prototype's block, reworded off the
             authoring pipeline it used to describe (#139). */}
         <p className="text-muted module-pending-copy">
-          {s['module.pending.conceptPage']}
+          {copy.module.pending.conceptPage}
         </p>
       </section>
     );
@@ -154,7 +152,7 @@ function ConceptSection({ module }: { module: ModuleDetail }) {
   const body = stripConceptNote(stripLeadingTitle(module.conceptPageMarkdown));
   return (
     <section>
-      <h2 className="module-section-label">{s['module.sectionLabel.conceptPage']}</h2>
+      <h2 className="module-section-label">{copy.module.sectionLabel.conceptPage}</h2>
       <div className="module-concept">
         <Markdown source={body} />
       </div>
@@ -178,19 +176,18 @@ function ConceptSection({ module }: { module: ModuleDetail }) {
  * the Concept Page and Model Examples ones — an absence with a reason.
  */
 function ExercisesSection({ module }: { module: ModuleDetail }) {
-  const s = useStrings();
   if (module.exercises.length === 0 && !module.pending) return null;
   return (
     <>
       <div className="hr module-rule" />
       <section>
-        <h2 className="module-section-label">{s['module.sectionLabel.exercises']}</h2>
+        <h2 className="module-section-label">{copy.module.sectionLabel.exercises}</h2>
         {module.exercises.length === 0 ? (
           // Pending: the prototype's line, so the unauthored pack reads as
           // not-yet rather than blank. No cards, so a pending Module exposes
           // no navigable Exercise routes.
           <p className="text-muted module-pending-copy">
-            {s['module.pending.exercises']}
+            {copy.module.pending.exercises}
           </p>
         ) : (
           <div className="module-exercises">
@@ -259,7 +256,6 @@ function ExerciseCard({
   moduleId: string;
   exercise: ExerciseBrief;
 }) {
-  const s = useStrings();
   return (
     <Link
       to={`/modules/${moduleId}/exercises/${exercise.id}`}
@@ -267,8 +263,8 @@ function ExerciseCard({
     >
       <span className="tag tag-outline">
         {exercise.type === 'refactor'
-          ? s['module.exercise.tagRefactor']
-          : s['module.exercise.tagConstruct']}
+          ? copy.module.exercise.tagRefactor
+          : copy.module.exercise.tagConstruct}
       </span>
       <div className="module-exercise-text">
         <div className="module-exercise-title">{exercise.title}</div>
@@ -308,17 +304,16 @@ function ArrowRightIcon() {
  * scroll inside their cell — never the page (all in app.css).
  */
 function ModelExampleFigure({ example }: { example: ModelExample }) {
-  const s = useStrings();
   return (
     <figure className="module-example">
       <div className="module-example-grid">
         <div className="module-example-cell">
-          <div className="module-example-label">{s['module.example.before']}</div>
+          <div className="module-example-label">{copy.module.example.before}</div>
           <pre className="module-example-code">{example.before}</pre>
         </div>
         <div className="module-example-cell">
           <div className="module-example-label module-example-label-after">
-            {s['module.example.after']}
+            {copy.module.example.after}
           </div>
           <pre className="module-example-code">{example.after}</pre>
         </div>

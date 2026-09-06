@@ -1,7 +1,7 @@
 import { describeError } from './describeError';
 import { KataMark } from './KataMark';
 import { Notice } from './Notice';
-import { interpolate, useStrings } from '../strings/strings';
+import { copy, interpolate } from '../strings/copy';
 
 /**
  * What the learner sees when IndexedDB refuses to open (#68): site data
@@ -16,7 +16,6 @@ import { interpolate, useStrings } from '../strings/strings';
  * enough to build them.
  */
 export function ProgressUnavailable({ error }: { error: unknown }) {
-  const s = useStrings();
   const detail = describeError(error);
   const origin = window.location.host;
 
@@ -30,9 +29,9 @@ export function ProgressUnavailable({ error }: { error: unknown }) {
       </header>
       <main className="app-main">
         <div className="app-container">
-          <Notice title={s['notice.progressUnavailable.title']}>
-            <p>{interpolate(s['notice.progressUnavailable.body1'], { origin })}</p>
-            <p>{interpolate(s['notice.progressUnavailable.body2'], { origin })}</p>
+          <Notice title={copy.notice.progressUnavailable.title}>
+            <p>{interpolate(copy.notice.progressUnavailable.body1, { origin })}</p>
+            <p>{interpolate(copy.notice.progressUnavailable.body2, { origin })}</p>
             {detail !== null && (
               <p className="text-muted app-notice-detail">{detail}</p>
             )}

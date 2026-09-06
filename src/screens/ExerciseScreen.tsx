@@ -5,8 +5,8 @@ import { useCurriculum } from '../app/CurriculumContext';
 import { useDocumentTitle } from '../app/useDocumentTitle';
 import { useModuleDetail } from '../app/useModuleDetail';
 import type { CategoryLanguage, ExerciseBrief } from '../curriculum';
-import { LANGUAGE_LABEL_KEY, LANGUAGE_TEST_COMMAND } from '../strings/language';
-import { interpolate, useStrings } from '../strings/strings';
+import { LANGUAGE_TEST_COMMAND } from '../strings/language';
+import { copy, interpolate } from '../strings/copy';
 import { ordinalLabel } from './ModuleScreen';
 
 /**
@@ -26,7 +26,6 @@ import { ordinalLabel } from './ModuleScreen';
  * screen writes nothing and reads nothing from IProgress.
  */
 export function ExerciseScreen() {
-  const s = useStrings();
   const { id, exerciseId } = useParams();
   const curriculum = useCurriculum();
   const {
@@ -74,35 +73,35 @@ export function ExerciseScreen() {
     <>
       <Link to={`/modules/${module.id}`} className="btn btn-ghost exercise-back">
         <BackArrowIcon />
-        {interpolate(s['module.ordinalLabel'], { ordinal })}
+        {interpolate(copy.module.ordinalLabel, { ordinal })}
       </Link>
       {/* Header: kicker + 40px title + the one {type}-type outline tag. The
           captures' "Test Suite · n tests" tag is dropped — a brief carries no
           test count, and a count would imply the app tracks results (#3). */}
       <header className="exercise-header">
         <p className="exercise-kicker">
-          {interpolate(s['exercise.kicker'], { id: exercise.id, ordinal })}
+          {interpolate(copy.exercise.kicker, { id: exercise.id, ordinal })}
         </p>
         <h1 className="exercise-title">{exercise.title}</h1>
         <span className="tag tag-outline">
           {exercise.type === 'refactor'
-            ? s['exercise.tagRefactorType']
-            : s['exercise.tagConstructType']}
+            ? copy.exercise.tagRefactorType
+            : copy.exercise.tagConstructType}
         </span>
       </header>
       <section>
-        <h2 className="exercise-section-label">{s['exercise.sectionLabel.spec']}</h2>
+        <h2 className="exercise-section-label">{copy.exercise.sectionLabel.spec}</h2>
         {/* Exactly three rows (tokens.json layout.specGrid: 130px 1fr,
             1px row rules). The captures' Workbench row is historical —
             no folder is materialized for the learner (#3). */}
         <div className="exercise-spec-grid">
-          <div className="exercise-spec-label">{s['exercise.spec.concept']}</div>
+          <div className="exercise-spec-label">{copy.exercise.spec.concept}</div>
           <div className="exercise-spec-value">{exercise.concept}</div>
-          <div className="exercise-spec-label">{s['exercise.spec.smell']}</div>
+          <div className="exercise-spec-label">{copy.exercise.spec.smell}</div>
           <div className="exercise-spec-value">{exercise.smell}</div>
-          <div className="exercise-spec-label">{s['exercise.spec.sizeBudget']}</div>
+          <div className="exercise-spec-label">{copy.exercise.spec.sizeBudget}</div>
           <div className="exercise-spec-value exercise-spec-value-mono">
-            {interpolate(s['exercise.spec.sizeBudgetValue'], {
+            {interpolate(copy.exercise.spec.sizeBudgetValue, {
               loc: exercise.sizeBudgetLoc,
             })}
           </div>
@@ -112,13 +111,13 @@ export function ExerciseScreen() {
       <section>
         <div className="exercise-interface-heading">
           <h2 className="exercise-section-label exercise-section-label-inline">
-            {s['exercise.sectionLabel.targetInterface']}
+            {copy.exercise.sectionLabel.targetInterface}
           </h2>
-          <span className="tag tag-accent">{s['exercise.targetInterface.immutableTag']}</span>
+          <span className="tag tag-accent">{copy.exercise.targetInterface.immutableTag}</span>
         </div>
         <TargetInterfaceDefinition />
         <p className="text-muted exercise-interface-note">
-          {s['exercise.targetInterface.note']}
+          {copy.exercise.targetInterface.note}
         </p>
         {/* Display-only C# (tokens.json typeScale.app.codeTargetInterface:
             12.5 / 1.6 mono) — never a textarea, never editable. */}
@@ -148,10 +147,9 @@ export function ExerciseScreen() {
  * character in it is the authored Target Interface, never Kata's prose.
  */
 function TargetInterfaceDefinition() {
-  const s = useStrings();
   return (
     <p className="text-muted exercise-interface-definition">
-      {s['exercise.targetInterface.definition']}
+      {copy.exercise.targetInterface.definition}
     </p>
   );
 }
@@ -178,13 +176,12 @@ function PracticeMaterial({
   exercise: ExerciseBrief;
   language: CategoryLanguage;
 }) {
-  const s = useStrings();
   return (
     <section>
-      <h2 className="exercise-section-label">{s['exercise.sectionLabel.practiceMaterial']}</h2>
+      <h2 className="exercise-section-label">{copy.exercise.sectionLabel.practiceMaterial}</h2>
       {exercise.folderUrl === null ? (
         <p className="text-muted exercise-folder-pending">
-          {s['exercise.practiceMaterial.pending']}
+          {copy.exercise.practiceMaterial.pending}
         </p>
       ) : (
         <>
@@ -194,14 +191,14 @@ function PracticeMaterial({
             rel="noreferrer"
             className="exercise-folder-link"
           >
-            {s['exercise.practiceMaterial.linkLabel']}
+            {copy.exercise.practiceMaterial.linkLabel}
           </a>
           <p className="text-muted exercise-folder-note">
-            {interpolate(s['exercise.practiceMaterial.noteBefore'], {
-              language: s[LANGUAGE_LABEL_KEY[language]],
+            {interpolate(copy.exercise.practiceMaterial.noteBefore, {
+              language: copy.language[language],
             })}{' '}
             <code>{LANGUAGE_TEST_COMMAND[language]}</code>{' '}
-            {s['exercise.practiceMaterial.noteAfter']}
+            {copy.exercise.practiceMaterial.noteAfter}
           </p>
         </>
       )}

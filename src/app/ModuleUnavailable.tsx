@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { BackArrowIcon } from './BackArrowIcon';
 import { describeError } from './describeError';
 import { Notice } from './Notice';
-import { useStrings } from '../strings/strings';
+import { copy } from '../strings/copy';
 
 /**
  * What the Module and Exercise screens show when `ICurriculum.getModule(id)`
@@ -29,28 +29,27 @@ export function ModuleUnavailable({
   error: unknown;
   onRetry: () => void;
 }) {
-  const s = useStrings();
   const detail = describeError(error);
 
   return (
     <>
       <Link to="/" className="btn btn-ghost module-back">
         <BackArrowIcon />
-        {s['shell.backToCurriculum']}
+        {copy.shell.backToCurriculum}
       </Link>
-      <Notice title={s['notice.moduleUnavailable.title']}>
+      <Notice title={copy.notice.moduleUnavailable.title}>
         <p>
-          {s['notice.moduleUnavailable.body1Before']}{' '}
+          {copy.notice.moduleUnavailable.body1Before}{' '}
           <code>content/modules/{moduleId}.json</code>
-          {s['notice.moduleUnavailable.body1After']}
+          {copy.notice.moduleUnavailable.body1After}
         </p>
-        <p>{s['notice.moduleUnavailable.body2']}</p>
+        <p>{copy.notice.moduleUnavailable.body2}</p>
         {detail !== null && (
           <p className="text-muted app-notice-detail">{detail}</p>
         )}
         <div className="app-notice-actions">
           <button type="button" className="btn btn-ghost" onClick={onRetry}>
-            {s['notice.moduleUnavailable.retry']}
+            {copy.notice.moduleUnavailable.retry}
           </button>
         </div>
       </Notice>

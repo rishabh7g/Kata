@@ -7,8 +7,7 @@ import { useDocumentTitle } from '../app/useDocumentTitle';
 import { useModuleSummaries } from '../app/useModuleSummaries';
 import type { Category, ModuleId, ModuleSummary } from '../curriculum';
 import type { IProgress } from '../progress';
-import { LANGUAGE_LABEL_KEY } from '../strings/language';
-import { useStrings } from '../strings/strings';
+import { copy } from '../strings/copy';
 
 /**
  * Curriculum — the Library's index: every Category in order, each with its
@@ -38,7 +37,6 @@ export function CurriculumScreen() {
   const answeredModuleIds = useAnsweredModuleIds(useProgress(), modules);
   // The home screen is the app itself: the tab reads plain `Kata` (#77).
   useDocumentTitle(null);
-  const s = useStrings();
 
   return (
     <>
@@ -53,16 +51,16 @@ export function CurriculumScreen() {
           about the rows changes. Static text: no link, no disclosure, no
           second route into a Module. */}
       <header className="curriculum-header">
-        <h1 className="curriculum-title">{s['curriculum.title']}</h1>
+        <h1 className="curriculum-title">{copy.curriculum.title}</h1>
         <div className="curriculum-orientation text-muted">
           <p className="curriculum-orientation-line">
-            {s['curriculum.orientation.module']}
+            {copy.curriculum.orientation.module}
           </p>
           <p className="curriculum-orientation-line">
-            {s['curriculum.orientation.ownIde']}
+            {copy.curriculum.orientation.ownIde}
           </p>
           <p className="curriculum-orientation-line">
-            {s['curriculum.orientation.browserOnly']}
+            {copy.curriculum.orientation.browserOnly}
           </p>
         </div>
       </header>
@@ -134,7 +132,6 @@ function CategorySection({
   section: CategorySectionData;
   answeredModuleIds: ReadonlySet<ModuleId>;
 }) {
-  const s = useStrings();
   const { category } = section;
 
   return (
@@ -142,7 +139,7 @@ function CategorySection({
       <header className="curriculum-category-header">
         <h2 className="curriculum-category-title">{category.title}</h2>
         <span className="tag tag-neutral curriculum-category-language">
-          {s[LANGUAGE_LABEL_KEY[category.language]]}
+          {copy.language[category.language]}
         </span>
         <p className="text-muted curriculum-category-desc">
           {category.description}
@@ -242,11 +239,10 @@ function ModuleRow({
  * answers and neither a judgement: answers saved, or none yet.
  */
 function StatusTag({ inProgress }: { inProgress: boolean }) {
-  const s = useStrings();
   if (inProgress) {
-    return <span className="tag tag-outline">{s['status.inProgress']}</span>;
+    return <span className="tag tag-outline">{copy.status.inProgress}</span>;
   }
-  return <span className="tag tag-neutral">{s['status.readyToStart']}</span>;
+  return <span className="tag tag-neutral">{copy.status.readyToStart}</span>;
 }
 
 // Icons copied from the design reference (design/DevGym.dc.html § Curriculum).
