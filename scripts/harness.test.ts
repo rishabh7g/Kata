@@ -230,15 +230,17 @@ describe('content schema + Module index (#7)', () => {
     }
   });
 
-  it('lists the six Agentic AI Modules, in Curriculum order, all six authored (#165, #166, #167, #168, #169, #170, #171)', () => {
+  it('lists the eight Agentic AI Modules, in Curriculum order, all eight authored (#165, #166, #167, #168, #169, #170, #171)', () => {
     const modules = readIndex().modules.filter((m) => m.categoryId === 'agentic-ai');
 
     // docs/design.md § Categories and Modules — the Category shipped as six
     // pending rows (#165); #166–#171 authored one content pack each, and #171
-    // closed the Category with ai06. No Module in the Library is pending now,
-    // which is why every pending-Module assertion in the suite is
-    // fixture-driven (src/App.test.tsx, src/curriculum/curriculum.test.ts).
-    expect(modules.map((m) => m.id)).toEqual(['ai01', 'ai02', 'ai03', 'ai04', 'ai05', 'ai06']);
+    // closed that first shelf with ai06. Structured Output and Self-Correcting
+    // RAG joined it from the learning-lab, authored with their index rows, so
+    // no Module in the Library is pending now, which is why every
+    // pending-Module assertion in the suite is fixture-driven
+    // (src/App.test.tsx, src/curriculum/curriculum.test.ts).
+    expect(modules.map((m) => m.id)).toEqual(['ai01', 'ai02', 'ai03', 'ai04', 'ai05', 'ai06', 'ai07', 'ai08']);
     expect(modules.map((m) => m.title)).toEqual([
       'Embeddings',
       'Ingestion',
@@ -246,9 +248,11 @@ describe('content schema + Module index (#7)', () => {
       'Agents & Tool Use',
       'LangGraph',
       'LangSmith',
+      'Structured Output',
+      'Self-Correcting RAG',
     ]);
-    expect(modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(modules.map((m) => m.pending)).toEqual([false, false, false, false, false, false]);
+    expect(modules.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(modules.map((m) => m.pending)).toEqual([false, false, false, false, false, false, false, false]);
     expect(readIndex().modules.some((m) => m.pending)).toBe(false);
   });
 
@@ -267,6 +271,8 @@ describe('content schema + Module index (#7)', () => {
     ['ai04', '#169'],
     ['ai05', '#170'],
     ['ai06', '#171'],
+    ['ai07', 'learning-lab'],
+    ['ai08', 'learning-lab'],
   ])('ships %s with two Model Examples and three explained Self-Check questions (%s)', (id) => {
     const pack = readPack(id);
 
@@ -299,10 +305,10 @@ describe('content schema + Module index (#7)', () => {
     },
   );
 
-  // Five of the six Agentic AI Modules only explain, which is a complete
+  // Seven of the eight Agentic AI Modules only explain, which is a complete
   // Module (#161). ai03 is the exception and the pilot (#172): one Python
   // Exercise, the only practice material in the Category.
-  it.each([['ai01'], ['ai02'], ['ai04'], ['ai05'], ['ai06']])(
+  it.each([['ai01'], ['ai02'], ['ai04'], ['ai05'], ['ai06'], ['ai07'], ['ai08']])(
     'ships %s as an explain-only pack (#161)',
     (id) => {
       expect(readPack(id).exercises).toEqual([]);

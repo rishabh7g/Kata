@@ -104,6 +104,22 @@
       "title": "LangSmith",
       "description": "Seeing what the agent did: tracing runs and evaluating outputs.",
       "pending": false
+    },
+    {
+      "id": "ai07",
+      "categoryId": "agentic-ai",
+      "ordinal": 7,
+      "title": "Structured Output",
+      "description": "A typed answer instead of prose: the model fills a shape your code can branch on.",
+      "pending": false
+    },
+    {
+      "id": "ai08",
+      "categoryId": "agentic-ai",
+      "ordinal": 8,
+      "title": "Self-Correcting RAG",
+      "description": "Judge the fetch, judge the answer — a graph that checks its own work before it replies.",
+      "pending": false
     }
   ]
 }
