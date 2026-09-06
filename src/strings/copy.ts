@@ -62,10 +62,6 @@ export const copy = {
       before: 'Before',
       after: 'After',
     },
-    exercise: {
-      tagRefactor: 'Refactor',
-      tagConstruct: 'Construct',
-    },
   },
 
   selfCheck: {
@@ -79,8 +75,9 @@ export const copy = {
 
   exercise: {
     kicker: 'Exercise {id} · Module {ordinal}',
-    tagRefactorType: 'Refactor-type',
-    tagConstructType: 'Construct-type',
+    /** One pair for both surfaces: the Module's card and this screen's tag. */
+    tagRefactor: 'Refactor',
+    tagConstruct: 'Construct',
     sectionLabel: {
       spec: 'Exercise Spec',
       targetInterface: 'Target Interface',
@@ -99,7 +96,6 @@ export const copy = {
       immutableTag: 'Immutable',
       definition:
         'The Target Interface is the boundary you must end up with — the Test Suite is written against it, and you may not change it.',
-      note: 'Wanting to change it is a signal to record and discuss — not an allowed move.',
     },
     practiceMaterial: {
       pending:

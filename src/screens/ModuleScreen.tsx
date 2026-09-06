@@ -1,69 +1,41 @@
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { ArrowRightIcon } from '../app/ArrowRightIcon';
 import { BackArrowIcon } from '../app/BackArrowIcon';
 import { Markdown } from '../app/Markdown';
-import { ModuleUnavailable } from '../app/ModuleUnavailable';
-import { useCurriculum } from '../app/CurriculumContext';
+import { ModuleGate } from '../app/ModuleGate';
+import { ordinalLabel } from '../app/ordinalLabel';
 import { useDocumentTitle } from '../app/useDocumentTitle';
-import { useModuleDetail } from '../app/useModuleDetail';
 import type { ExerciseBrief, ModelExample, ModuleDetail } from '../curriculum';
 import { copy, interpolate } from '../strings/copy';
 import { SelfCheck } from './SelfCheck';
 
 /**
- * Module — the reading surface: header, Concept Page prose, Model Examples,
- * and the Exercise cards (design/README.md § Screens › 2,
- * design/screens/02-state.png, 03-state.png).
+ * Module — the reading surface: header, the Concept Page prose, the Module's
+ * Self-Check, Model Examples and the Exercise cards.
  *
- * The aside column (tokens.json layout.moduleGrid: 1fr 350px) carries the
- * Module's Self-Check (#157) — its optional questions, answered beside the
- * prose they belong to. Nothing on this screen reports a state: the header
- * carries no status tag and the aside no gate panel, because a Library never
- * measures the reader (#155, #156).
+ * Nothing here reports a state. The app never runs, sees or records the
+ * reader's code, so a card carries no suite status and the header no tag.
  *
- * A Module carries 0..n Exercises (#161). With none, the whole Exercises
- * section is absent — no heading and no empty-state line — so an explain-only
- * Module simply reads shorter.
- *
- * Everything rendered comes from `ICurriculum.getModule(id)` (#9). The cards
- * carry no suite status and no runs meta — the app knows nothing about the
- * learner's code (read-only decision, #3); the captures' status column is
- * historical and is not built.
+ * A Module carries 0..n Exercises. With none, the whole Exercises section is
+ * absent — no heading, no empty-state line — so a Module that only explains
+ * simply reads shorter.
  */
 export function ModuleScreen() {
   const { id } = useParams();
-  const curriculum = useCurriculum();
-  const {
-    detail: module,
-    error: loadError,
-    retry,
-  } = useModuleDetail(curriculum, id ?? '');
-  // The tab names the Module once its content is here — while it loads, and
-  // for a Module that will not load at all, the tab stays plain `Kata` (#77).
-  useDocumentTitle(
-    module === undefined || module === null
-      ? null
-      : interpolate(copy.module.tabTitle, {
-          ordinal: ordinalLabel(module.ordinal),
-          title: module.title,
-        }),
+  return (
+    <ModuleGate id={id ?? ''}>
+      {(module) => <ModuleView module={module} />}
+    </ModuleGate>
   );
+}
 
-  // The content would not load (offline, before this Module was ever read).
-  // Checked first: a failure leaves the detail `undefined`, which the loading
-  // guard below would hold forever on a blank screen (#69).
-  if (loadError !== null) {
-    return (
-      <ModuleUnavailable
-        moduleId={id ?? ''}
-        error={loadError}
-        onRetry={retry}
-      />
-    );
-  }
-  // Still loading: render nothing rather than a made-up placeholder.
-  if (module === undefined) return null;
-  // Unknown id: back to the Curriculum, never a dead end (mirrors App.tsx).
-  if (module === null) return <Navigate to="/" replace />;
+function ModuleView({ module }: { module: ModuleDetail }) {
+  useDocumentTitle(
+    interpolate(copy.module.tabTitle, {
+      ordinal: ordinalLabel(module.ordinal),
+      title: module.title,
+    }),
+  );
 
   return (
     <>
@@ -147,14 +119,6 @@ function ExercisesSection({ module }: { module: ModuleDetail }) {
 }
 
 /**
- * A Module's ordinal as every surface writes it: two digits, zero-padded —
- * `Module 03`, never `Module 3`.
- */
-export function ordinalLabel(ordinal: number): string {
-  return String(ordinal).padStart(2, '0');
-}
-
-/**
  * The authored packs open their Concept Page markdown with the Module's own
  * `# title`; the header h1 above already shows it, so that one leading
  * heading is dropped before rendering — otherwise the title would appear
@@ -204,8 +168,8 @@ function ExerciseCard({
     >
       <span className="tag tag-outline">
         {exercise.type === 'refactor'
-          ? copy.module.exercise.tagRefactor
-          : copy.module.exercise.tagConstruct}
+          ? copy.exercise.tagRefactor
+          : copy.exercise.tagConstruct}
       </span>
       <div className="module-exercise-text">
         <div className="module-exercise-title">{exercise.title}</div>
@@ -213,28 +177,6 @@ function ExerciseCard({
       </div>
       <ArrowRightIcon />
     </Link>
-  );
-}
-
-// Icons copied from the design reference (design/DevGym.dc.html § Module).
-
-function ArrowRightIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="module-exercise-arrow"
-      aria-hidden="true"
-    >
-      <path d="M5 12h14" />
-      <path d="m12 5 7 7-7 7" />
-    </svg>
   );
 }
 

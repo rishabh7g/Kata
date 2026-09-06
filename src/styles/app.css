@@ -295,6 +295,12 @@ a.curriculum-row:hover {
   justify-self: end;
 }
 
+/* The shared arrow ships at 16; the row wants the prototype's 18. */
+.curriculum-row-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* Narrow viewports (#30): the header's fixed 340px intro column and the rows'
    fixed 230px status column force page-level horizontal scroll at phone
    widths — stack the intro under the title and drop the status under the
@@ -413,14 +419,6 @@ a.curriculum-row:hover {
 .module-section-label {
   margin: 0 0 14px;
 }
-
-/* The Concept Page label row (#30) — the label + the pack's provenance note
-   on one baseline — is gone with the note it existed to carry (#139): that
-   note is an emphasis-only opening paragraph the screen never renders, and
-   its wording differs per pack. The Concept Page label is now the same plain
-   `.module-section-label` every other section uses, so
-   `.module-concept-heading`, `.module-section-label-inline` and
-   `.module-concept-note` have no markup left to style. */
 
 /* Section separators: the 2px .hr from styles.css at the prototype's 32px. */
 .module-rule {
@@ -709,14 +707,6 @@ a.curriculum-row:hover {
    muted tone and 60ch measure as that note, so the section keeps one column
    of prose above the code block; no breakpoint or padding moves. */
 .exercise-interface-definition {
-  font-size: 16px;
-  max-width: 60ch;
-  margin: 0 0 8px;
-}
-
-/* The warning note: body-floor size, muted, capped at 60ch (#108;
-   prototype § Exercise). */
-.exercise-interface-note {
   font-size: 16px;
   max-width: 60ch;
   margin: 0 0 12px;

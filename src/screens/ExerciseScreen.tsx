@@ -1,68 +1,45 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { BackArrowIcon } from '../app/BackArrowIcon';
-import { ModuleUnavailable } from '../app/ModuleUnavailable';
-import { useCurriculum } from '../app/CurriculumContext';
+import { ModuleGate } from '../app/ModuleGate';
+import { ordinalLabel } from '../app/ordinalLabel';
 import { useDocumentTitle } from '../app/useDocumentTitle';
-import { useModuleDetail } from '../app/useModuleDetail';
-import type { CategoryLanguage, ExerciseBrief } from '../curriculum';
+import type { CategoryLanguage, ExerciseBrief, ModuleDetail } from '../curriculum';
 import { LANGUAGE_TEST_COMMAND } from '../strings/language';
 import { copy, interpolate } from '../strings/copy';
-import { ordinalLabel } from './ModuleScreen';
 
 /**
- * Exercise — the read surface for one brief: header, Exercise Spec grid,
- * the immutable Target Interface, and the practice-material link
- * (design/README.md § Screens › 3; screens/05-state.png, whose right-hand
- * aside is historical per the read-only decision, #3).
+ * Exercise — the read surface for one brief: header, the Exercise Spec grid,
+ * the immutable Target Interface, and the practice-material link.
  *
- * Everything comes from the brief inside `ICurriculum.getModule(id)` (#9) —
- * a brief is only reachable through its Module, so the route carries both
- * ids (docs/engineering.md § 4). Kata never runs code: nothing here reports
- * on the learner's work, and the Target Interface is strictly display-only.
- *
- * One column, and no state of any kind (#157): the Module's questions are its
- * Self-Check, answered on the Module screen beside the prose, and the aside
- * that used to hold them — with the gate banner under it — is gone. This
- * screen writes nothing and reads nothing from IProgress.
+ * A brief is only reachable through its Module, so the route carries both ids
+ * and the Module is what loads. Kata never runs code: nothing here reports on
+ * the reader's work, and the Target Interface is display-only.
  */
 export function ExerciseScreen() {
   const { id, exerciseId } = useParams();
-  const curriculum = useCurriculum();
-  const {
-    detail: module,
-    error: loadError,
-    retry,
-  } = useModuleDetail(curriculum, id ?? '');
-  // Looked up before the early returns because the title hook below has to be
-  // called on every render — the guards that use it are unchanged.
-  const exercise =
-    module === undefined || module === null
-      ? undefined
-      : module.exercises.find((brief) => brief.id === exerciseId);
-  // The tab names the brief once it is here; while the Module loads, or when
-  // the id names no brief, it stays plain `Kata` (#77).
+  return (
+    <ModuleGate id={id ?? ''}>
+      {(module) => (
+        <ExerciseView module={module} exerciseId={exerciseId ?? ''} />
+      )}
+    </ModuleGate>
+  );
+}
+
+function ExerciseView({
+  module,
+  exerciseId,
+}: {
+  module: ModuleDetail;
+  exerciseId: string;
+}) {
+  const exercise = module.exercises.find((brief) => brief.id === exerciseId);
   useDocumentTitle(
     exercise === undefined ? null : `${exercise.id} ${exercise.title}`,
   );
 
-  // The Module's content would not load: the brief lives inside it, so this
-  // screen is as blank as the Module's — same surface, same way out (#69).
-  if (loadError !== null) {
-    return (
-      <ModuleUnavailable
-        moduleId={id ?? ''}
-        error={loadError}
-        onRetry={retry}
-      />
-    );
-  }
-  // Still loading: render nothing rather than a made-up placeholder.
-  if (module === undefined) return null;
-  // Unknown Module id: back to the Curriculum, never a dead end.
-  if (module === null) return <Navigate to="/" replace />;
-
-  // Unknown brief id, or a Module that ships none: back to the owning
-  // Module, mirroring the unknown-Module fallback above.
+  // Unknown brief id, or a Module that ships none: back to the owning Module,
+  // mirroring the gate's unknown-Module fallback.
   if (exercise === undefined) {
     return <Navigate to={`/modules/${module.id}`} replace />;
   }
@@ -85,8 +62,8 @@ export function ExerciseScreen() {
         <h1 className="exercise-title">{exercise.title}</h1>
         <span className="tag tag-outline">
           {exercise.type === 'refactor'
-            ? copy.exercise.tagRefactorType
-            : copy.exercise.tagConstructType}
+            ? copy.exercise.tagRefactor
+            : copy.exercise.tagConstruct}
         </span>
       </header>
       <section>
@@ -116,9 +93,6 @@ export function ExerciseScreen() {
           <span className="tag tag-accent">{copy.exercise.targetInterface.immutableTag}</span>
         </div>
         <TargetInterfaceDefinition />
-        <p className="text-muted exercise-interface-note">
-          {copy.exercise.targetInterface.note}
-        </p>
         {/* Display-only C# (tokens.json typeScale.app.codeTargetInterface:
             12.5 / 1.6 mono) — never a textarea, never editable. */}
         <pre className="exercise-interface-code">
@@ -132,18 +106,14 @@ export function ExerciseScreen() {
 }
 
 /**
- * What a Target Interface is (#136) — one clause, under the section heading
- * and above `exercise.targetInterface.note`.
+ * What a Target Interface is — one clause, under the section heading.
  *
- * This is the first place the app defines a term three surfaces already use
- * as a label: this section heading, the Spec grid's "Target Interface" row
- * on the Module screen, and the accent `Immutable` tag right beside it. The
- * existing note only says what wanting to change it means — it presumes the
- * learner already knows what "it" is — so under clause (4) of the keeper
- * test (design/issue-guide.md § UI copy ban list, #133) the definition
- * belongs here, ahead of it. The note itself is unchanged, and stays.
+ * The first place the app defines a term three surfaces already use as a
+ * label: this heading, the Spec grid's row on the Module screen, and the
+ * accent `Immutable` tag beside it. It ends with the rule the tag states in
+ * one word, so nothing else on the screen has to repeat it.
  *
- * Above the `<pre>`, not inside it: the C# block is display-only and every
+ * Above the `<pre>`, not inside it: the code block is display-only and every
  * character in it is the authored Target Interface, never Kata's prose.
  */
 function TargetInterfaceDefinition() {

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRightIcon } from '../app/ArrowRightIcon';
+import { ordinalLabel } from '../app/ordinalLabel';
 import { useCategories } from '../app/useCategories';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
@@ -196,9 +198,7 @@ function ModuleRow({
 }) {
   return (
     <Link to={`/modules/${module.id}`} className="curriculum-row">
-      <div className="curriculum-row-ordinal">
-        {String(module.ordinal).padStart(2, '0')}
-      </div>
+      <div className="curriculum-row-ordinal">{ordinalLabel(module.ordinal)}</div>
       <div>
         <h3 className="curriculum-row-title">{module.title}</h3>
         <p className="text-muted curriculum-row-desc">{module.description}</p>
@@ -222,25 +222,4 @@ function ModuleRow({
 function StatusTag({ inProgress }: { inProgress: boolean }) {
   if (!inProgress) return null;
   return <span className="tag tag-outline">{copy.status.inProgress}</span>;
-}
-
-// Icons copied from the design reference (design/DevGym.dc.html § Curriculum).
-
-function ArrowRightIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M5 12h14" />
-      <path d="m12 5 7 7-7 7" />
-    </svg>
-  );
 }
