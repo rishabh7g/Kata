@@ -336,23 +336,27 @@ else
       json "$WORK/content/index.json" \
         'data.categories.some((c) => c.title === "Software Design" && c.language === "csharp")' \
         'the Software Design heading and its language (#163)'
-      # The Agentic AI Category (#165): the second shelf ships as six pending
+      # The Agentic AI Category (#165): the second shelf shipped as six pending
       # rows, so the deployed index is the whole surface — a client-rendered
       # SPA serves the heading and the rows from this file, not from HTML.
+      # Two more rows joined it from the learning-lab: Structured Output and
+      # Self-Correcting RAG, ordinals 7 and 8.
       has "$WORK/content/index.json" '"agentic-ai"' 'the Agentic AI Category (#165)'
       has "$WORK/content/index.json" '"ai06"' 'the sixth Agentic AI Module (#165)'
+      has "$WORK/content/index.json" '"ai08"' 'the eighth Agentic AI Module'
       json "$WORK/content/index.json" \
         'data.categories.some((c) => c.title === "Agentic AI" && c.language === "python")' \
         'the Agentic AI heading and its language (#165)'
       json "$WORK/content/index.json" \
-        'data.modules.filter((m) => m.categoryId === "agentic-ai").every((m, i) => m.ordinal === i + 1) && data.modules.filter((m) => m.categoryId === "agentic-ai").length === 6' \
-        'six Agentic AI Modules, ordinals 1-6 (#165)'
+        'data.modules.filter((m) => m.categoryId === "agentic-ai").every((m, i) => m.ordinal === i + 1) && data.modules.filter((m) => m.categoryId === "agentic-ai").length === 8' \
+        'eight Agentic AI Modules, ordinals 1-8 (#165)'
       # The Category shipped every row pending (#165); #166 authored the
       # first pack, #167 the second, #168 the third, #169 the fourth, #170
-      # the fifth and #171 the sixth, so what the deployed index has to say
-      # now is that all six are readable and NO Module in the Library is
-      # pending — the pending-Module placeholder above is fixture-driven for
-      # exactly that reason.
+      # the fifth and #171 the sixth; ai07 and ai08 were authored with their
+      # index rows, so what the deployed index has to say now is that all
+      # eight are readable and NO Module in the Library is pending — the
+      # pending-Module placeholder above is fixture-driven for exactly that
+      # reason.
       json "$WORK/content/index.json" \
         'data.modules.find((m) => m.id === "ai01").pending === false' \
         'ai01 is no longer pending (#166)'
@@ -371,6 +375,12 @@ else
       json "$WORK/content/index.json" \
         'data.modules.find((m) => m.id === "ai06").pending === false' \
         'ai06 is no longer pending (#171)'
+      json "$WORK/content/index.json" \
+        'data.modules.find((m) => m.id === "ai07").pending === false' \
+        'ai07 is not pending'
+      json "$WORK/content/index.json" \
+        'data.modules.find((m) => m.id === "ai08").pending === false' \
+        'ai08 is not pending'
       json "$WORK/content/index.json" \
         'data.modules.every((m) => m.pending === false)' \
         'no Module in the deployed Library is pending (#171)'
@@ -456,6 +466,20 @@ else
       else
         bad "ai06 is pending in the deployed index — LangSmith content (#171) is missing"
       fi
+      # Modules ai07 and ai08 — Structured Output and Self-Correcting RAG,
+      # the two packs drawn from the learning-lab's langgraph-course and
+      # contract-agent projects: the loop below must also fetch and validate
+      # content/modules/ai07.json and ai08.json.
+      if [[ " $MODULES " == *" ai07 "* ]]; then
+        note "ai07 is non-pending — Structured Output content is live"
+      else
+        bad "ai07 is pending in the deployed index — Structured Output content is missing"
+      fi
+      if [[ " $MODULES " == *" ai08 "* ]]; then
+        note "ai08 is non-pending — Self-Correcting RAG content is live"
+      else
+        bad "ai08 is pending in the deployed index — Self-Correcting RAG content is missing"
+      fi
       for id in $MODULES; do
         get "${URL}content/modules/${id}.json" "$WORK/content/modules/${id}.json"
       done
@@ -508,6 +532,18 @@ else
         json "$WORK/content/modules/ai06.json" \
           'data.id === "ai06" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
           'the served ai06 pack: explain-only, three Self-Check questions (#171)'
+      fi
+      # The served ai07.json and ai08.json parse the same way, and carry the
+      # two Model Examples each pack reads with.
+      if [[ -f "$WORK/content/modules/ai07.json" ]]; then
+        json "$WORK/content/modules/ai07.json" \
+          'data.id === "ai07" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
+          'the served ai07 pack: explain-only, three Self-Check questions'
+      fi
+      if [[ -f "$WORK/content/modules/ai08.json" ]]; then
+        json "$WORK/content/modules/ai08.json" \
+          'data.id === "ai08" && data.exercises.length === 0 && data.selfCheckQuestions.length === 3 && data.modelExamples.length === 2' \
+          'the served ai08 pack: explain-only, three Self-Check questions'
       fi
       if [[ -n "$MODULES" ]]; then
         if ! out="$(node "$REPO/scripts/validate-content.mjs" "$CONTENT_SCHEMA" "$WORK/content/modules" 2>&1)"; then
