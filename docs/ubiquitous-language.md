@@ -22,22 +22,9 @@ Keep this file open during all planning and prompting sessions. Every PRD, promp
 - **Generator** — the authoring-time script that drafts Concept Pages, Model Examples, and exercise material by calling the local `claude` CLI on the build host. It runs before the content is committed, never at runtime: the shipped app contains no LLM client and no generation code.
 - **ICurriculum** / **IProgress** — the two Target Interfaces the app is built from: reading the authored content, and owning the learner's Self-Check answers. Defined normatively in `docs/engineering.md` § 2.
 
-## Removed terms (kept so old references stay decodable)
-
-These are **not live system terms** — don't use them in issues, prompts, commits, or UI. The first three named the original localhost architecture (`docs/engineering.md` § 9 records why each is gone); the last three named the gated-course model Kata dropped when it became a Library.
-
-- **Verification Run** — one execution of an Exercise's Test Suite, reported to the app. Kata no longer receives, stores, or displays test results.
-- **Verifier CLI** — the `kata verify` command that ran `dotnet test` and posted results back. The learner runs the tests themselves; nothing reports anywhere.
-- **Workbench** — the local folder an Exercise was materialized into. Exercise folders are committed in this repo instead; the learner clones the one they want.
-- **Exit Gate** — a Module's pass condition, opened by submitting the Behavioral Checklist. Modules have no pass condition: nothing is submitted and nothing is passed.
-- **Behavioral Checklist** — the Exit Gate's one condition and the only judgement the app recorded. The questions survive as the **Self-Check**; what is gone is the submitting, the pass state, and the judgement.
-- **Checkpoint** — a recorded passage through an Exit Gate, and the unit of progress that unlocked the next Module. Nothing unlocks now, so nothing is recorded but Self-Check answers.
-
-Note what is *not* removed: **Test Suite** is still a live term. It stopped being a gate condition; it did not stop being the point of the practice.
-
 ## Banned / disambiguated terms
 
-- Don't say "lesson", "course", "level", "quiz", "flashcard" — none of these exist in this system. Kata is a Library; its questions are a Self-Check.
+- Don't say "lesson", "course", "level", "quiz", "flashcard", "Checkpoint", "Exit Gate", "Workbench" or "Verification Run" — none of these exist in this system. Kata is a Library; its questions are a Self-Check.
 - Don't say "grade" or "score" — Kata never measures the learner's work, and a Self-Check has no result.
 - Don't say "unlock", "locked", "gate", or "submit" — nothing in the Library blocks the reader and nothing is sent anywhere. "Progress" survives only as the name of what is stored (`IProgress`, the exported progress file): the reader's Self-Check answers, never a measure of how far they have got.
 - "Interface" alone is ambiguous — say **Target Interface** (domain) or C# `interface` (code) explicitly.

@@ -23,8 +23,8 @@ needs to know none of that.
 | Piece | Decision |
 |---|---|
 | App | **React + Vite + TypeScript**, `strict: true`, no `any` in app code |
-| Styling | **`design/styles.css` is the app stylesheet** — imported as-is, the single source of styling truth |
-| Tokens | `design/tokens.json` is honoured through the CSS variables `styles.css` defines; never hard-code a hex or px the tokens already carry |
+| Styling | **`src/styles/base.css` is the design system** — the single source of styling truth; `app.css` adds the layout around it |
+| Tokens | the custom properties `base.css` defines are the tokens; never hard-code a hex or size one already carries |
 | Fonts | **Self-hosted** Archivo 400/600/800 as committed `woff2` + `@font-face`, replacing the stylesheet's Google Fonts import (an offline PWA may not depend on a third-party origin) |
 | Persistence | **IndexedDB in the browser only** (§ 4). No accounts, no server, no sync |
 | Offline | Web app manifest + a hand-rolled service worker (`src/pwa/`). The **app shell** — document, JS, CSS, fonts, icons, manifest — is **precached** cache-first from a build-generated list, in a cache named for a hash of those files, so a new deploy activates on the next online load. The **content JSON** is **not** precached (`cache.addAll` is atomic, and a Module that has not been authored yet would fail the whole install): it is fetched network-first and cached as it is read, so it is offline-ready after one online visit |
@@ -38,9 +38,10 @@ not a bug: a Module that has never been read online cannot be read offline.
 When `ICurriculum.getModule(id)` rejects, the Module and Exercise screens
 render the `ModuleUnavailable` notice (`src/app/ModuleUnavailable.tsx`) — the
 file that failed, why it is not offline-ready, the browser's own error text,
-`Try again`, and the way back to the Curriculum — rather than nothing at all
-(#69). A **404 is not a failure**: a missing content file means the Module is
-pending, and the pending placeholder renders as usual.
+`Try again`, and the way back to the Curriculum — rather than nothing at all.
+A **404 is a failure like any other status**: every indexed Module has a
+content file, so a missing one is a content error the reader meets as an
+unavailable Module.
 
 Host and CI facts: **Node v24** and the **dotnet 10 SDK** are both available —
 Node for the app and the authoring scripts, dotnet only for compiling the
@@ -53,195 +54,19 @@ Because the app is static, "deploy" means "the Actions run that published
 
 ## 2. The two Target Interfaces
 
-This section is the contract. Its code block is normative TypeScript: paste it
-verbatim into a `.ts` file and it compiles under `strict`. Both Target Interfaces
-are fully asynchronous, because both of their backing stores (HTTP-fetched JSON
+Both Target Interfaces are fully asynchronous, because both of their backing stores (HTTP-fetched JSON
 and IndexedDB) are. Absence is always `null`, never `undefined`, so every value
 survives a JSON round-trip unchanged. The one exception is an authored field
 that may simply not be written (`explanation?`): its key is absent from the JSON
 altogether rather than present and empty, which round-trips unchanged too.
 
-The code block below is written as TypeScript `interface` declarations. In prose
-a boundary is always a **Target Interface**, and C# code the learner receives is
-always a C# `interface`.
+In prose a boundary is always a **Target Interface**, and C# code the learner
+receives is always a C# `interface`.
 
-```ts
-// ── Ids and scalars ──────────────────────────────────────────────────────
-
-/** Module id exactly as committed in the content files; opaque to the app. */
-export type ModuleId = string;
-
-/** Category id exactly as committed in the content files; opaque to the app. */
-export type CategoryId = string;
-
-/** Exercise id, unique app-wide, equal to its repo folder name: 'm01-e1'. */
-export type ExerciseId = string;
-
-/** Self-Check question id, unique within its Module: 'q1' … 'q3'. */
-export type SelfCheckQuestionId = string;
-
-/** ISO-8601 instant in UTC, e.g. '2026-08-12T09:41:00.000Z'. */
-export type IsoDateTime = string;
-
-export type ExerciseType = 'refactor' | 'construct';
-
-/** The one practice language every Module in a Category is written in. */
-export type CategoryLanguage = 'csharp' | 'python';
-
-// ── Authored content (committed JSON, read-only at runtime) ──────────────
-
-export interface Category {
-  readonly id: CategoryId;
-  readonly ordinal: number; // 1-based, contiguous, the order Categories read in
-  readonly title: string;
-  readonly description: string; // one line, shown under the title
-  readonly language: CategoryLanguage; // every Module in it practises this one
-}
-
-export interface ModuleIndexEntry {
-  readonly id: ModuleId;
-  readonly categoryId: CategoryId; // the one Category this Module belongs to
-  readonly ordinal: number; // 1-based, contiguous within its Category
-  readonly title: string;
-  readonly description: string; // one line, shown under the title
-  readonly pending: boolean; // true = content pack not authored yet
-}
-
-export interface ModuleIndex {
-  readonly schemaVersion: 2;
-  readonly categories: readonly Category[];
-  readonly modules: readonly ModuleIndexEntry[];
-}
-
-export interface ModelExample {
-  readonly before: string; // source in the Category's language, <= 40 lines
-  readonly after: string; // source in the Category's language, <= 40 lines
-  readonly caption: string; // what moved or got hidden
-}
-
-export interface ExerciseBrief {
-  readonly id: ExerciseId;
-  readonly type: ExerciseType;
-  readonly title: string;
-  readonly concept: string; // Exercise Spec row 1
-  readonly smell: string; // Exercise Spec row 2 — the planted flaw
-  readonly targetInterfaceCode: string; // Category's language, read-only
-  readonly sizeBudgetLoc: number; // <= 300
-  readonly folderUrl: string | null; // GitHub folder link; null until committed
-}
-
-export interface SelfCheckOption {
-  readonly value: string; // the stored answer value
-  readonly label: string; // what the radio shows
-}
-
-export interface SelfCheckQuestion {
-  readonly id: SelfCheckQuestionId;
-  readonly prompt: string; // behaviorally answerable — countable or doable
-  readonly options: readonly SelfCheckOption[]; // 2–4 radios
-  /** Revealed once any option is picked, and the SAME text whichever one was:
-   *  it teaches, it never marks an answer right or wrong. 1–3 sentences in the
-   *  novice voice (docs/design.md § Editorial standard). Absent = the question
-   *  reveals nothing at all. */
-  readonly explanation?: string;
-}
-
-export interface ModuleContent {
-  readonly schemaVersion: 1;
-  readonly id: ModuleId;
-  readonly conceptPageMarkdown: string;
-  readonly modelExamples: readonly ModelExample[]; // 2–3
-  readonly exercises: readonly ExerciseBrief[]; // 0..n; [] = explains only
-  readonly selfCheckQuestions: readonly [
-    SelfCheckQuestion,
-    SelfCheckQuestion,
-    SelfCheckQuestion,
-  ]; // exactly 3
-}
-
-// ── Reader answers (the only data Kata ever persists) ────────────────────
-
-/** A Module's Self-Check picks: one option value per question id. Always
- *  partial — none, some, or all three answered are equally normal. */
-export type SelfCheckAnswers = Readonly<
-  Partial<Record<SelfCheckQuestionId, string>>
->;
-
-/** One Module's stored Self-Check answers; at most one record per Module. */
-export interface ModuleSelfCheck {
-  readonly moduleId: ModuleId;
-  readonly answers: SelfCheckAnswers;
-  readonly savedAt: IsoDateTime; // when the last pick was autosaved
-}
-
-/** The whole persisted state, in one value: backup file and test fixture. */
-export interface ProgressState {
-  readonly schemaVersion: 2;
-  readonly selfCheckAnswers: readonly ModuleSelfCheck[];
-}
-
-// ── What ICurriculum hands to the screens ────────────────────────────────
-
-export interface ModuleSummary {
-  readonly id: ModuleId;
-  readonly categoryId: CategoryId; // denormalized from the index, for grouping
-  readonly language: CategoryLanguage; // denormalized from its Category
-  readonly ordinal: number; // within its Category
-  readonly title: string;
-  readonly description: string;
-  readonly pending: boolean;
-}
-
-export interface ModuleDetail extends ModuleSummary {
-  readonly conceptPageMarkdown: string; // '' when pending
-  readonly modelExamples: readonly ModelExample[]; // [] when pending
-  readonly exercises: readonly ExerciseBrief[]; // [] when pending
-  readonly selfCheckQuestions: readonly SelfCheckQuestion[]; // [] when pending, else 3
-}
-
-// ── Seams ────────────────────────────────────────────────────────────────
-
-/** Where authored content comes from: HTTP in the app, in-memory in tests. */
-export interface ContentSource {
-  loadIndex(): Promise<ModuleIndex>;
-  /** null = the Module has no content file yet (pending). */
-  loadModuleContent(id: ModuleId): Promise<ModuleContent | null>;
-}
-
-// ── Target Interface 1 of 2: ICurriculum ─────────────────────────────────
-
-export interface ICurriculum {
-  /** Every Category, in its own ordinal order — the shelves the Curriculum
-   *  groups its rows under. */
-  getCategories(): Promise<readonly Category[]>;
-  /** Every Module, ordered by Category ordinal, then Module ordinal. */
-  getModules(): Promise<readonly ModuleSummary[]>;
-  /** Full detail for one Module; null when the id is unknown. */
-  getModule(id: ModuleId): Promise<ModuleDetail | null>;
-}
-
-export declare function createCurriculum(content: ContentSource): ICurriculum;
-
-// ── Target Interface 2 of 2: IProgress ───────────────────────────────────
-
-export interface IProgress {
-  /** Autosave of a Module's Self-Check picks; replaces what was stored. */
-  saveSelfCheckAnswers(
-    moduleId: ModuleId,
-    answers: SelfCheckAnswers,
-  ): Promise<void>;
-  /** One Module's stored answers; null when that Module has none. */
-  getSelfCheckAnswers(moduleId: ModuleId): Promise<ModuleSelfCheck | null>;
-  /** Whole state out, for the backup file and for test fixtures. */
-  exportState(): Promise<ProgressState>;
-  /** Whole state in: replaces everything stored. All-or-nothing. */
-  importState(state: ProgressState): Promise<void>;
-}
-
-export declare function createProgress(
-  databaseName?: string,
-): Promise<IProgress>;
-```
+The contract itself is [`src/curriculum/contract.ts`](../src/curriculum/contract.ts)
+— the file the compiler reads. It used to be reprinted here and copied there by
+hand; the copy the compiler checks is the one that cannot drift, so this section
+describes the behaviour and the file states the shapes.
 
 ### ICurriculum — behaviour
 
@@ -251,7 +76,7 @@ all, and it **writes nothing, ever**.
 
 - `getCategories()` returns the index's Categories **sorted by `ordinal`**,
   each exactly as authored (id, ordinal, title, description, language). It is
-  the titles and one-line descriptions the Curriculum's headings read (#163);
+  the titles and one-line descriptions the Curriculum's headings read;
   the rows themselves still come from `getModules()`, so a Category is a
   heading over rows and never a screen, a route or a second way into a Module.
 - `getModules()` returns one `ModuleSummary` per entry in the module index,
@@ -260,16 +85,13 @@ all, and it **writes nothing, ever**.
   `categoryId` it was authored under and its Category's `language`,
   denormalized so a screen never has to join the two arrays itself.
 - `getModule(id)` returns `ModuleDetail`. For an **unknown id it returns
-  `null`** — it never throws and never invents a Module. For a **pending**
-  Module it returns detail with `pending: true` and empty content
-  (`conceptPageMarkdown: ''`, `[]` for the three arrays); the screen renders the
-  pending placeholder from that.
+  `null`** — it never throws and never invents a Module.
 - `getModule` answers for **every** Module, always: no Module waits on another
   and nothing here can refuse a read, so a deep link into any Module resolves
-  from the first visit (#156).
-- A Module that is **not** flagged pending but whose content file is missing is
-  a content error that CI should have caught; at runtime `getModule` falls back
-  to the pending shape rather than throwing, so a screen never goes blank.
+  from the first visit.
+- A Module whose content file will not load **rejects**, and the screen says
+  the Module is unavailable and offers a retry. That is what a missing file is
+  too: every indexed Module has one.
 - A Module whose `categoryId` names no declared Category cannot deploy — the
   schema rejects the index — so at runtime it is simply **not placed**: it is
   left out of `getModules()` and `getModule` answers `null` for it, by the same
@@ -277,7 +99,7 @@ all, and it **writes nothing, ever**.
 - Both methods may cache the fetched content in memory, which is safe because
   the content is committed and immutable per deploy. A **failed** load is never
   cached: the next call fetches again, so a `Try again` after an offline first
-  visit can succeed (#69).
+  visit can succeed.
 
 **The one seam.** `createCurriculum` takes a `ContentSource` and nothing else,
 so `ICurriculum` and `IProgress` never touch each other: the Library has no
@@ -292,7 +114,7 @@ screen, no content file, and no other code module ever writes storage.
 
 **Answers are not a judgement.** An answer is stored because the reader picked
 it and would like it back on the next visit. It opens nothing, closes nothing,
-and is never read as a measure of the reader (#159): Kata never runs code,
+and is never read as a measure of the reader: Kata never runs code,
 never inspects the learner's solution, and never judges quality.
 
 Rules, in the order a reviewer should check them:
@@ -301,15 +123,12 @@ Rules, in the order a reviewer should check them:
   (last write wins) with `savedAt = now`. It accepts a partial map, including
   an empty one, because a reader may answer one question or none.
 - `getSelfCheckAnswers(moduleId)` is a pure read of that Module's record, or
-  `null` when it has none. For an unknown or pending Module it returns `null`
+  `null` when it has none. For a Module with no record it returns `null`
   rather than throwing.
 - Records are **per Module**: writing one Module's answers never touches
   another's, and the key is the `moduleId` itself, so a Module has at most one.
-- `exportState()` returns everything stored, ordered by `moduleId` ascending —
-  within a Category that is the Module's ordinal, given the `m01`/`ai01` id
-  shape. `importState(state)`
-  **replaces** the store wholesale in one transaction, after rejecting a state
-  with a `schemaVersion` it does not know. A rejected import changes nothing.
+- There is no way to read the whole store out or to replace it. The reader's
+  answers live in this browser and nowhere else.
 - Every write records the instant it happened and nothing else. There is no
   timeline, streak, schedule, or history of attempts anywhere.
 
@@ -326,7 +145,7 @@ Two consequences worth stating:
 - The Exercise route must carry **both** the Module id and the Exercise id — a
   brief is only reachable through its Module.
 - The Self-Check is **per Module**, not per Exercise: it lives on the Module
-  screen, beside the prose it belongs to (#157).
+  screen, beside the prose it belongs to.
 
 A Curriculum row's tag comes from one answers lookup — `ModuleSummary` carries
 no state of the reader at all:
@@ -337,7 +156,7 @@ no state of the reader at all:
 | otherwise | neutral `Ready to start` |
 
 Two tags, both about the reader's own Self-Check answers and neither a
-judgement. The row is always a link, at full opacity (#156), and the nav
+judgement. The row is always a link, at full opacity, and the nav
 carries the Kata lockup and no tally of any kind.
 
 ---
@@ -360,7 +179,7 @@ schemas/module-content.schema.json # JSON Schema for a Module content file
 content from `` `${import.meta.env.BASE_URL}content/…` ``. The `schemas/` folder
 is a repo-root authoring artifact and is not shipped.
 
-**Module index** — `{ schemaVersion: 2, categories: [...], modules: [...] }`.
+**Module index** — `{ schemaVersion: 3, categories: [...], modules: [...] }`.
 A **Category** is a titled group of Modules that share one practice language,
 and every Module belongs to exactly one. Each entry of `categories` requires:
 
@@ -381,21 +200,21 @@ Each entry of `modules` requires:
 | `ordinal` | integer | ≥ 1, unique and contiguous from 1 **within its Category** |
 | `title` | string | non-empty; matches `docs/design.md` § Curriculum verbatim |
 | `description` | string | non-empty, one line |
-| `pending` | boolean | `true` until that Module's content pack is authored |
 
 A Module naming a `categoryId` no Category declares is a **content error**, so
 the index never validates and never deploys. Reference integrity inside one
 document is the one rule draft 2020-12 cannot state, so
 `scripts/validate-content.mjs` checks it beside the schema — same gate, same
-exit code, and it runs against the deployed index in `scripts/smoke.sh` too.
+exit code, before every deploy.
 
-**Module content** — one file per non-pending Module, requiring:
+**Module content** — one file per Module, requiring:
 
 | Field | Type | Rule |
 |---|---|---|
-| `schemaVersion` | integer | `1` |
+| `schemaVersion` | integer | `2` |
 | `id` | string | matches the file name and an index entry |
-| `conceptPageMarkdown` | string | non-empty markdown, ~1 page of prose |
+| `provenance` | string | which editing stages the pack has been through; a fact about the pack, rendered by no screen |
+| `conceptPageMarkdown` | string | non-empty markdown, ~1 page of prose, no title line — the screen's `h1` is the title, and sections open at `##` |
 | `modelExamples` | array | 2–3 items, each `{ before, after, caption }`, all non-empty; each code side ≤ 40 lines, in the Category's language (an authoring rule, checked in review) |
 | `exercises` | array | 0..n briefs — `[]` is valid and means the Module only explains |
 | `selfCheckQuestions` | array | **exactly 3**, each `{ id, prompt, options }` plus an optional `explanation`, with **2–4** options `{ value, label }`; option values unique within a question; question ids unique within the Module |
@@ -445,10 +264,9 @@ the "at most one per Module" invariant is the key itself:
 **That is the entire persisted surface.** Nothing else is ever written: no copy
 of the content (the service worker cache holds that), no analytics, no session
 or device identity, no timestamp beyond `savedAt`. Clearing site data clears
-the reader's answers and nothing else — which is why `exportState`/
-`importState` exist as the backup story.
+the reader's answers and nothing else.
 
-**The old `kata` database is abandoned, not migrated** (#159). It held the
+**The old `kata` database is abandoned, not migrated.** It held the
 gated model's records, and those describe a judgement the Library no longer
 makes, so there is nothing worth carrying forward. Opening `IProgress` deletes
 it — `indexedDB.deleteDatabase('kata')`, fire-and-forget: a browser that never
@@ -459,44 +277,11 @@ nothing waits on it.
 hardened privacy profile, some embedded webviews), there is no Kata to run:
 `IProgress` is the only write path. The bootstrap (`src/app/bootstrap.tsx`)
 renders the `ProgressUnavailable` notice instead of the app — the cause and the
-one fix the learner controls, on the page rather than in the console (#68).
+one fix the learner controls, on the page rather than in the console.
 
 ---
 
-## 5. Authoring-time content workflow
-
-Concept Pages, Model Examples, Exercise briefs, Self-Check questions,
-and exercise material are **drafted at authoring time on the build host, never
-at runtime**:
-
-1. **Draft** — a Node script under `scripts/` calls the local `claude` CLI
-   headless (installed and authenticated on this host, so drafting costs
-   nothing). Every prompt embeds `docs/ubiquitous-language.md` verbatim plus
-   the relevant rules from `docs/design.md`. Drafts land in a gitignored
-   `drafts/` folder and are never shipped.
-2. **Editing** — however many passes the page actually gets, which may be
-   none. The Concept Page's first line is an emphasis-only provenance note
-   recording the stages it has been through and who made each one. It lives in
-   the markdown source, where provenance belongs, and no screen renders it
-   (#139). No page is ever finished by being committed: one edited again later
-   says so in that line, and one still carrying its first draft says that
-   instead. The note is the record — it is authored per pack, not a fixed
-   string, so read the pack to learn where it stands.
-3. **Commit** — the edited text is committed as content JSON (§ 3) and must
-   pass schema validation in CI before it can deploy.
-
-Consequences that are not negotiable:
-
-- The shipped app contains **no LLM client, no API key, and no generation
-  code**. It only fetches committed JSON.
-- **Regeneration means new content committed**, reviewed the same way. Nothing
-  is ever generated, overwritten, or mutated at runtime.
-- A regenerated Exercise is a **new** Exercise id, never an edit of the old one
-  — the old material and the learner's solutions stay valid.
-
----
-
-## 6. Exercises in the repo
+## 5. Exercises in the repo
 
 Practice material is committed under `exercises/<moduleId>/<exerciseId>/`, one
 folder per Exercise brief, written in the practice language of the Module's
@@ -514,7 +299,7 @@ exercises/
       src/             # the Target Interface + a stub only, no implementation
       tests/           # the xUnit Test Suite
   ai03/
-    ai03-e1/           # construct type, Python (#172)
+    ai03-e1/           # construct type, Python
       README.md        # goal, `pytest`, the immutable-Target-Interface rule
       smell-notes.md   # the reviewer's notes, as in every folder
       src/             # the signatures to implement + provided helpers
@@ -544,32 +329,14 @@ plane.
   the Category's language (`src/strings/language.ts`).
 - CI checks every committed exercise folder so a cloned folder is never broken,
   and the check follows what is in the folder — no language is silently skipped
-  (#172). C# folders are compiled (`dotnet build`, build only); Python folders
+ . C# folders are compiled (`dotnet build`, build only); Python folders
   are collected (`pytest --collect-only`), which proves the imports resolve and
   the tests are discoverable. Neither runs a test: a construct Exercise's
   skeleton is red by design, so a gate on execution could never be honest.
 
 ---
 
-## 7. Build order (thinnest end-to-end slice first)
-
-1. **Foundation** — these docs, the Vite scaffold on GitHub Pages, the PWA
-   baseline, and the terse-output check scripts. Nothing user-visible yet
-   beyond the shell.
-2. **Read path** — content schema + the five-Module index, `ICurriculum`, then
-   the Curriculum, Module, and Exercise screens read-only. Real content for
-   Module 1 lands here. The app is useful for reading on day 1.
-3. **Answer loop** — `IProgress` and the Self-Check form: the reader's picks
-   are stored and restored. Everything after is content and polish. (Built
-   first as a gated progression loop; un-gated in L1, #155–#159.)
-4. **Content packs** — Modules 2–5 (Concept Pages, Model Examples, Self-Check
-   questions, briefs) plus the committed exercise folders.
-5. **Polish** — the pending-Module placeholder, progress export/import, and the
-   design-fidelity sweep against `design/screens/`.
-
----
-
-## 8. Module 0 discipline
+## 6. Module 0 discipline
 
 The app is built with the workflow it teaches — it is its own first Exercise.
 
@@ -582,31 +349,10 @@ The app is built with the workflow it teaches — it is its own first Exercise.
   the code — never the reverse.
 - **Every authoring prompt embeds `docs/ubiquitous-language.md`** verbatim, and
   every UI string uses its terms exactly.
-- **Critical-path review**: `IProgress`'s write paths —
-  `saveSelfCheckAnswers` and `importState` — get a line-by-line human review in
-  their PR. They are the only places anything is ever stored, and the stored
-  answers are everything the reader would lose.
+- **Critical-path review**: `IProgress`'s one write path,
+  `saveSelfCheckAnswers`, gets a line-by-line human review in its PR. It is
+  the only place anything is ever stored.
 - **Deriving beats storing.** A screen's state is computed from the stored
   answers on every read. The only stored fact is the one in § 4.
 
 ---
-
-## 9. Superseded decisions
-
-The original architecture was a localhost app that ran and checked the
-learner's code. Kata is read-only and static instead; these pieces are gone, and
-this section is the only place they are named:
-
-| Removed | Why |
-|---|---|
-| ASP.NET Core minimal API + HTTP endpoints | Nothing is left for a server to do — all content is committed and all progress is local |
-| SQLite data model | The browser's IndexedDB holds the only three records worth keeping (§ 4) |
-| `IGenerator` (runtime LLM calls) | Content is authored on the build host and committed (§ 5), so the app ships no LLM client and no key |
-| `IWorkbench` (materialising an Exercise to disk) | Exercise folders are committed in this repo; the learner clones the folder themselves (§ 6) |
-| Verifier CLI (`kata verify`) | Kata does not run the learner's code, so it has nothing to report to |
-| Verification Runs, test-result parsing, run history | Kata records nothing but the reader's own Self-Check answers, so pass/fail counts have no reader |
-| Test Suite results as a pass condition | A Module has no pass condition at all (#155) — the Library opens every page from the first visit |
-
-The Test Suite is still the trustworthy artifact and still the point of the
-practice — the learner runs it in their own IDE and judges their own work.
-Kata stopped pretending to check it.

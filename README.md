@@ -19,14 +19,10 @@ or grades anywhere in the system.
 | Doc | What it is |
 |---|---|
 | [`docs/design.md`](docs/design.md) | Product intent — the one principle, pedagogy, the editorial standard every Concept Page meets, Categories and Modules, non-goals |
-| [`docs/engineering.md`](docs/engineering.md) | Architecture, the two Target Interfaces (`ICurriculum`, `IProgress`), content schema, storage, build order — normative: its § 2 code block is the single source the code copies |
+| [`docs/engineering.md`](docs/engineering.md) | Architecture, the two Target Interfaces (`ICurriculum`, `IProgress`), content schema, storage — the shapes themselves live in [`src/curriculum/contract.ts`](src/curriculum/contract.ts) |
 | [`docs/ubiquitous-language.md`](docs/ubiquitous-language.md) | Vocabulary contract — Library, Category, Module, Self-Check; every UI label uses these terms exactly |
 | [`docs/simplification-plan.md`](docs/simplification-plan.md) | The simplification plan — rung's method (measure at 360px, said once, no vestiges, contract tests only) applied to Kata, with the measured baseline, batches C → A → B → D → E → G → F, and targets |
-| [`design/README.md`](design/README.md) | Frontend design handoff spec — read before building any screen |
-| [`design/DevGym.dc.html`](design/DevGym.dc.html) | Interactive prototype (historical filename, visual reference only) — open in a browser as-is |
-| [`design/screens/`](design/screens/) | Captured states 01–06 (Curriculum, Module, Exercise) — historical: taken before the Library reframe |
-| [`design/issue-guide.md`](design/issue-guide.md) | How to write issues against this design |
-| [`design/tokens.json`](design/tokens.json) + [`design/styles.css`](design/styles.css) | Design tokens and the shipping stylesheet |
+| [`src/styles/base.css`](src/styles/base.css) | The design system — tokens, type scale, components — and the single source of styling truth |
 
 ## Run it
 
@@ -40,6 +36,11 @@ npm test      # Vitest
 npm run build # type-check (strict) + production build into dist/
 ```
 
+`node scripts/validate-content.mjs` validates the committed content against the
+two schemas, and CI runs it before every build. `node tools/measure.mjs` drives
+the built app in a real browser and prints each screen's height and the y of
+what the reader came for — hand-run, and it gates nothing.
+
 Every push to `main` runs the same steps in
 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) and publishes
 `dist/` to GitHub Pages — that Actions run *is* the deploy.
@@ -50,31 +51,23 @@ All three screens are live on GitHub Pages. Curriculum lists the Modules under
 their Category heading, all of them open to read; Module carries its Concept Page, Model Examples, Self-Check
 and Exercises; Exercise shows the Exercise Spec, the immutable Target Interface,
 and the link to the committed practice folder, whose note names the toolchain
-and the command for its Category's language (`dotnet test`, `pytest`). All five Software Design Modules
-are authored — a Concept Page, three Model Examples, and two Exercises whose
-folder and Test Suite are committed under `exercises/`.
+and the command for its Category's language (`dotnet test`, `pytest`).
+
+All eleven Modules are authored: the five Software Design Modules each carry a
+Concept Page, three Model Examples and two Exercises whose folder and Test
+Suite are committed under `exercises/`; the six Agentic AI Modules are
+explain-only by design, with one pilot Python Exercise (see `docs/design.md`
+§ Exercise coverage across the two Categories).
 
 Reading is never blocked: nothing is submitted, nothing is judged, and no Module
 waits on another. The only thing the app stores is the reader's Self-Check
-answers, autosaved in this browser's IndexedDB, and export/import moves them to
-a file and back. It is an installable PWA — the shell is precached, so it loads
+answers, autosaved in this browser's IndexedDB. It is an installable PWA — the shell is precached, so it loads
 and renders offline.
-
-The Library reframe lands doc-first (`design/issue-guide.md` ground rule 5): the
-docs above are the contract, and the screens, contracts and content are being
-brought to it one issue at a time.
 
 ## Naming
 
-**Resolved: Kata.** `design/brand/` held three explorations — DevGym, Praxis,
-Kata — and Kata is the adopted name. The rename landed in a single pass across
-the docs, `design/README.md`, the nav lockup, and the brand mark
-(`design/assets/kata-mark.svg`).
-
-`design/DevGym.dc.html`, `design/brand/Brand DevGym.dc.html` /
-`Brand Praxis.dc.html`, `design/assets/devgym-mark.svg`, and
-`design/screens/*.png` keep their old filenames — historical visual reference
-only, not re-captured or renamed.
+**Resolved: Kata.** Two other names were explored and dropped; nothing in the
+tree carries them any more.
 
 ## How work happens
 

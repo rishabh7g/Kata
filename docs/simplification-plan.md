@@ -186,8 +186,36 @@ behind it.
 - Module at 360: Self-Check within one screen of the prose it asks about.
 - Build stays under 2 s; bundle stays under 85 KiB gzip.
 
-## Owner decisions this plan needs
+## Owner decisions this plan needed
 
-- A4: delete export/import, or keep it behind a native confirm.
-- B3: collapse the strings layer, or keep it for a locale that does not exist yet.
-- G: whether a Concept Page word ceiling exists, and where.
+All three were settled as recommended and are implemented:
+
+- The backup footer is deleted (#215). The reader's answers now live in one
+  browser with no way out; the fallback, two buttons behind a native confirm,
+  is about 60 lines if it is ever wanted.
+- The strings layer is one typed object (#218).
+- There is no word ceiling. `validate-content.mjs` reports words per Concept
+  Page and gates nothing (#223).
+
+## What the plan got wrong
+
+Recorded here rather than quietly fixed, because a plan is only useful if its
+misses are visible:
+
+- **Batch order.** B3 ran before Batch A. With a canonical key list, a
+  placeholder table and a pack to keep in step, every copy change in the screen
+  issues would have been three edits instead of one.
+- **build-exercises.sh.** Batch D proposed deleting it because
+  `exercises.yml` "builds and collects the folders already". The workflow
+  delegates to that script; it is the only check the committed practice
+  material has, and it stayed.
+- **The Curriculum's y=300 target** (#212) was not met and was the wrong test.
+  What sits above the first row is the nav, the title, one line, and a Category
+  heading — and a Category heading is content. The fold is what mattered, and
+  the first row moved from y=690 to y=374 against a 740px fold.
+- **The 10% comment target** (#216) was not met either: 29% became 25%. Every
+  issue reference and every mention of a removed thing is gone, which was the
+  actual rule; what remains explains decisions the code cannot state itself,
+  and deleting it to reach a ratio would have been the wrong trade.
+- **sizeBudgetLoc** did not need moving into the validator: the schema already
+  caps it at 300.
