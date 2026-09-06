@@ -17,16 +17,16 @@ import { createCurriculum } from './curriculum';
 // One Category, its Modules deliberately NOT in ordinal order — order must
 // come from the data, never from the file order.
 const index: ModuleIndex = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   categories: [
     { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
   ],
   modules: [
-    { id: 'm03', categoryId: 'software-design', ordinal: 3, title: 'Testing at Boundaries', description: 'Test the Target Interface.', pending: true },
-    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false },
-    { id: 'm05', categoryId: 'software-design', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.', pending: true },
-    { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: false },
-    { id: 'm04', categoryId: 'software-design', ordinal: 4, title: 'Naming', description: 'Ubiquitous Language.', pending: true },
+    { id: 'm03', categoryId: 'software-design', ordinal: 3, title: 'Testing at Boundaries', description: 'Test the Target Interface.' },
+    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.' },
+    { id: 'm05', categoryId: 'software-design', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.' },
+    { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.' },
+    { id: 'm04', categoryId: 'software-design', ordinal: 4, title: 'Naming', description: 'Ubiquitous Language.' },
   ],
 };
 
@@ -53,13 +53,14 @@ function contentFor(id: ModuleId): ModuleContent {
   };
 }
 
-/** In-memory ContentSource: non-pending Modules have content, pending have none. */
+/** In-memory ContentSource: every indexed Module has a content file. */
 function memorySource(overrides?: Partial<ContentSource>): ContentSource {
   return {
     loadIndex: async () => index,
     loadModuleContent: async (id) => {
       const entry = index.modules.find((m) => m.id === id);
-      return entry === undefined || entry.pending ? null : contentFor(id);
+      if (entry === undefined) throw new Error(`no content file for ${id}`);
+      return contentFor(id);
     },
     ...overrides,
   };
@@ -88,14 +89,14 @@ describe('getCategories', () => {
     // Authored second-shelf-first, so file order and ordinal order disagree.
     const curriculum = createCurriculum({
       loadIndex: async () => ({
-        schemaVersion: 2,
+        schemaVersion: 3,
         categories: [
           { id: 'agentic-ai', ordinal: 2, title: 'Agentic AI', description: 'Agents in Python.', language: 'python' },
           { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
         ],
         modules: [],
       }),
-      loadModuleContent: async () => null,
+      loadModuleContent: async (id) => contentFor(id),
     });
 
     const categories = await curriculum.getCategories();
@@ -104,20 +105,19 @@ describe('getCategories', () => {
     expect(categories.map((c) => c.language)).toEqual(['csharp', 'python']);
   });
 
-  it('returns a Category whose Modules are all pending, like any other', async () => {
+  it('returns every Category, whatever its Modules hold', async () => {
     // The Library never hides a shelf that has not been written yet (#165):
-    // pending is a fact about the content pack, not about the reader.
     const curriculum = createCurriculum({
       loadIndex: async () => ({
-        schemaVersion: 2,
+        schemaVersion: 3,
         categories: [
           { id: 'agentic-ai', ordinal: 1, title: 'Agentic AI', description: 'Agents in Python.', language: 'python' },
         ],
         modules: [
-          { id: 'm06', categoryId: 'agentic-ai', ordinal: 1, title: 'Prompts', description: 'Say what you want.', pending: true },
+          { id: 'm06', categoryId: 'agentic-ai', ordinal: 1, title: 'Prompts', description: 'Say what you want.' },
         ],
       }),
-      loadModuleContent: async () => null,
+      loadModuleContent: async (id) => contentFor(id),
     });
 
     expect((await curriculum.getCategories()).map((c) => c.title)).toEqual([
@@ -132,7 +132,7 @@ describe('getCategories', () => {
         loads += 1;
         return index;
       },
-      loadModuleContent: async () => null,
+      loadModuleContent: async (id) => contentFor(id),
     });
 
     await curriculum.getCategories();
@@ -171,7 +171,6 @@ describe('getModules ordering', () => {
       ordinal: 1,
       title: 'Deep Modules',
       description: 'Hide complexity.',
-      pending: false,
     });
     expect(createCurriculum).toHaveLength(1);
   });
@@ -190,21 +189,21 @@ describe('getModules ordering', () => {
     // Two Categories, each with its own 1-based contiguous ordinals — so a
     // sort on the Module ordinal alone would interleave the two shelves.
     const twoCategories: ModuleIndex = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       categories: [
         { id: 'agentic-ai', ordinal: 2, title: 'Agentic AI', description: 'Agents in Python.', language: 'python' },
         { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
       ],
       modules: [
-        { id: 'm07', categoryId: 'agentic-ai', ordinal: 2, title: 'Tools', description: 'Give the agent hands.', pending: true },
-        { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.', pending: true },
-        { id: 'm06', categoryId: 'agentic-ai', ordinal: 1, title: 'Prompts', description: 'Say what you want.', pending: true },
-        { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: true },
+        { id: 'm07', categoryId: 'agentic-ai', ordinal: 2, title: 'Tools', description: 'Give the agent hands.' },
+        { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.' },
+        { id: 'm06', categoryId: 'agentic-ai', ordinal: 1, title: 'Prompts', description: 'Say what you want.' },
+        { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.' },
       ],
     };
     const curriculum = createCurriculum({
       loadIndex: async () => twoCategories,
-      loadModuleContent: async () => null,
+      loadModuleContent: async (id) => contentFor(id),
     });
 
     const modules = await curriculum.getModules();
@@ -221,12 +220,12 @@ describe('getModules ordering', () => {
       ...index,
       modules: [
         ...index.modules,
-        { id: 'm09', categoryId: 'nowhere', ordinal: 1, title: 'Orphan', description: 'No shelf.', pending: true },
+        { id: 'm09', categoryId: 'nowhere', ordinal: 1, title: 'Orphan', description: 'No shelf.' },
       ],
     };
     const curriculum = createCurriculum({
       loadIndex: async () => dangling,
-      loadModuleContent: async () => null,
+      loadModuleContent: async (id) => contentFor(id),
     });
 
     expect((await curriculum.getModules()).map((m) => m.id)).not.toContain('m09');
@@ -234,7 +233,7 @@ describe('getModules ordering', () => {
   });
 });
 
-// ── getModule: detail, pending, unknown id ─────────────────────────────────
+// ── getModule: detail, unknown id, a content file that will not load ──────
 
 describe('getModule', () => {
   it('returns full detail for an authored Module', async () => {
@@ -247,7 +246,6 @@ describe('getModule', () => {
     expect(detail?.modelExamples).toHaveLength(2);
     expect(detail?.exercises.map((e) => e.type)).toEqual(['refactor', 'construct']);
     expect(detail?.selfCheckQuestions).toHaveLength(3);
-    expect(detail?.pending).toBe(false);
   });
 
   it('returns null for an unknown id — never throws, never invents a Module', async () => {
@@ -256,34 +254,9 @@ describe('getModule', () => {
     await expect(curriculum.getModule('m99')).resolves.toBeNull();
   });
 
-  it('surfaces the pending flag with empty content for a pending Module', async () => {
-    const curriculum = createCurriculum(memorySource());
-
-    const detail = await curriculum.getModule('m03');
-
-    expect(detail?.pending).toBe(true);
-    expect(detail?.conceptPageMarkdown).toBe('');
-    expect(detail?.modelExamples).toEqual([]);
-    expect(detail?.exercises).toEqual([]);
-    expect(detail?.selfCheckQuestions).toEqual([]);
-  });
-
-  it('falls back to the pending shape when a non-pending Module has no content file', async () => {
-    // A content error CI should have caught; the screen must never go blank.
-    const curriculum = createCurriculum(
-      memorySource({ loadModuleContent: async () => null }),
-    );
-
-    const detail = await curriculum.getModule('m01');
-
-    expect(detail?.pending).toBe(true);
-    expect(detail?.conceptPageMarkdown).toBe('');
-    expect(detail?.exercises).toEqual([]);
-  });
-
-  it('rejects when the content load fails — not the pending shape (#69)', async () => {
-    // A missing file is pending (above); a failed request is a failure. They
-    // must stay apart, or an offline Module renders as "content pending".
+  it('rejects when the content load fails, so the screen can say so', async () => {
+    // The screen tells a failure apart from a still-loading Module by this
+    // rejection; without it an offline Module blanks forever.
     const curriculum = createCurriculum(
       memorySource({
         loadModuleContent: async () => {

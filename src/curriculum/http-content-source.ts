@@ -13,10 +13,11 @@ export function createHttpContentSource(baseUrl: string): ContentSource {
       return (await response.json()) as ModuleIndex;
     },
 
-    async loadModuleContent(id: ModuleId): Promise<ModuleContent | null> {
+    async loadModuleContent(id: ModuleId): Promise<ModuleContent> {
       const response = await fetch(`${baseUrl}content/modules/${id}.json`);
-      // 404 = the Module has no content file yet (pending).
-      if (response.status === 404) return null;
+      // Every indexed Module has a file, so a 404 is a content error like any
+      // other status: the screen says the Module is unavailable and offers a
+      // retry, rather than rendering an empty Module as if it were finished.
       if (!response.ok) {
         throw new Error(`Failed to load content for ${id}: HTTP ${response.status}`);
       }

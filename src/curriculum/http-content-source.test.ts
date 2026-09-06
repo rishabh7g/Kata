@@ -8,12 +8,12 @@ import { createHttpContentSource } from './http-content-source';
 // Category they belong to. This seam only fetches and parses — it never
 // reshapes what it read, so the fixture is the real thing in miniature.
 const index = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   categories: [
     { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
   ],
   modules: [
-    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.', pending: false },
+    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.' },
   ],
 };
 
@@ -60,18 +60,18 @@ describe('createHttpContentSource', () => {
     expect(loaded).toEqual(content);
   });
 
-  it('returns null for a 404 — the Module has no content file yet (pending)', async () => {
+  it('rejects on a 404 — every indexed Module has a content file', async () => {
     stubFetch(() => new Response('not found', { status: 404 }));
 
-    const loaded = await createHttpContentSource('/Kata/').loadModuleContent('m02');
-
-    expect(loaded).toBeNull();
+    await expect(
+      createHttpContentSource('/Kata/').loadModuleContent('m02'),
+    ).rejects.toThrow(/404/);
   });
 
   it('propagates a failed Module fetch — offline is not a missing file (#69)', async () => {
-    // The network refusing is nothing like a 404: the file may exist and be
-    // perfectly authored. The rejection has to reach the screen so it can say
-    // "not available" instead of rendering the pending Module placeholder.
+    // The rejection has to reach the screen so it can say "not available"
+    // and offer a retry, rather than blanking on a Module that loads fine
+    // once the reader is back online.
     const failure = new TypeError('Failed to fetch');
     vi.stubGlobal(
       'fetch',

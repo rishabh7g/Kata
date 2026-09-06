@@ -2,12 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "kata:schemas/module-index.schema.json",
   "title": "Kata Module index",
-  "description": "docs/engineering.md § 3 Content schema — the machine-checkable twin of the ModuleIndex TypeScript type (§ 2). Validated by scripts/validate-content.mjs against public/content/index.json, locally and in CI before the build. Ordinal contiguity and title verbatim-ness against docs/design.md § Curriculum are held by scripts/harness.test.ts, not expressible here.",
+  "description": "docs/engineering.md \u00a7 3 Content schema \u2014 the machine-checkable twin of the ModuleIndex TypeScript type (\u00a7 2). Validated by scripts/validate-content.mjs against public/content/index.json, locally and in CI before the build. Ordinal contiguity and title verbatim-ness against docs/design.md \u00a7 Curriculum are held by scripts/harness.test.ts, not expressible here.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "categories", "modules"],
+  "required": [
+    "schemaVersion",
+    "categories",
+    "modules"
+  ],
   "properties": {
-    "schemaVersion": { "const": 2 },
+    "schemaVersion": {
+      "const": 3
+    },
     "categories": {
       "description": "A Category is a titled group of Modules that share one practice language; every Module belongs to exactly one.",
       "type": "array",
@@ -16,10 +22,16 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "ordinal", "title", "description", "language"],
+        "required": [
+          "id",
+          "ordinal",
+          "title",
+          "description",
+          "language"
+        ],
         "properties": {
           "id": {
-            "description": "Category id exactly as committed in the content files — an opaque slug, e.g. 'software-design'.",
+            "description": "Category id exactly as committed in the content files \u2014 an opaque slug, e.g. 'software-design'.",
             "type": "string",
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
           },
@@ -35,14 +47,17 @@
             "pattern": "^[^\\n]+$"
           },
           "description": {
-            "description": "One line, shown under the title — no newlines.",
+            "description": "One line, shown under the title \u2014 no newlines.",
             "type": "string",
             "minLength": 1,
             "pattern": "^[^\\n]+$"
           },
           "language": {
             "description": "The one practice language every Module in this Category is written in.",
-            "enum": ["csharp", "python"]
+            "enum": [
+              "csharp",
+              "python"
+            ]
           }
         }
       }
@@ -54,37 +69,39 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "categoryId", "ordinal", "title", "description", "pending"],
+        "required": [
+          "id",
+          "categoryId",
+          "ordinal",
+          "title",
+          "description"
+        ],
         "properties": {
           "id": {
-            "description": "Module id exactly as committed in the content files, unique app-wide: a short Category prefix and a 2-digit position — 'm01' in Software Design, 'ai01' in Agentic AI.",
+            "description": "Module id exactly as committed in the content files, unique app-wide: a short Category prefix and a 2-digit position \u2014 'm01' in Software Design, 'ai01' in Agentic AI.",
             "type": "string",
             "pattern": "^[a-z]+\\d{2}$"
           },
           "categoryId": {
-            "description": "The one Category this Module belongs to — must equal the id of an entry in categories.",
+            "description": "The one Category this Module belongs to \u2014 must equal the id of an entry in categories.",
             "type": "string",
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
           },
           "ordinal": {
-            "description": "1-based, contiguous within its Category — the reading order inside that Category.",
+            "description": "1-based, contiguous within its Category \u2014 the reading order inside that Category.",
             "type": "integer",
             "minimum": 1
           },
           "title": {
-            "description": "Matches docs/design.md § Curriculum verbatim.",
+            "description": "Matches docs/design.md \u00a7 Curriculum verbatim.",
             "type": "string",
             "minLength": 1
           },
           "description": {
-            "description": "One line, shown under the title — no newlines.",
+            "description": "One line, shown under the title \u2014 no newlines.",
             "type": "string",
             "minLength": 1,
             "pattern": "^[^\\n]+$"
-          },
-          "pending": {
-            "description": "true until that Module's content pack is authored.",
-            "type": "boolean"
           }
         }
       }

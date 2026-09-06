@@ -61,8 +61,8 @@ export function ExerciseScreen() {
   // Unknown Module id: back to the Curriculum, never a dead end.
   if (module === null) return <Navigate to="/" replace />;
 
-  // Unknown brief id (or a pending Module with no briefs): back to the
-  // owning Module, mirroring the unknown-Module fallback above.
+  // Unknown brief id, or a Module that ships none: back to the owning
+  // Module, mirroring the unknown-Module fallback above.
   if (exercise === undefined) {
     return <Navigate to={`/modules/${module.id}`} replace />;
   }

@@ -24,11 +24,6 @@ import { SelfCheck } from './SelfCheck';
  * section is absent — no heading and no empty-state line — so an explain-only
  * Module simply reads shorter.
  *
- * A pending Module (content pack not authored yet) renders the placeholder
- * state instead (#28): the prototype's muted copy blocks for Concept Page /
- * Model Examples / Exercises, and no navigable Exercise cards. It carries no
- * questions either, so it renders no aside at all.
- *
  * Everything rendered comes from `ICurriculum.getModule(id)` (#9). The cards
  * carry no suite status and no runs meta — the app knows nothing about the
  * learner's code (read-only decision, #3); the captures' status column is
@@ -88,28 +83,11 @@ export function ModuleScreen() {
         <h1 className="module-title">{module.title}</h1>
       </header>
       <div className="module-body">
-        <div>
-          <ConceptSection module={module} />
-          <div className="hr module-rule" />
-          <section>
-            <h2 className="module-section-label">{copy.module.sectionLabel.modelExamples}</h2>
-            {module.modelExamples.length === 0 ? (
-              // Pending copy per the prototype; also the quiet fallback for
-              // a pack with no examples — never a blank section.
-              <p className="text-muted module-pending-copy">
-                {copy.module.pending.modelExamples}
-              </p>
-            ) : (
-              module.modelExamples.map((example, index) => (
-                <ModelExampleFigure key={index} example={example} />
-              ))
-            )}
-          </section>
-          <ExercisesSection module={module} />
+        <div className="module-concept">
+          <Markdown source={stripConceptNote(stripLeadingTitle(module.conceptPageMarkdown))} />
         </div>
-        {/* The Self-Check rides in the aside beside the prose it asks
-            about (#157). A Module with no questions renders no aside — there
-            is nothing else the column ever held. */}
+        {/* Beside the prose at 1024 and up, straight after it on a phone —
+            which is where "answer them as you read" says it is. */}
         {module.selfCheckQuestions.length > 0 && (
           <aside className="module-aside">
             <SelfCheck
@@ -118,90 +96,53 @@ export function ModuleScreen() {
             />
           </aside>
         )}
+        <div className="module-sections">
+          {module.modelExamples.length > 0 && (
+            <section>
+              <div className="hr module-rule" />
+              <h2 className="module-section-label">
+                {copy.module.sectionLabel.modelExamples}
+              </h2>
+              {module.modelExamples.map((example, index) => (
+                <ModelExampleFigure key={index} example={example} />
+              ))}
+            </section>
+          )}
+          <ExercisesSection module={module} />
+        </div>
       </div>
     </>
   );
 }
 
 /**
- * The Concept Page section: the section label, then the pack's prose.
+ * The Exercises section, or nothing at all.
  *
- * The packs still open with a provenance line — one emphasis-only paragraph
- * naming how the page was drafted — and the label row used to carry it beside
- * the label (#30). That line is authoring provenance, not learning content —
- * it told the learner how the page was made, which is nothing they read the
- * Module for — so it is no longer displayed (#139). It is still stripped,
- * because a line that stops being lifted out would otherwise reappear as the
- * first paragraph of the prose. Its wording is the packs' business and has
- * changed more than once (#173, #201), so nothing here quotes it.
- */
-function ConceptSection({ module }: { module: ModuleDetail }) {
-  if (module.pending) {
-    return (
-      <section>
-        <h2 className="module-section-label">{copy.module.sectionLabel.conceptPage}</h2>
-        {/* The pending copy: the prototype's block, reworded off the
-            authoring pipeline it used to describe (#139). */}
-        <p className="text-muted module-pending-copy">
-          {copy.module.pending.conceptPage}
-        </p>
-      </section>
-    );
-  }
-
-  const body = stripConceptNote(stripLeadingTitle(module.conceptPageMarkdown));
-  return (
-    <section>
-      <h2 className="module-section-label">{copy.module.sectionLabel.conceptPage}</h2>
-      <div className="module-concept">
-        <Markdown source={body} />
-      </div>
-    </section>
-  );
-}
-
-/**
- * The Exercises section — and its leading rule — or nothing at all.
- *
- * Exercises are 0..n per Module (#161): how many a Module carries is an
- * authoring convention (docs/design.md § Module anatomy — a Software Design
- * Module ships one refactor and one construct), not a schema rule. An
- * explain-only Module authors `"exercises": []` and gets no heading, no
- * empty-state line, and no divider above one: it simply reads shorter,
- * ending on its Model Examples. A section label over nothing would be the
- * screen telling the reader something is missing when nothing is.
- *
- * A pending Module is the one empty case that still speaks (#28): its pack
- * is not authored yet, so it keeps the prototype's placeholder line beside
- * the Concept Page and Model Examples ones — an absence with a reason.
+ * Exercises are 0..n per Module: how many one carries is an authoring
+ * convention (docs/design.md § Exercise coverage), not a schema rule. A
+ * Module that only explains gets no heading and no empty-state line — it
+ * simply reads shorter, ending on its Model Examples. A section label over
+ * nothing is the screen telling the reader something is missing when
+ * nothing is.
  */
 function ExercisesSection({ module }: { module: ModuleDetail }) {
-  if (module.exercises.length === 0 && !module.pending) return null;
+  if (module.exercises.length === 0) return null;
   return (
-    <>
+    <section>
       <div className="hr module-rule" />
-      <section>
-        <h2 className="module-section-label">{copy.module.sectionLabel.exercises}</h2>
-        {module.exercises.length === 0 ? (
-          // Pending: the prototype's line, so the unauthored pack reads as
-          // not-yet rather than blank. No cards, so a pending Module exposes
-          // no navigable Exercise routes.
-          <p className="text-muted module-pending-copy">
-            {copy.module.pending.exercises}
-          </p>
-        ) : (
-          <div className="module-exercises">
-            {module.exercises.map((exercise) => (
-              <ExerciseCard
-                key={exercise.id}
-                moduleId={module.id}
-                exercise={exercise}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-    </>
+      <h2 className="module-section-label">
+        {copy.module.sectionLabel.exercises}
+      </h2>
+      <div className="module-exercises">
+        {module.exercises.map((exercise) => (
+          <ExerciseCard
+            key={exercise.id}
+            moduleId={module.id}
+            exercise={exercise}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 

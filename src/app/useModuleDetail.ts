@@ -13,8 +13,8 @@ type Loaded = {
 
 export type ModuleDetailState = {
   /**
-   * `undefined` while loading and after a failure, `null` when the id is
-   * unknown — pending vs authored is already resolved inside the detail.
+   * `undefined` while loading and after a failure, `null` when the id names
+   * no Module in the index.
    */
   detail: ModuleDetail | null | undefined;
   /**
@@ -41,8 +41,7 @@ export type ModuleDetailState = {
  * A rejection is kept for the same reason a detail is: content JSON is fetched
  * network-first and cached as it is read (docs/engineering.md § 1 Offline), so
  * a Module never opened online simply fails offline, and the screen has to be
- * able to tell that apart from "still loading". A 404 is not a failure — the
- * content source turns a missing file into the pending shape.
+ * able to tell that apart from "still loading".
  */
 export function useModuleDetail(
   curriculum: ICurriculum,

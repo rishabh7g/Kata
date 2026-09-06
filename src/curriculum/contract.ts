@@ -40,11 +40,10 @@ export interface ModuleIndexEntry {
   readonly ordinal: number; // 1-based, contiguous within its Category
   readonly title: string;
   readonly description: string; // one line, shown under the title
-  readonly pending: boolean; // true = content pack not authored yet
 }
 
 export interface ModuleIndex {
-  readonly schemaVersion: 2;
+  readonly schemaVersion: 3;
   readonly categories: readonly Category[];
   readonly modules: readonly ModuleIndexEntry[];
 }
@@ -119,14 +118,13 @@ export interface ModuleSummary {
   readonly ordinal: number; // within its Category
   readonly title: string;
   readonly description: string;
-  readonly pending: boolean;
 }
 
 export interface ModuleDetail extends ModuleSummary {
-  readonly conceptPageMarkdown: string; // '' when pending
-  readonly modelExamples: readonly ModelExample[]; // [] when pending
-  readonly exercises: readonly ExerciseBrief[]; // [] when pending
-  readonly selfCheckQuestions: readonly SelfCheckQuestion[]; // [] when pending, else 3
+  readonly conceptPageMarkdown: string;
+  readonly modelExamples: readonly ModelExample[]; // 2–3
+  readonly exercises: readonly ExerciseBrief[]; // 0..n; [] = explains only
+  readonly selfCheckQuestions: readonly SelfCheckQuestion[]; // 3
 }
 
 // ── Seams ────────────────────────────────────────────────────────────────
@@ -134,8 +132,8 @@ export interface ModuleDetail extends ModuleSummary {
 /** Where authored content comes from: HTTP in the app, in-memory in tests. */
 export interface ContentSource {
   loadIndex(): Promise<ModuleIndex>;
-  /** null = the Module has no content file yet (pending). */
-  loadModuleContent(id: ModuleId): Promise<ModuleContent | null>;
+  /** Rejects when the file is missing: every indexed Module has one. */
+  loadModuleContent(id: ModuleId): Promise<ModuleContent>;
 }
 
 // ── Target Interface 1 of 2: ICurriculum ─────────────────────────────────

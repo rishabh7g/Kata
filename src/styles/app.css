@@ -386,10 +386,25 @@ a.curriculum-row:hover {
 
 /* Laptop band: the aside column would squeeze the main column below the
    examples' 300px cell minimum and force page-level horizontal scroll at
-   narrower widths — two columns only from min-width: 1024px up. */
+   narrower widths — two columns only from min-width: 1024px up.
+
+   The Self-Check sits after the prose in source order, so a phone reads
+   prose then questions. Here it is placed explicitly in the second column,
+   spanning both content rows, which puts it back beside the prose without
+   the DOM order a phone depends on. */
 @media (min-width: 1024px) {
   .module-body {
     grid-template-columns: 1fr 350px;
+  }
+
+  .module-concept,
+  .module-sections {
+    grid-column: 1;
+  }
+
+  .module-aside {
+    grid-column: 2;
+    grid-row: 1 / span 2;
   }
 }
 
@@ -426,6 +441,11 @@ a.curriculum-row:hover {
    before the body is parsed (src/screens/ModuleScreen.tsx, #139). */
 .module-concept {
   max-width: 66ch;
+}
+
+/* Everything after the Self-Check: Model Examples, then Exercises. */
+.module-sections {
+  display: grid;
 }
 
 .module-concept code {

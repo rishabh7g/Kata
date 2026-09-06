@@ -55,19 +55,8 @@ export const copy = {
     ordinalLabel: 'Module {ordinal}',
     tabTitle: 'Module {ordinal} — {title}',
     sectionLabel: {
-      conceptPage: 'Concept Page',
       modelExamples: 'Model Examples',
       exercises: 'Exercises',
-    },
-    // What is missing, in the reader's terms, when a content pack is not
-    // authored yet. The section is the pending Module's only content, so
-    // without it the section renders blank.
-    pending: {
-      conceptPage:
-        'Concept Page not written yet — there is nothing to read in this Module.',
-      modelExamples: 'Model Examples arrive with the Concept Page.',
-      exercises:
-        'No Exercises yet — the first is generated from an Exercise Spec.',
     },
     example: {
       before: 'Before',

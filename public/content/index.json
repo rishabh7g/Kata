@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "categories": [
     {
       "id": "software-design",
@@ -12,7 +12,7 @@
       "id": "agentic-ai",
       "ordinal": 2,
       "title": "Agentic AI",
-      "description": "How LLM apps retrieve, reason, and act — explained from zero.",
+      "description": "How LLM apps retrieve, reason, and act \u2014 explained from zero.",
       "language": "python"
     }
   ],
@@ -22,88 +22,77 @@
       "categoryId": "software-design",
       "ordinal": 1,
       "title": "Deep Modules & Information Hiding",
-      "description": "Hide the most complexity behind the smallest surface — the generative root of good design.",
-      "pending": false
+      "description": "Hide the most complexity behind the smallest surface \u2014 the generative root of good design."
     },
     {
       "id": "m02",
       "categoryId": "software-design",
       "ordinal": 2,
       "title": "Dependency Direction",
-      "description": "Coupling, cohesion, and pointing dependencies at stable abstractions.",
-      "pending": false
+      "description": "Coupling, cohesion, and pointing dependencies at stable abstractions."
     },
     {
       "id": "m03",
       "categoryId": "software-design",
       "ordinal": 3,
       "title": "Testing at Boundaries + TDD loop",
-      "description": "Test the Target Interface, not the internals — small steps as the speed limit.",
-      "pending": false
+      "description": "Test the Target Interface, not the internals \u2014 small steps as the speed limit."
     },
     {
       "id": "m04",
       "categoryId": "software-design",
       "ordinal": 4,
       "title": "Naming & Ubiquitous Language",
-      "description": "The cheapest, highest-leverage improvement — names drawn from the Ubiquitous Language.",
-      "pending": false
+      "description": "The cheapest, highest-leverage improvement \u2014 names drawn from the Ubiquitous Language."
     },
     {
       "id": "m05",
       "categoryId": "software-design",
       "ordinal": 5,
       "title": "Error Design",
-      "description": "Define errors out of existence — API design for backend .NET work.",
-      "pending": false
+      "description": "Define errors out of existence \u2014 API design for backend .NET work."
     },
     {
       "id": "ai01",
       "categoryId": "agentic-ai",
       "ordinal": 1,
       "title": "Embeddings",
-      "description": "Meaning as geometry: how text becomes vectors you can compare.",
-      "pending": false
+      "description": "Meaning as geometry: how text becomes vectors you can compare."
     },
     {
       "id": "ai02",
       "categoryId": "agentic-ai",
       "ordinal": 2,
       "title": "Ingestion",
-      "description": "From documents to searchable chunks: load, split, embed, store.",
-      "pending": false
+      "description": "From documents to searchable chunks: load, split, embed, store."
     },
     {
       "id": "ai03",
       "categoryId": "agentic-ai",
       "ordinal": 3,
       "title": "Retrieval-Augmented Generation",
-      "description": "Retrieve first, then generate — grounding answers in your own data.",
-      "pending": false
+      "description": "Retrieve first, then generate \u2014 grounding answers in your own data."
     },
     {
       "id": "ai04",
       "categoryId": "agentic-ai",
       "ordinal": 4,
       "title": "Agents & Tool Use",
-      "description": "The reason–act loop: a model that decides which tool to call next.",
-      "pending": false
+      "description": "The reason\u2013act loop: a model that decides which tool to call next."
     },
     {
       "id": "ai05",
       "categoryId": "agentic-ai",
       "ordinal": 5,
       "title": "LangGraph",
-      "description": "Agents as graphs: explicit state, nodes, and edges instead of tangled loops.",
-      "pending": false
+      "description": "Agents as graphs: explicit state, nodes, and edges instead of tangled loops."
     },
     {
       "id": "ai06",
       "categoryId": "agentic-ai",
       "ordinal": 6,
       "title": "LangSmith",
-      "description": "Seeing what the agent did: tracing runs and evaluating outputs.",
-      "pending": false
+      "description": "Seeing what the agent did: tracing runs and evaluating outputs."
     }
   ]
 }

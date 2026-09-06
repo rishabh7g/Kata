@@ -79,11 +79,8 @@ interface CategorySectionData {
  * `null` until BOTH reads are in: a heading with no rows under it and rows
  * with no heading over them are each a half-drawn screen.
  *
- * A Category whose Modules are ALL pending still gets its section: pending is
- * a fact about the content pack, never about the reader, and nothing in the
- * Library hides a shelf that has not been written yet (#165 lands exactly
- * that state). A Category with no Modules at all renders nothing — an empty
- * heading is furniture over a void.
+ * A Category with no Modules renders nothing — an empty heading is furniture
+ * over a void.
  */
 function groupIntoSections(
   categories: readonly Category[] | null,

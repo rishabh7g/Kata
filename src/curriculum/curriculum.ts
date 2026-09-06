@@ -78,11 +78,11 @@ export function createCurriculum(content: ContentSource): ICurriculum {
     return indexPromise;
   }
 
-  async function loadContent(id: ModuleId): Promise<ModuleContent | null> {
+  async function loadContent(id: ModuleId): Promise<ModuleContent> {
     const cached = contentCache.get(id);
     if (cached !== undefined) return cached;
     const loaded = await content.loadModuleContent(id);
-    if (loaded !== null) contentCache.set(id, loaded);
+    contentCache.set(id, loaded);
     return loaded;
   }
 
@@ -97,7 +97,6 @@ export function createCurriculum(content: ContentSource): ICurriculum {
       ordinal: entry.ordinal,
       title: entry.title,
       description: entry.description,
-      pending: entry.pending,
     };
   }
 
@@ -121,23 +120,11 @@ export function createCurriculum(content: ContentSource): ICurriculum {
       // Unknown id: null — never throw, never invent a Module.
       if (placed === undefined) return null;
 
-      const summary = summarize(placed);
-      // A pending Module has no content file; a non-pending Module whose file
-      // is missing is a content error CI should have caught — at runtime both
-      // fall back to the pending shape so a screen never goes blank.
-      const moduleContent = placed.entry.pending ? null : await loadContent(id);
-      if (moduleContent === null) {
-        return {
-          ...summary,
-          pending: true,
-          conceptPageMarkdown: '',
-          modelExamples: [],
-          exercises: [],
-          selfCheckQuestions: [],
-        };
-      }
+      // A rejection here reaches the screen as an unavailable Module with a
+      // retry, which is what a missing or unreadable content file is.
+      const moduleContent = await loadContent(id);
       return {
-        ...summary,
+        ...summarize(placed),
         conceptPageMarkdown: moduleContent.conceptPageMarkdown,
         modelExamples: moduleContent.modelExamples,
         exercises: moduleContent.exercises,
