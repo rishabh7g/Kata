@@ -21,6 +21,7 @@ or grades anywhere in the system.
 | [`docs/design.md`](docs/design.md) | Product intent — the one principle, pedagogy, the editorial standard every Concept Page meets, Categories and Modules, non-goals |
 | [`docs/engineering.md`](docs/engineering.md) | Architecture, the two Target Interfaces (`ICurriculum`, `IProgress`), content schema, storage, build order — normative: its § 2 code block is the single source the code copies |
 | [`docs/ubiquitous-language.md`](docs/ubiquitous-language.md) | Vocabulary contract — Library, Category, Module, Self-Check; every UI label uses these terms exactly |
+| [`docs/simplification-plan.md`](docs/simplification-plan.md) | The simplification plan — rung's method (measure at 360px, said once, no vestiges, contract tests only) applied to Kata, with the measured baseline, batches C → A → B → D → E → G → F, and targets |
 | [`design/README.md`](design/README.md) | Frontend design handoff spec — read before building any screen |
 | [`design/DevGym.dc.html`](design/DevGym.dc.html) | Interactive prototype (historical filename, visual reference only) — open in a browser as-is |
 | [`design/screens/`](design/screens/) | Captured states 01–06 (Curriculum, Module, Exercise) — historical: taken before the Library reframe |
