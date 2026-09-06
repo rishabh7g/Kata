@@ -3,5 +3,5 @@ export type {
   IProgress,
   ModuleSelfCheck,
   SelfCheckAnswers,
-} from './contract';
+} from '../curriculum/contract';
 export { createProgress } from './progress';

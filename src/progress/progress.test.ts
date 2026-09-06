@@ -4,8 +4,8 @@
 // "clear site data" reset.
 //
 // Critical path (§ 8): IProgress is the app's ONLY write path, and
-// saveSelfCheckAnswers + importState are the only two code paths that store
-// anything. Every rule those paths must obey is asserted here.
+// saveSelfCheckAnswers is the only code path that stores anything. Every rule
+// it must obey is asserted here.
 import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createProgress } from './progress';
@@ -38,14 +38,14 @@ afterEach(() => {
 
 describe('empty state', () => {
   it('starts with no answers stored at all', async () => {
-    const progress = await createProgress('kata-test');
+    const progress = await createProgress();
 
     expect(await progress.getSelfCheckAnswers('m01')).toBeNull();
     expect(await progress.getSelfCheckAnswers('m01')).toBeNull();
   });
 
   it('returns null for an unknown or pending Module rather than throwing', async () => {
-    const progress = await createProgress('kata-test');
+    const progress = await createProgress();
 
     expect(await progress.getSelfCheckAnswers('m99')).toBeNull();
   });
@@ -53,7 +53,7 @@ describe('empty state', () => {
 
 describe('saveSelfCheckAnswers — the write path', () => {
   it('stores the picks with savedAt = now', async () => {
-    const progress = await createProgress('kata-test');
+    const progress = await createProgress();
 
     await progress.saveSelfCheckAnswers('m01', answers);
 
@@ -65,7 +65,7 @@ describe('saveSelfCheckAnswers — the write path', () => {
   });
 
   it('accepts a partial answer set — one question answered, or none', async () => {
-    const progress = await createProgress('kata-test');
+    const progress = await createProgress();
 
     await progress.saveSelfCheckAnswers('m01', { q2: 'one' });
     await progress.saveSelfCheckAnswers('m02', {});
@@ -77,7 +77,7 @@ describe('saveSelfCheckAnswers — the write path', () => {
   });
 
   it('replaces the record on each autosave — last write wins', async () => {
-    const progress = await createProgress('kata-test');
+    const progress = await createProgress();
     await progress.saveSelfCheckAnswers('m01', { q1: 'yes' });
 
     vi.setSystemTime(new Date('2026-08-12T09:42:00.000Z'));
@@ -93,7 +93,7 @@ describe('saveSelfCheckAnswers — the write path', () => {
 
 describe('per-Module isolation', () => {
   it("Module 1's answers never touch Module 2's", async () => {
-    const progress = await createProgress('kata-test');
+    const progress = await createProgress();
 
     await progress.saveSelfCheckAnswers('m01', answers);
 
@@ -103,11 +103,11 @@ describe('per-Module isolation', () => {
 
 describe('persistence — state survives a reload', () => {
   it('re-opening the same database sees the stored answers', async () => {
-    const first = await createProgress('kata-test');
+    const first = await createProgress();
     await first.saveSelfCheckAnswers('m02', { q1: 'yes' });
 
     // A reload is a new IProgress over the same IndexedDB database.
-    const second = await createProgress('kata-test');
+    const second = await createProgress();
 
     expect(await second.getSelfCheckAnswers('m02')).toEqual({
       moduleId: 'm02',

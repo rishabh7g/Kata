@@ -1,6 +1,7 @@
-// The two Target Interfaces and every shape they exchange — copied verbatim
-// (not retyped) from docs/engineering.md § 2 "The two Target Interfaces".
-// That code block is normative: if the doc changes, re-copy; never edit here.
+// The two Target Interfaces and every shape they exchange.
+//
+// This file is the contract — the one the compiler reads and the one
+// docs/engineering.md § 2 points at. Change it here.
 
 // ── Ids and scalars ──────────────────────────────────────────────────────
 

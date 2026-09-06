@@ -2,7 +2,7 @@
 // implementation exists (Module 0 discipline: tests come from the doc, the
 // code comes from the tests). The seam is exactly the one the doc names, and
 // since #158 the only one: an in-memory ContentSource.
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type {
   SelfCheckQuestion,
   ContentSource,
@@ -10,7 +10,7 @@ import type {
   ModuleId,
   ModuleIndex,
 } from './contract';
-import { createCurriculum } from './curriculum';
+import { createCurriculum, createHttpContentSource } from './curriculum';
 
 // ── Fixtures: the real committed shapes, in miniature ─────────────────────
 
@@ -296,5 +296,82 @@ describe('getModule', () => {
 
     expect(detail).not.toBeNull();
     expect(detail?.title).toBe('Dependency Direction');
+  });
+});
+
+// ── createHttpContentSource: the URLs it builds, the failures it passes on ─
+
+function stubFetch(responder: (url: string) => Response) {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) =>
+    responder(String(input)),
+  );
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('createHttpContentSource', () => {
+  it('loads the index from <base>content/index.json', async () => {
+    const fetchMock = stubFetch(() => Response.json(index));
+
+    const loaded = await createHttpContentSource('/Kata/').loadIndex();
+
+    expect(fetchMock).toHaveBeenCalledWith('/Kata/content/index.json');
+    expect(loaded).toEqual(index);
+  });
+
+  it('passes the Categories and each Module\'s categoryId through untouched', async () => {
+    stubFetch(() => Response.json(index));
+
+    const loaded = await createHttpContentSource('/Kata/').loadIndex();
+
+    expect(loaded.categories).toEqual(index.categories);
+    expect(loaded.modules.map((m) => m.categoryId)).toEqual(
+      index.modules.map((m) => m.categoryId),
+    );
+  });
+
+  it('loads a Module content file from <base>content/modules/<id>.json', async () => {
+    const content = { schemaVersion: 1, id: 'm01' };
+    const fetchMock = stubFetch(() => Response.json(content));
+
+    const loaded = await createHttpContentSource('/Kata/').loadModuleContent('m01');
+
+    expect(fetchMock).toHaveBeenCalledWith('/Kata/content/modules/m01.json');
+    expect(loaded).toEqual(content);
+  });
+
+  it('rejects on a 404 — every indexed Module has a content file', async () => {
+    stubFetch(() => new Response('not found', { status: 404 }));
+
+    await expect(
+      createHttpContentSource('/Kata/').loadModuleContent('m02'),
+    ).rejects.toThrow(/404/);
+  });
+
+  it('propagates a failed Module fetch — offline is not a missing file', async () => {
+    // The rejection has to reach the screen so it can say "not available"
+    // and offer a retry, rather than blanking on a Module that loads fine
+    // once the reader is back online.
+    const failure = new TypeError('Failed to fetch');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw failure;
+      }),
+    );
+
+    await expect(
+      createHttpContentSource('/Kata/').loadModuleContent('m03'),
+    ).rejects.toThrow(failure);
+  });
+
+  it('throws on a non-404 failure loading the index', async () => {
+    stubFetch(() => new Response('boom', { status: 500 }));
+
+    await expect(createHttpContentSource('/Kata/').loadIndex()).rejects.toThrow();
   });
 });

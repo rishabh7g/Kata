@@ -1,5 +1,4 @@
-// Public surface of the curriculum module. Screens (#10–#13) import from
-// here; contract.ts stays the verbatim copy of the docs/engineering.md block.
+// Public surface of the curriculum module.
 export type {
   Category,
   CategoryId,
@@ -21,5 +20,4 @@ export type {
   SelfCheckQuestion,
   SelfCheckQuestionId,
 } from './contract';
-export { createCurriculum } from './curriculum';
-export { createHttpContentSource } from './http-content-source';
+export { createCurriculum, createHttpContentSource } from './curriculum';

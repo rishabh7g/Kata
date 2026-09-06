@@ -12,8 +12,9 @@ import type {
   ModuleId,
   ModuleSelfCheck,
   SelfCheckAnswers,
-} from './contract';
+} from '../curriculum/contract';
 
+const DATABASE = 'kata-v2';
 const ANSWERS = 'selfCheckAnswers';
 
 /** The gated model's database. Deleted on open; never read. */
@@ -56,18 +57,14 @@ function committed(tx: IDBTransaction): Promise<void> {
 
 // ── The Target Interface ─────────────────────────────────────────────────
 
-export async function createProgress(
-  databaseName = 'kata-v2',
-): Promise<IProgress> {
-  const db = await openDatabase(databaseName);
+export async function createProgress(): Promise<IProgress> {
+  const db = await openDatabase(DATABASE);
 
   // Fire-and-forget (§ 4): the gated model's records describe a judgement the
   // Library no longer makes, so there is nothing to carry forward and nothing
   // to wait for. A browser that never had one is the normal case, and a
   // refused delete (another tab holding it open) leaves the app working.
-  if (databaseName !== ABANDONED_DATABASE) {
-    indexedDB.deleteDatabase(ABANDONED_DATABASE);
-  }
+  indexedDB.deleteDatabase(ABANDONED_DATABASE);
 
   return {
     async saveSelfCheckAnswers(

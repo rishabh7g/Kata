@@ -1,9 +1,12 @@
 // ICurriculum — docs/engineering.md § ICurriculum — behaviour.
 //
-// A pure function of content: reads the committed content JSON through the
-// ContentSource seam and writes nothing, ever. It reads no progress data at
-// all — the Library has no lock chain to derive (#158). Pure TypeScript — no
-// DOM, no React.
+// A pure function of content: reads the committed content JSON and writes
+// nothing, ever. It reads no progress data at all. Pure TypeScript — no DOM,
+// no React.
+//
+// The HTTP ContentSource lives here too: it is the only one the app builds,
+// and the type stays a seam because the tests' in-memory fake is a real
+// second implementation of it.
 import type {
   Category,
   CategoryId,
@@ -12,6 +15,7 @@ import type {
   ModuleContent,
   ModuleDetail,
   ModuleId,
+  ModuleIndex,
   ModuleIndexEntry,
   ModuleSummary,
 } from './contract';
@@ -130,6 +134,31 @@ export function createCurriculum(content: ContentSource): ICurriculum {
         exercises: moduleContent.exercises,
         selfCheckQuestions: moduleContent.selfCheckQuestions,
       };
+    },
+  };
+}
+
+// ── The one ContentSource the app builds ─────────────────────────────────
+
+export function createHttpContentSource(baseUrl: string): ContentSource {
+  return {
+    async loadIndex(): Promise<ModuleIndex> {
+      const response = await fetch(`${baseUrl}content/index.json`);
+      if (!response.ok) {
+        throw new Error(`Failed to load module index: HTTP ${response.status}`);
+      }
+      return (await response.json()) as ModuleIndex;
+    },
+
+    async loadModuleContent(id: ModuleId): Promise<ModuleContent> {
+      const response = await fetch(`${baseUrl}content/modules/${id}.json`);
+      // Every indexed Module has a file, so a 404 is a content error like any
+      // other status: the screen says the Module is unavailable and offers a
+      // retry, rather than rendering an empty Module as if it were finished.
+      if (!response.ok) {
+        throw new Error(`Failed to load content for ${id}: HTTP ${response.status}`);
+      }
+      return (await response.json()) as ModuleContent;
     },
   };
 }
