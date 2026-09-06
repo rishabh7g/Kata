@@ -41,7 +41,7 @@ The Software Design Category holds five Modules, ordered foundations-down. The o
 4. **Naming & Ubiquitous Language** — cheapest, highest leverage; also directly improves every AI collaboration.
 5. **Error Design** — define errors out of existence; API design for backend .NET work.
 
-The Agentic AI Category holds six Modules, practised in Python, in the same
+The Agentic AI Category holds eight Modules, practised in Python, in the same
 suggested reading order — each one leans on the one before, and none of them
 blocks another:
 
@@ -51,6 +51,8 @@ blocks another:
 4. **Agents & Tool Use** — the reason–act loop: a model that decides which tool to call next.
 5. **LangGraph** — agents as graphs: explicit state, nodes, and edges instead of tangled loops.
 6. **LangSmith** — seeing what the agent did: tracing runs and evaluating outputs.
+7. **Structured Output** — a typed answer instead of prose: the model fills a shape your code can branch on.
+8. **Self-Correcting RAG** — judge the fetch, judge the answer: a graph that checks its own work before it replies.
 
 Deliberately cut: CLEAN architecture and design-pattern catalogs as standalone Modules. After Modules 1–2 they compress to short reads; add them as Concept-Page appendices only.
 
@@ -60,9 +62,9 @@ The two Categories carry practice material to different depths, and both depths 
 
 **Software Design ships two Exercises per Module** — one refactor-type, where the behavior is already correct and a Smell is planted in the design, and one construct-type, where a Target Interface is given and the code behind it is not. Two is the convention for this Category, not a schema rule; nothing enforces it.
 
-**Agentic AI is explain-only by design.** Five of its six Modules author `"exercises": []` and are complete Modules in that state: the Category teaches by explaining, and the Concept Page plus Model Examples plus Self-Check is the whole of what it sets out to give. An empty Exercises list here is a finished Module, never an unfinished one.
+**Agentic AI is explain-only by design.** Seven of its eight Modules author `"exercises": []` and are complete Modules in that state: the Category teaches by explaining, and the Concept Page plus Model Examples plus Self-Check is the whole of what it sets out to give. An empty Exercises list here is a finished Module, never an unfinished one.
 
-**`ai03-e1` is the one exception, and it is a pilot.** The single construct-type Python Exercise under Retrieval-Augmented Generation exists to prove one thing: that the offline practice path works in a second language — the learner clones the folder, runs `pytest` in their own IDE, and Kata never sees the result (#172). It is not the first of six.
+**`ai03-e1` is the one exception, and it is a pilot.** The single construct-type Python Exercise under Retrieval-Augmented Generation exists to prove one thing: that the offline practice path works in a second language — the learner clones the folder, runs `pytest` in their own IDE, and Kata never sees the result (#172). It is not the first of eight.
 
 **Whether more Python Exercises are authored is decided after the pilot has been used in practice, not by default.** Filling the other five in for symmetry is the move this section exists to prevent. If the pilot proves useful, more are authored deliberately; if it does not, the Category stays as it is.
 
