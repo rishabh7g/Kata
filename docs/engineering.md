@@ -43,9 +43,9 @@ A **404 is a failure like any other status**: every indexed Module has a
 content file, so a missing one is a content error the reader meets as an
 unavailable Module.
 
-Host and CI facts: **Node v24** and the **dotnet 10 SDK** are both available —
+Host facts: **Node v24** and the **dotnet 10 SDK** are both available —
 Node for the app and the authoring scripts, dotnet only for compiling the
-committed exercise material in CI (§ 6). The app itself never invokes dotnet.
+committed exercise material via `scripts/build-exercises.sh` (§ 6). The app itself never invokes dotnet.
 
 Because the app is static, "deploy" means "the Actions run that published
 `dist/`". There is nothing to restart and no environment to configure.
@@ -327,7 +327,7 @@ plane.
   sees the result, and never gates on it.** The Exercise screen simply links to
   the folder on GitHub via the brief's `folderUrl`, and names the command from
   the Category's language (`src/strings/language.ts`).
-- CI checks every committed exercise folder so a cloned folder is never broken,
+- `scripts/build-exercises.sh`, run by hand, checks every committed exercise folder so a cloned folder is never broken,
   and the check follows what is in the folder — no language is silently skipped
  . C# folders are compiled (`dotnet build`, build only); Python folders
   are collected (`pytest --collect-only`), which proves the imports resolve and

@@ -137,7 +137,7 @@ behind it.
   (693 lines, 23 exit codes, five of them one-per-Module), `build-exercises.sh`,
   `test-scoped.sh`, `scripts/README.md`.
 - Keep `validate-content.mjs` (the content gate) and `generate-icons.mjs` (committed
-  output). Keep `exercises.yml`: it is the one check the Exercise folders have.
+  output). Keep `build-exercises.sh`, run by hand: it is the one check the Exercise folders have.
 - Move `sizeBudgetLoc ≤ 300` from the deleted generator into `validate-content.mjs`, as a
   report line, not a failure.
 
@@ -206,9 +206,9 @@ misses are visible:
   placeholder table and a pack to keep in step, every copy change in the screen
   issues would have been three edits instead of one.
 - **build-exercises.sh.** Batch D proposed deleting it because
-  `exercises.yml` "builds and collects the folders already". The workflow
-  delegates to that script; it is the only check the committed practice
-  material has, and it stayed.
+  the Exercises workflow "builds and collects the folders already". That
+  workflow only delegated to this script (and has since been removed); the
+  script is the only check the committed practice material has, and it stayed.
 - **The Curriculum's y=300 target** (#212) was not met and was the wrong test.
   What sits above the first row is the nav, the title, one line, and a Category
   heading — and a Category heading is content. The fold is what mattered, and
