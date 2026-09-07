@@ -21,10 +21,6 @@
 
   /* The mono family, once; the code sizes live with the blocks that set them. */
   --font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
-
-  /* The house UI standard's body-text floor (#108): with zoom off once the
-     app is installed, no reading text may render below this. */
-  --text-body-min: 16px;
 }
 
 @media (min-width: 768px) {
@@ -93,22 +89,6 @@ html, body {
   overscroll-behavior: contain;
 }
 
-/* Present to a screen reader, absent to the eye — the live region (#73) and
-   nothing else. Clipped rather than `display: none` or `visibility: hidden`,
-   which take an element out of the accessibility tree along with the layout,
-   and sized 1px rather than 0 so the text still has a box to be read from. */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
-
 /* Section-label type, decoupled from the heading level (#75).
  *
  * design/styles.css hangs the label style — 13px, uppercase, +0.08em — on the
@@ -149,7 +129,7 @@ html, body {
 /* 16 / 800.
 
    The tag under this class is an h1 — a notice is the whole screen when it is
-   raised (#94) — and this class is what keeps it card-title sized rather than
+   raised (#94) — and this class is what keeps it at 16px rather than
    42px. Size travels on the class, level on the tag (#75). The size and the
    margin are both stated because the browser's own `section h1` rule sets
    both; a class beats it, but only for what the class declares. */
@@ -541,10 +521,6 @@ a.curriculum-row:hover {
 .module-exercise-smell {
   font-size: 16px;
   margin-top: 3px;
-}
-
-.module-exercise-arrow {
-  flex: none;
 }
 
 /* The Self-Check aside. It is in flow here: on a phone it sits between the

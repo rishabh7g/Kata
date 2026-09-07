@@ -11,7 +11,7 @@ import type { ReactNode } from 'react';
  * **A notice is the screen when it is raised**, so its title is that
  * screen's `h1`: nothing loaded to sit above it, and an `h2` alone would
  * leave the failure states with no outline to navigate. The tag is the
- * level, never the size — `.app-notice-title` carries the card-title type.
+ * level, never the size — `.app-notice-title` carries the 16px size.
  * A notice raised inside a screen that already has an `h1` would need a
  * level prop; nothing does that today.
  */
