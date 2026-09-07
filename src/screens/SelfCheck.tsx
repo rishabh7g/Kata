@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useProgress } from '../app/ProgressContext';
-import type { SelfCheckQuestion } from '../curriculum';
+import type {
+  SelfCheckOption as SelfCheckOptionData,
+  SelfCheckQuestion,
+  SelfCheckQuestionId,
+} from '../curriculum';
 import type { SelfCheckAnswers } from '../progress';
 import { copy } from '../strings/copy';
 
@@ -51,6 +55,16 @@ export function SelfCheck({
   if (questions.length === 0) return null;
   if (picks === undefined) return null;
 
+  function recordPick(questionId: SelfCheckQuestionId, value: string) {
+    const next = { ...picks, [questionId]: value };
+    setPicks(next);
+    // Fire-and-forget: an answer gates nothing, so a lost write costs at most
+    // re-picking a radio.
+    progress.saveSelfCheckAnswers(moduleId, next).catch((error: unknown) => {
+      console.error(`Failed to save the Self-Check answer for ${moduleId}`, error);
+    });
+  }
+
   return (
     <section className="self-check" aria-label={copy.selfCheck.heading}>
       <h2 className="module-section-label">{copy.selfCheck.heading}</h2>
@@ -59,67 +73,97 @@ export function SelfCheck({
       <p className="text-muted self-check-definition">
         {copy.selfCheck.definition}
       </p>
-      {questions.map((question) => {
-        // The prompt is the group's label, not loose text beside it, so
-        // focusing any option announces the question and the option's
-        // position among the 2–4.
-        const promptId = `self-check-${moduleId}-${question.id}-prompt`;
-        // The slot exists from first render, empty until a pick fills it: a
-        // live region has to be in the DOM before its content changes to be
-        // announced. A question with no explanation gets no slot at all.
-        const explanationId = `self-check-${moduleId}-${question.id}-explanation`;
-        const hasExplanation = question.explanation !== undefined;
-        const answer = picks[question.id];
-        return (
-          <div className="self-check-item" key={question.id}>
-            <div className="self-check-prompt" id={promptId}>
-              {question.prompt}
-            </div>
-            <div
-              className="self-check-options"
-              role="radiogroup"
-              aria-labelledby={promptId}
-              aria-describedby={hasExplanation ? explanationId : undefined}
-            >
-              {question.options.map((option) => (
-                <label className="radio" key={option.value}>
-                  <input
-                    type="radio"
-                    name={`self-check-${moduleId}-${question.id}`}
-                    value={option.value}
-                    checked={answer === option.value}
-                    onChange={() => {
-                      const next = { ...picks, [question.id]: option.value };
-                      setPicks(next);
-                      // Fire-and-forget: an answer gates nothing, so a lost
-                      // write costs at most re-picking a radio.
-                      progress
-                        .saveSelfCheckAnswers(moduleId, next)
-                        .catch((error: unknown) => {
-                          console.error(
-                            `Failed to save the Self-Check answer for ${moduleId}`,
-                            error,
-                          );
-                        });
-                    }}
-                  />
-                  <span className="dot" />
-                  <span>{option.label}</span>
-                </label>
-              ))}
-            </div>
-            {hasExplanation && (
-              <p
-                className="text-muted self-check-explanation"
-                id={explanationId}
-                aria-live="polite"
-              >
-                {answer === undefined ? '' : question.explanation}
-              </p>
-            )}
-          </div>
-        );
-      })}
+      {questions.map((question) => (
+        <SelfCheckItem
+          key={question.id}
+          moduleId={moduleId}
+          question={question}
+          answer={picks[question.id]}
+          onPick={recordPick}
+        />
+      ))}
     </section>
+  );
+}
+
+/** One question: its prompt labelling its radios, and its explanation slot. */
+function SelfCheckItem({
+  moduleId,
+  question,
+  answer,
+  onPick,
+}: {
+  moduleId: string;
+  question: SelfCheckQuestion;
+  answer: string | undefined;
+  onPick: (questionId: SelfCheckQuestionId, value: string) => void;
+}) {
+  // The prompt is the group's label, not loose text beside it, so focusing
+  // any option announces the question and the option's position among the
+  // 2–4.
+  const promptId = `self-check-${moduleId}-${question.id}-prompt`;
+  // The slot exists from first render, empty until a pick fills it: a live
+  // region has to be in the DOM before its content changes to be announced.
+  // A question with no explanation gets no slot at all.
+  const explanationId = `self-check-${moduleId}-${question.id}-explanation`;
+  const hasExplanation = question.explanation !== undefined;
+  return (
+    <div className="self-check-item">
+      <div className="self-check-prompt" id={promptId}>
+        {question.prompt}
+      </div>
+      <div
+        className="self-check-options"
+        role="radiogroup"
+        aria-labelledby={promptId}
+        aria-describedby={hasExplanation ? explanationId : undefined}
+      >
+        {question.options.map((option) => (
+          <SelfCheckOption
+            key={option.value}
+            name={`self-check-${moduleId}-${question.id}`}
+            option={option}
+            checked={answer === option.value}
+            onPick={() => onPick(question.id, option.value)}
+          />
+        ))}
+      </div>
+      {hasExplanation && (
+        <p
+          className="text-muted self-check-explanation"
+          id={explanationId}
+          aria-live="polite"
+        >
+          {answer === undefined ? '' : question.explanation}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** One radio in a question's group. */
+function SelfCheckOption({
+  name,
+  option,
+  checked,
+  onPick,
+}: {
+  name: string;
+  option: SelfCheckOptionData;
+  checked: boolean;
+  onPick: () => void;
+}) {
+  return (
+    <label className="radio">
+      <input
+        type="radio"
+        name={name}
+        value={option.value}
+        checked={checked}
+        onChange={onPick}
+      />
+      <span className="dot" />
+      <span>{option.label}</span>
+    </label>
   );
 }
