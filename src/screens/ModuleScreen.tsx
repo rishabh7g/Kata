@@ -60,6 +60,7 @@ function ModuleView({ module }: { module: ModuleDetail }) {
         {module.selfCheckQuestions.length > 0 && (
           <aside className="module-aside">
             <SelfCheck
+              key={module.id}
               moduleId={module.id}
               questions={module.selfCheckQuestions}
             />

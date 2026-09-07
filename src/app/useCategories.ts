@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { Category, ICurriculum } from '../curriculum';
+import { useAsyncValue } from './useAsyncValue';
 
 /**
  * Every Category, in ordinal order — straight from
@@ -9,30 +9,17 @@ import type { Category, ICurriculum } from '../curriculum';
  * halves are here, never a heading over a made-up placeholder.
  *
  * Re-reads on every navigation (`location.key`) and costs nothing extra:
- * ICurriculum caches the one index load both reads come from.
+ * ICurriculum caches the one index load both reads come from. A failed read
+ * is the same failure as the Module index it is read from — a first-ever
+ * visit with no network — and there is nothing sensible to render for it.
  */
 export function useCategories(
   curriculum: ICurriculum,
 ): readonly Category[] | null {
-  const [categories, setCategories] = useState<readonly Category[] | null>(null);
   const { key: locationKey } = useLocation();
-
-  useEffect(() => {
-    let cancelled = false;
-    curriculum
-      .getCategories()
-      .then((loaded) => {
-        if (!cancelled) setCategories(loaded);
-      })
-      .catch((error: unknown) => {
-        // Same failure as the Module index it is read from: a first-ever
-        // visit with no network. Nothing sensible to render.
-        console.error('Failed to load the Categories', error);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [curriculum, locationKey]);
-
-  return categories;
+  return useAsyncValue(
+    () => curriculum.getCategories(),
+    [curriculum, locationKey],
+    'Failed to load the Categories',
+  );
 }

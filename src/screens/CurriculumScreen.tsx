@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon } from '../app/ArrowRightIcon';
 import { ordinalLabel } from '../app/ordinalLabel';
+import { useAsyncValue } from '../app/useAsyncValue';
 import { useCategories } from '../app/useCategories';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
@@ -115,40 +115,44 @@ function CategorySection({
   );
 }
 
-/** The Modules carrying saved Self-Check answers — the rows that show a tag. */
+const NO_ANSWERED_IDS: ReadonlySet<ModuleId> = new Set();
+
+/**
+ * The Modules carrying saved Self-Check answers — the rows that show a tag.
+ * Empty until the read is in, and empty when it fails: nothing read, no tag,
+ * and every row still links.
+ */
 function useAnsweredModuleIds(
   progress: IProgress,
   modules: readonly ModuleSummary[] | null,
 ): ReadonlySet<ModuleId> {
-  const [answeredIds, setAnsweredIds] = useState<ReadonlySet<ModuleId>>(
-    new Set(),
+  const answeredIds = useAsyncValue(
+    () => readAnsweredModuleIds(progress, modules),
+    [progress, modules],
+    'Failed to read the stored Self-Check answers',
   );
+  return answeredIds ?? NO_ANSWERED_IDS;
+}
 
-  useEffect(() => {
-    if (modules === null) return;
-    let cancelled = false;
-    Promise.all(
-      modules.map(async (module) => ({
-        id: module.id,
-        answers: await progress.getSelfCheckAnswers(module.id),
-      })),
-    )
-      .then((results) => {
-        if (cancelled) return;
-        setAnsweredIds(
-          new Set(results.filter((r) => r.answers !== null).map((r) => r.id)),
-        );
-      })
-      .catch((error: unknown) => {
-        // Nothing read, no tag; every row still links.
-        console.error('Failed to read the stored Self-Check answers', error);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [progress, modules]);
+/** The ids of the Modules IProgress holds a record for — none until the index is here. */
+async function readAnsweredModuleIds(
+  progress: IProgress,
+  modules: readonly ModuleSummary[] | null,
+): Promise<ReadonlySet<ModuleId>> {
+  if (modules === null) return NO_ANSWERED_IDS;
+  const answered = await Promise.all(
+    modules.map((module) => answeredModuleId(progress, module.id)),
+  );
+  return new Set(answered.filter((id) => id !== null));
+}
 
-  return answeredIds;
+/** The Module's id when IProgress holds a record for it, `null` otherwise. */
+async function answeredModuleId(
+  progress: IProgress,
+  id: ModuleId,
+): Promise<ModuleId | null> {
+  const record = await progress.getSelfCheckAnswers(id);
+  return record === null ? null : id;
 }
 
 /**

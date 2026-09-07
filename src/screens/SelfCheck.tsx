@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useProgress } from '../app/ProgressContext';
+import { useAsyncValue } from '../app/useAsyncValue';
 import type {
   SelfCheckOption as SelfCheckOptionData,
   SelfCheckQuestion,
   SelfCheckQuestionId,
 } from '../curriculum';
-import type { SelfCheckAnswers } from '../progress';
+import type { IProgress, SelfCheckAnswers } from '../progress';
 import { copy } from '../strings/copy';
 
 /**
@@ -20,6 +21,9 @@ import { copy } from '../strings/copy';
  * A question may carry an `explanation`. Any pick reveals it and it is the
  * same text whichever option was picked — it teaches what the question was
  * pointing at, and never marks a pick right or wrong.
+ *
+ * Mounted keyed by `moduleId` (ModuleScreen), so the picks made this session
+ * belong to one Module and never carry over to the next.
  */
 export function SelfCheck({
   moduleId,
@@ -29,35 +33,24 @@ export function SelfCheck({
   questions: readonly SelfCheckQuestion[];
 }) {
   const progress = useProgress();
-  // undefined = the stored answers are still loading; render nothing rather
-  // than flash three empty questions over answers that exist.
-  const [picks, setPicks] = useState<SelfCheckAnswers | undefined>(undefined);
-
-  useEffect(() => {
-    let cancelled = false;
-    setPicks(undefined);
-    progress
-      .getSelfCheckAnswers(moduleId)
-      .then((stored) => {
-        if (!cancelled) setPicks(stored?.answers ?? {});
-      })
-      .catch((error: unknown) => {
-        // IndexedDB refusing to open is the only real cause; nothing sensible
-        // to render, and every read surface on the screen still works.
-        console.error(`Failed to load Self-Check answers for ${moduleId}`, error);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [progress, moduleId]);
+  // null = the stored answers are still loading; render nothing rather than
+  // flash three empty questions over answers that exist.
+  const stored = useAsyncValue(
+    () => loadStoredPicks(progress, moduleId),
+    [progress, moduleId],
+    `Failed to load Self-Check answers for ${moduleId}`,
+  );
+  // The picks made since the load, over the stored ones.
+  const [sessionPicks, setSessionPicks] = useState<SelfCheckAnswers>({});
 
   // No questions, no panel: no heading and no definition either.
   if (questions.length === 0) return null;
-  if (picks === undefined) return null;
+  if (stored === null) return null;
+  const picks: SelfCheckAnswers = { ...stored, ...sessionPicks };
 
   function recordPick(questionId: SelfCheckQuestionId, value: string) {
     const next = { ...picks, [questionId]: value };
-    setPicks(next);
+    setSessionPicks((session) => ({ ...session, [questionId]: value }));
     // Fire-and-forget: an answer gates nothing, so a lost write costs at most
     // re-picking a radio.
     progress.saveSelfCheckAnswers(moduleId, next).catch((error: unknown) => {
@@ -84,6 +77,19 @@ export function SelfCheck({
       ))}
     </section>
   );
+}
+
+/**
+ * The Module's stored answers, or an empty map for a Module with no record.
+ * IndexedDB refusing to open is the only real failure, and every read surface
+ * on the screen still works without the panel.
+ */
+async function loadStoredPicks(
+  progress: IProgress,
+  moduleId: string,
+): Promise<SelfCheckAnswers> {
+  const record = await progress.getSelfCheckAnswers(moduleId);
+  return record?.answers ?? {};
 }
 
 /** One question: its prompt labelling its radios, and its explanation slot. */

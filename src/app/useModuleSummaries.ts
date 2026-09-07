@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { ICurriculum, ModuleSummary } from '../curriculum';
+import { useAsyncValue } from './useAsyncValue';
 
 /**
  * Every Module, ordered by ordinal — straight from `ICurriculum.getModules()`.
@@ -10,30 +10,16 @@ import type { ICurriculum, ModuleSummary } from '../curriculum';
  * Re-reads on every navigation (`location.key`). ICurriculum is a pure
  * function of committed content and caches it in memory, so a return
  * to the Curriculum costs one cached call and the screen never has to decide
- * whether its list is still current.
+ * whether its list is still current. A failed read only happens on a
+ * first-ever visit with no network, and there is nothing sensible to render.
  */
 export function useModuleSummaries(
   curriculum: ICurriculum,
 ): readonly ModuleSummary[] | null {
-  const [modules, setModules] = useState<readonly ModuleSummary[] | null>(null);
   const { key: locationKey } = useLocation();
-
-  useEffect(() => {
-    let cancelled = false;
-    curriculum
-      .getModules()
-      .then((loaded) => {
-        if (!cancelled) setModules(loaded);
-      })
-      .catch((error: unknown) => {
-        // Content is precached by the service worker, so this only fires on a
-        // first-ever visit with no network. Nothing sensible to render.
-        console.error('Failed to load the Module index', error);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [curriculum, locationKey]);
-
-  return modules;
+  return useAsyncValue(
+    () => curriculum.getModules(),
+    [curriculum, locationKey],
+    'Failed to load the Module index',
+  );
 }
