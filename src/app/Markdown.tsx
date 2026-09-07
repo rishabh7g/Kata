@@ -31,61 +31,85 @@ type Block =
 const HEADING = /^(#{1,4})\s+(.+)$/;
 const LIST_ITEM = /^\s*(?:-|\d+\.)\s+/;
 
+/** One block read off `lines` at `at`, and the index of the line after it. */
+type Read = { readonly block: Block; readonly next: number };
+
 function parseBlocks(source: string): Block[] {
-  const blocks: Block[] = [];
   const lines = source.split('\n');
-  let i = 0;
-  const line = () => lines[i] ?? '';
-
-  while (i < lines.length) {
-    if (line().trim() === '') {
-      i += 1;
-      continue;
+  const blocks: Block[] = [];
+  for (let at = 0; at < lines.length; ) {
+    const read =
+      readHeading(lines, at) ?? readList(lines, at) ?? readParagraph(lines, at);
+    if (read !== null) {
+      blocks.push(read.block);
     }
-
-    const heading = HEADING.exec(line());
-    if (heading !== null) {
-      blocks.push({
-        kind: 'heading',
-        level: heading[1]?.length ?? 1,
-        text: heading[2] ?? '',
-      });
-      i += 1;
-      continue;
-    }
-
-    if (LIST_ITEM.test(line())) {
-      const ordered = /^\s*\d+\./.test(line());
-      const items: string[] = [];
-      while (i < lines.length && line().trim() !== '') {
-        if (LIST_ITEM.test(line())) {
-          items.push(line().replace(LIST_ITEM, '').trim());
-        } else {
-          // An indented continuation of the previous item (hard-wrapped source).
-          const last = items.length - 1;
-          items[last] = `${items[last] ?? ''} ${line().trim()}`.trim();
-        }
-        i += 1;
-      }
-      blocks.push({ kind: 'list', ordered, items });
-      continue;
-    }
-
-    // Paragraph: consecutive plain lines joined with spaces (hard wraps).
-    const parts: string[] = [];
-    while (
-      i < lines.length &&
-      line().trim() !== '' &&
-      !HEADING.test(line()) &&
-      !LIST_ITEM.test(line())
-    ) {
-      parts.push(line().trim());
-      i += 1;
-    }
-    blocks.push({ kind: 'paragraph', text: parts.join(' ') });
+    at = read?.next ?? at + 1; // No reader wants a blank line: step past it.
   }
-
   return blocks;
+}
+
+function readHeading(lines: readonly string[], at: number): Read | null {
+  const heading = HEADING.exec(lines[at] ?? '');
+  if (heading === null) {
+    return null;
+  }
+  const level = heading[1]?.length ?? 1;
+  const text = heading[2] ?? '';
+  return { block: { kind: 'heading', level, text }, next: at + 1 };
+}
+
+/**
+ * A `-` / `1.` run up to the next blank line. A run line that is not itself an
+ * item is an indented continuation of the previous one (hard-wrapped source).
+ */
+function readList(lines: readonly string[], at: number): Read | null {
+  const first = lines[at] ?? '';
+  if (!LIST_ITEM.test(first)) {
+    return null;
+  }
+  const end = endOfRun(lines, at, isNonBlank);
+  const items: string[] = [];
+  for (const line of lines.slice(at, end)) {
+    if (LIST_ITEM.test(line)) {
+      items.push(line.replace(LIST_ITEM, '').trim());
+    } else {
+      const last = items.length - 1;
+      items[last] = `${items[last] ?? ''} ${line.trim()}`.trim();
+    }
+  }
+  const ordered = /^\s*\d+\./.test(first);
+  return { block: { kind: 'list', ordered, items }, next: end };
+}
+
+/** Consecutive plain lines joined with spaces (hard wraps); null on a blank. */
+function readParagraph(lines: readonly string[], at: number): Read | null {
+  const end = endOfRun(lines, at, isPlain);
+  if (end === at) {
+    return null;
+  }
+  const text = lines.slice(at, end).map((line) => line.trim()).join(' ');
+  return { block: { kind: 'paragraph', text }, next: end };
+}
+
+function isNonBlank(line: string): boolean {
+  return line.trim() !== '';
+}
+
+function isPlain(line: string): boolean {
+  return isNonBlank(line) && !HEADING.test(line) && !LIST_ITEM.test(line);
+}
+
+/** Index of the first line at or after `at` that fails `keep`, or the end. */
+function endOfRun(
+  lines: readonly string[],
+  at: number,
+  keep: (line: string) => boolean,
+): number {
+  let end = at;
+  while (end < lines.length && keep(lines[end] ?? '')) {
+    end += 1;
+  }
+  return end;
 }
 
 function renderBlock(block: Block, index: number): ReactNode {
