@@ -93,6 +93,20 @@
       "ordinal": 6,
       "title": "LangSmith",
       "description": "Seeing what the agent did: tracing runs and evaluating outputs."
+    },
+    {
+      "id": "ai07",
+      "categoryId": "agentic-ai",
+      "ordinal": 7,
+      "title": "Structured Output",
+      "description": "A typed answer instead of prose: the model fills a shape your code can branch on."
+    },
+    {
+      "id": "ai08",
+      "categoryId": "agentic-ai",
+      "ordinal": 8,
+      "title": "Self-Correcting RAG",
+      "description": "Judge the fetch, judge the answer \u2014 a graph that checks its own work before it replies."
     }
   ]
 }
