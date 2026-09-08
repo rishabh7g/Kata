@@ -21,13 +21,14 @@ architecture: `docs/design.md`, `docs/engineering.md`. Cross-repo rules:
   clones into their own IDE. Neither is a build input.
 - `scripts/build-exercises.sh` is the only check the committed Exercise folders
   have — hand-run, gating nothing: it builds each `.csproj` and *collects* (never
-  runs) each pytest suite. Broken on macOS; see below.
+  runs) each pytest suite. It needs the toolchain the material it finds is
+  written in — a missing `dotnet` or `pytest` is exit 2, never a pass.
 - Deploy is a push to `main`: `.github/workflows/deploy.yml` publishes `dist/`
   to Pages, and that Actions run *is* the deploy. Nothing to restart.
 
 ## How to verify it
 
-`scripts/verify.sh` → `TYPES ok | LINT ok | TEST 77/77 ok | CONTENT ok | BUILD ok`
+`scripts/verify.sh` → `TYPES ok | LINT ok | TEST 81/81 ok | CONTENT ok | BUILD ok`
 (per-stage logs in `.verify/`, exit-code table in the script's own header).
 
 ## Deviations from the repo standards
@@ -46,9 +47,11 @@ architecture: `docs/design.md`, `docs/engineering.md`. Cross-repo rules:
 
 ## What a newcomer gets wrong
 
-- **`scripts/build-exercises.sh` prints a green `0 Test Suites` on macOS** while
-  11 folders sit under `exercises/`: discovery uses GNU `find -printf` with
-  stderr discarded (#234). A pass from it on a mac means nothing.
+- **`EXERCISES ok | 0 Test Suites (none committed yet)` means the tree really
+  is empty, and nothing else.** It used to mean discovery had failed: GNU `find
+  -printf` with stderr discarded, so on macOS 11 committed folders read as none
+  (#234). Discovery is now one POSIX `find` whose status is checked — it cannot
+  fail quietly — and `scripts/build-exercises.test.ts` pins all three cases.
 - **`src/app/__snapshots__/Markdown.concept-pages.html` is behaviour, not a
   fixture** — every authored Concept Page's rendered HTML. Re-pin it on purpose
   with `npx vitest run -u`; an unexplained diff is a parser change, not noise.
