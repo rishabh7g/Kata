@@ -27,7 +27,7 @@ architecture: `docs/design.md`, `docs/engineering.md`. Cross-repo rules:
 
 ## How to verify it
 
-`scripts/verify.sh` → `TYPES ok | LINT ok | TEST 75/75 ok | CONTENT ok | BUILD ok`
+`scripts/verify.sh` → `TYPES ok | LINT ok | TEST 77/77 ok | CONTENT ok | BUILD ok`
 (per-stage logs in `.verify/`, exit-code table in the script's own header).
 
 ## Deviations from the repo standards
@@ -55,5 +55,9 @@ architecture: `docs/design.md`, `docs/engineering.md`. Cross-repo rules:
 - **`docs/simplification-plan.md` is a plan record, not the present state.** It
   still names DevGym, `design/` and other things already deleted. The naming
   question is closed: Kata.
-- **`verify.sh` has been seen printing `FAIL TEST (exit 30)` with all 75 tests
-  passing (#233).** Re-run it once before believing a red TEST stage.
+- **`verify.sh` was once seen printing `FAIL TEST (exit 30)` with all tests
+  passing (#233), and 84 runs under CPU load could not reproduce it.** A red
+  TEST is still a red TEST: read the second line of the failure block, which
+  names what `npm run test` itself exited with — `1` is vitest's verdict, `137`
+  or `143` mean it was killed. If the log is clean and the status is not 1, that
+  is the missing evidence #233 asked for.
