@@ -70,6 +70,14 @@ exit-code table in the script's own header).
   look is now a precondition checked before discovery, discovery itself is one
   POSIX `find` whose status is checked, and `scripts/build-exercises.test.ts`
   pins every case.
+- **`npm ci` printing `EBADENGINE` here is the pin working, not a break.**
+  `engines.node` is `^22.22.2 || >=24.15.0` (#242), which mirrors
+  `jsdom@30.0.1`'s own `^22.22.2 || ^24.15.0 || >=26.0.0` — the strictest Node
+  floor anything in this lockfile declares, and the same range rung and Bora.py
+  carry. This host runs v24.13.0, which satisfies neither arm, so npm warns for
+  `kata` and for `jsdom` and installs anyway; the deploy workflow's
+  `node-version: 24` resolves above 24.15.0 and is silent. Raise the host
+  (claude-setup#64), not the range.
 - **`src/components/__snapshots__/Markdown.concept-pages.html` is behaviour, not a
   fixture** — every authored Concept Page's rendered HTML. Re-pin it on purpose
   with `npx vitest run -u`; an unexplained diff is a parser change, not noise.
