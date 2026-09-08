@@ -1,4 +1,4 @@
-// Written from docs/engineering.md § ICurriculum — behaviour, BEFORE the
+// Written from docs/02-engineering.md § ICurriculum — behaviour, BEFORE the
 // implementation exists (Module 0 discipline: tests come from the doc, the
 // code comes from the tests). The seam is exactly the one the doc names, and
 // since #158 the only one: an in-memory ContentSource.

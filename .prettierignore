@@ -16,7 +16,7 @@ exercises/
 src/components/__snapshots__/
 
 # The markdown is hand-formatted prose and it stays that way. Measured, not
-# assumed: prettier pads the tables in docs/engineering.md § 1 and § 6 out to
+# assumed: prettier pads the tables in docs/02-engineering.md § 1 and § 6 out to
 # 400-plus columns, which is unreadable in an editor and unreviewable in a diff.
 # rung/.prettierignore excludes markdown for the same reason.
 *.md

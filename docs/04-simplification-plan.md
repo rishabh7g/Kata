@@ -126,7 +126,7 @@ behind it.
   check; the build step and the shell-purity scan go. A second locale, if it ever comes,
   is a second object.
 - **B4 The contract lives in one place.** The `ICurriculum` / `IProgress` block exists
-  in `docs/engineering.md` § 2, `src/curriculum/contract.ts` ("verbatim copy") and the
+  in `docs/02-engineering.md` § 2, `src/curriculum/contract.ts` ("verbatim copy") and the
   shim. `contract.ts` is the source; the doc links to it.
 
 ### Batch D — Tooling: delete what nothing runs
@@ -147,14 +147,14 @@ behind it.
 - Delete `support.js` and `brand/support.js` (byte-identical, 1,911 lines each), `_ds/`,
   `DevGym.dc.html`, `brand/*.dc.html`, `assets/devgym-mark.svg`, `screens/*.png`
   (documented as pre-reframe and historical), `issue-guide.md` (fold its keeper test into
-  `docs/design.md` in four lines).
+  `docs/01-design.md` in four lines).
 - Move `design/styles.css` beside `src/styles/app.css`: one stylesheet directory.
 - `tokens.json`: after Batch C its only readers are `app.css` comments, `index.html`'s
   theme colour and `generate-icons.mjs`. Fold the consumed values into CSS custom
   properties and delete the file, or trim it to the keys with a reader. Delete is the
   recommendation.
 - `design/README.md` becomes a page about what remains, or is folded into
-  `docs/design.md`.
+  `docs/01-design.md`.
 
 ### Batch G — Content said once
 
@@ -170,10 +170,10 @@ behind it.
 - `README.md`: § Naming collapses to one sentence once the historical files are gone;
   § Status drops "being brought to it one issue at a time"; the start-here table lists
   what exists.
-- `docs/engineering.md` (612 lines): delete § 5 authoring workflow, § 7 build order and
+- `docs/02-engineering.md` (612 lines): delete § 5 authoring workflow, § 7 build order and
   § 9 superseded decisions (git has them); § 2 links to `contract.ts`.
-- `docs/ubiquitous-language.md`: delete § Removed terms.
-- The screen descriptions exist in `design/README.md` and `docs/engineering.md`; keep one.
+- `docs/03-ubiquitous-language.md`: delete § Removed terms.
+- The screen descriptions exist in `design/README.md` and `docs/02-engineering.md`; keep one.
 - Retake nothing: after Batch E there are no screenshots to keep current.
 
 ## Targets

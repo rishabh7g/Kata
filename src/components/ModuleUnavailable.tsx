@@ -9,7 +9,7 @@ import { copy } from '../strings/copy';
  * rejects — in practice a `content/modules/<id>.json` fetch that failed
  * offline. Content JSON is deliberately not precached: it is cached as it is
  * read, so a Module never opened online has nothing to fall back to
- * (docs/engineering.md § 1 Offline). That is a fine trade; a blank screen is
+ * (docs/02-engineering.md § 1 Offline). That is a fine trade; a blank screen is
  * not, so the state it creates gets said out loud.
  *
  * A missing content file is NOT this: a 404 means the Module is pending, and

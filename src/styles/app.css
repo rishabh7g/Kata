@@ -199,7 +199,7 @@ body {
 }
 
 /* Category headings (#163) — the shelves the rows group under
-   (docs/ubiquitous-language.md § Category). A heading, never a route: no
+   (docs/03-ubiquitous-language.md § Category). A heading, never a route: no
    link, no disclosure, no filter, so the row below it stays the one way into
    a Module. Title at 2 (32), the one-line
    description in the muted body role, and the Category's language ONCE, in

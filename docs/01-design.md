@@ -1,6 +1,6 @@
 # Kata — Design
 
-Personal app for learning software design fundamentals through authored exercises the learner does in their own IDE. Terms per `ubiquitous-language.md`.
+Personal app for learning software design fundamentals through authored exercises the learner does in their own IDE. Terms per `03-ubiquitous-language.md`.
 
 ## Core thesis
 
@@ -72,7 +72,7 @@ The two Categories carry practice material to different depths, and both depths 
 
 Each Module contains:
 
-- Concept Page, written to the editorial standard above; its first line is the provenance note recording which editing stages it has been through (`docs/engineering.md` § 5), and no screen renders that line
+- Concept Page, written to the editorial standard above; its first line is the provenance note recording which editing stages it has been through (`docs/02-engineering.md` § 5), and no screen renders that line
 - 2–3 Model Examples (before/after code pairs in the Category's language, ≤40 lines each side)
 - A Self-Check — a few optional questions, answered while reading, autosaved, never submitted
 - Exercises: none, one, or several, each a committed folder the learner clones. A Module that only explains is a complete Module. How many a Module ships is a per-Category convention rather than a schema rule — see § Exercise coverage across the two Categories above (#161, #172).
@@ -95,4 +95,4 @@ Each Module contains:
 
 ## Module 0 (meta)
 
-The app is built using the workflow it teaches: this design doc + ubiquitous language file first, the two Target Interfaces designed by hand (see `engineering.md`), implementations delegated to AI, tests written at those boundaries. The app is its own first Exercise.
+The app is built using the workflow it teaches: this design doc + ubiquitous language file first, the two Target Interfaces designed by hand (see `02-engineering.md`), implementations delegated to AI, tests written at those boundaries. The app is its own first Exercise.

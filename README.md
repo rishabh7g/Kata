@@ -18,10 +18,10 @@ or grades anywhere in the system.
 
 | Doc | What it is |
 |---|---|
-| [`docs/design.md`](docs/design.md) | Product intent — the one principle, pedagogy, the editorial standard every Concept Page meets, Categories and Modules, non-goals |
-| [`docs/engineering.md`](docs/engineering.md) | Architecture, the two Target Interfaces (`ICurriculum`, `IProgress`), content schema, storage — the shapes themselves live in [`src/curriculum/contract.ts`](src/curriculum/contract.ts) |
-| [`docs/ubiquitous-language.md`](docs/ubiquitous-language.md) | Vocabulary contract — Library, Category, Module, Self-Check; every UI label uses these terms exactly |
-| [`docs/simplification-plan.md`](docs/simplification-plan.md) | The simplification plan — rung's method (measure at 360px, said once, no vestiges, contract tests only) applied to Kata, with the measured baseline, batches C → A → B → D → E → G → F, and targets |
+| [`docs/01-design.md`](docs/01-design.md) | Product intent — the one principle, pedagogy, the editorial standard every Concept Page meets, Categories and Modules, non-goals |
+| [`docs/02-engineering.md`](docs/02-engineering.md) | Architecture, the two Target Interfaces (`ICurriculum`, `IProgress`), content schema, storage — the shapes themselves live in [`src/curriculum/contract.ts`](src/curriculum/contract.ts) |
+| [`docs/03-ubiquitous-language.md`](docs/03-ubiquitous-language.md) | Vocabulary contract — Library, Category, Module, Self-Check; every UI label uses these terms exactly |
+| [`docs/04-simplification-plan.md`](docs/04-simplification-plan.md) | The simplification plan — rung's method (measure at 360px, said once, no vestiges, contract tests only) applied to Kata, with the measured baseline, batches C → A → B → D → E → G → F, and targets |
 | [`src/styles/base.css`](src/styles/base.css) | The design system — tokens, type scale, components — and the single source of styling truth |
 
 ## Run it
@@ -66,7 +66,7 @@ and the command for its Category's language (`dotnet test`, `pytest`).
 All eleven Modules are authored: the five Software Design Modules each carry a
 Concept Page, three Model Examples and two Exercises whose folder and Test
 Suite are committed under `exercises/`; the six Agentic AI Modules are
-explain-only by design, with one pilot Python Exercise (see `docs/design.md`
+explain-only by design, with one pilot Python Exercise (see `docs/01-design.md`
 § Exercise coverage across the two Categories).
 
 Reading is never blocked: nothing is submitted, nothing is judged, and no Module

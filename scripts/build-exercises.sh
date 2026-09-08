@@ -2,7 +2,7 @@
 #
 # Kata exercise check — every committed Exercise folder's Test Suite must be
 # intact, so a learner who clones a folder never lands on broken material.
-# Never a test RUN: Kata never gates on test execution (docs/engineering.md
+# Never a test RUN: Kata never gates on test execution (docs/02-engineering.md
 # § 6), and a construct Exercise's skeleton is red by design.
 #
 #   scripts/build-exercises.sh          # checks every exercises/<module>/<id>/
@@ -51,7 +51,7 @@ mkdir -p -- "$WORK"
 
 # ─── discover ───────────────────────────────────────────────────────────────
 # Exercise folders are exercises/<module>/<exercise>/ — the first two path
-# segments above any .csproj or .py file (docs/engineering.md § 6 layout).
+# segments above any .csproj or .py file (docs/02-engineering.md § 6 layout).
 #
 # One find, and its status is checked. `-print`, never GNU's `-printf`: BSD
 # find (macOS) rejects the whole expression, and with its stderr discarded that

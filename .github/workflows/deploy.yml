@@ -1,6 +1,6 @@
 name: Deploy to GitHub Pages
 
-# docs/engineering.md § 1 Stack: GitHub Pages, deployed by a GitHub Actions
+# docs/02-engineering.md § 1 Stack: GitHub Pages, deployed by a GitHub Actions
 # workflow on push to main. "Deploy" means "the Actions run that published
 # dist/" — there is nothing to restart and no environment to configure.
 on:
@@ -36,7 +36,7 @@ jobs:
       - name: Test
         run: npm test
 
-      # docs/engineering.md § 3: content is validated before the build, so
+      # docs/02-engineering.md § 3: content is validated before the build, so
       # invalid content can never deploy. Live since #7 committed schemas/ and
       # public/content/ — on invalid content this step fails and nothing ships.
       - name: Validate content

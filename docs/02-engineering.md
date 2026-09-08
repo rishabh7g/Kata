@@ -6,7 +6,7 @@ LLM call, and no code execution: the app reads authored content that is
 committed to the repo and records the reader's own Self-Check answers in the
 browser.
 The learner practises C# in their own IDE, against material this repo hands
-them. Terms per `ubiquitous-language.md`.
+them. Terms per `03-ubiquitous-language.md`.
 
 Everything the app does is behind **two Target Interfaces** — `ICurriculum`
 (read the authored content) and `IProgress` (own the reader's Self-Check
@@ -199,7 +199,7 @@ Each entry of `modules` requires:
 | `id` | string | `^[a-z]+\d{2}$`, unique app-wide — a short Category prefix and a 2-digit position (`m01`, `ai01`) |
 | `categoryId` | string | equals the `id` of one entry of `categories` |
 | `ordinal` | integer | ≥ 1, unique and contiguous from 1 **within its Category** |
-| `title` | string | non-empty; matches `docs/design.md` § Curriculum verbatim |
+| `title` | string | non-empty; matches `docs/01-design.md` § Curriculum verbatim |
 | `description` | string | non-empty, one line |
 
 A Module naming a `categoryId` no Category declares is a **content error**, so
@@ -222,7 +222,7 @@ exit code, before every deploy.
 
 How many Exercises a Module carries is an **authoring convention, not a schema
 rule**: a Software Design Module ships two — one `refactor`, one `construct`
-(`docs/design.md` § Module anatomy) — while an explain-only Module ships `"exercises":
+(`docs/01-design.md` § Module anatomy) — while an explain-only Module ships `"exercises":
 []` and simply reads shorter. The schema counts nothing, so neither shape is a
 content error.
 
@@ -239,14 +239,14 @@ Both schemas set `"additionalProperties": false`, so a stray field is an error
 rather than silently ignored data. Content is validated by
 `scripts/validate-content.mjs` locally and in CI **before** the build, so
 invalid content can never deploy. Self-Check prompts must be behaviorally
-answerable — countable or doable — per `docs/design.md` § Pedagogy, and no
-content text may use a banned term from `docs/ubiquitous-language.md`.
+answerable — countable or doable — per `docs/01-design.md` § Pedagogy, and no
+content text may use a banned term from `docs/03-ubiquitous-language.md`.
 
 A question's `explanation` is optional and additive: authored, it is revealed
 once the reader picks any option, and it is the **same text whichever option
 was picked**. It teaches what the question was pointing at; it never says which
 option was right, because nothing in Kata is right or wrong. Written to
-`docs/design.md` § Editorial standard, 1–3 sentences. Question ids unique within
+`docs/01-design.md` § Editorial standard, 1–3 sentences. Question ids unique within
 a Module and option values unique within a question are the two rules draft
 2020-12 cannot state, so `scripts/validate-content.mjs` checks them beside the
 schema — same gate, same exit code, same run against the deployed content.
@@ -348,7 +348,7 @@ The app is built with the workflow it teaches — it is its own first Exercise.
   If the two ever differ, this doc is right.
 - **This doc changes first.** A Target Interface change edits this file, then
   the code — never the reverse.
-- **Every authoring prompt embeds `docs/ubiquitous-language.md`** verbatim, and
+- **Every authoring prompt embeds `docs/03-ubiquitous-language.md`** verbatim, and
   every UI string uses its terms exactly.
 - **Critical-path review**: `IProgress`'s one write path,
   `saveSelfCheckAnswers`, gets a line-by-line human review in its PR. It is
