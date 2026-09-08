@@ -57,11 +57,20 @@ export NO_COLOR=1 FORCE_COLOR=0
 # The one-line summary, built a segment at a time as stages pass.
 segments=()
 
-# fail <STAGE> <exit-code> <log> — the only thing a red run prints: what broke,
-# the tail of its log, and where the rest of it is.
+# fail <STAGE> <exit-code> <log> <status> <command…> — the only thing a red run
+# prints: what broke, the status the command itself exited with, the tail of its
+# log, and where the rest of it is.
+#
+# The stage code (30) is the harness's word for "TEST failed"; `$status` is the
+# tool's own — 1 means the tool decided the run was bad, 137/143 mean it was
+# killed and nothing decided anything. Telling them apart matters: #233 is a
+# TEST failure whose log held 75 passing tests and no error, and the one thing
+# that would have named its cause was never printed.
 fail() {
-  local stage=$1 code=$2 log=$3
-  printf 'FAIL %s (exit %s)\n\n' "$stage" "$code"
+  local stage=$1 code=$2 log=$3 status=${4-} command=${5-}
+  printf 'FAIL %s (exit %s)\n' "$stage" "$code"
+  [ -n "$status" ] && printf '%s exited %s\n' "$command" "$status"
+  printf '\n'
   if [ -s "$log" ]; then
     tail -n 20 "$log"
   else
@@ -76,7 +85,7 @@ fail() {
 run() {
   local stage=$1 code=$2 log=$3
   shift 3
-  "$@" >>"$log" 2>&1 || fail "$stage" "$code" "$log"
+  "$@" >>"$log" 2>&1 || fail "$stage" "$code" "$log" "$?" "$*"
 }
 
 # Vitest's summary line reads `Tests  54 passed (54)`, with `N failed |` and
@@ -111,6 +120,21 @@ else
 fi
 
 # vite.config.ts carries the vitest config, so it gates TEST as well as BUILD.
+#
+# #233 — TEST was seen failing once with `Tests 75 passed (75)` and no error in
+# its log. Not reproduced since, under deliberate CPU contention (8 spinners on
+# 12 cores): 30 sequential `npm run test` runs, 12 pairs of concurrent ones in
+# this same checkout, and 30 consecutive `verify.sh` runs — 84 runs, every one
+# exit 0. No vitest bug is named because none was demonstrated, so nothing here
+# works around one. What the harness does instead is print the tool's own exit
+# status in the failure block (see `fail`), which is the fact the first report
+# lacked: 1 means vitest judged the run bad and its log is worth reading; 137 or
+# 143 mean it was killed and the log is beside the point. If TEST goes red with
+# a clean log again, that line is the finding — put it in #233.
+#
+# What must NOT happen: TEST is never re-run to see if it passes the second
+# time, and `test_counts` is a display detail that never overrides the status.
+# Either would turn a real failure into a green line.
 if [ -f "$repo_root/vite.config.ts" ]; then
   run TEST 30 "$log_dir/test.log" npm run test
   counts=$(test_counts "$log_dir/test.log")

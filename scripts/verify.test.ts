@@ -202,6 +202,7 @@ describe('the first failure stops the run', () => {
     expect(run.stdout).toBe(
       [
         'FAIL TYPES (exit 10)',
+        'npx tsc --noEmit exited 2',
         '',
         'src/App.tsx(1,1): error TS2322',
         '',
@@ -211,11 +212,33 @@ describe('the first failure stops the run', () => {
     );
   });
 
+  // #233: a TEST stage that failed with 75 passing tests in its log. `1` (the
+  // tool judged the run bad) and `143` (it was killed mid-run and judged
+  // nothing) are the same stage code and opposite diagnoses, so the failure
+  // block names the tool's own status as well as the stage's.
+  it('names the command and the status it exited with, beside the stage code', () => {
+    const run = verify({ exits: { TEST: 143 } });
+
+    expect(run.status).toBe(30);
+    expect(run.stdout.split('\n').slice(0, 2)).toEqual([
+      'FAIL TEST (exit 30)',
+      'npm run test exited 143',
+    ]);
+  });
+
+  it('still fails a suite that reports every test passing but exits non-zero', () => {
+    const run = verify({ exits: { TEST: 1 } });
+
+    expect(run.status).toBe(30);
+    expect(run.stdout).toContain('Tests  54 passed (54)');
+    expect(run.stdout).not.toContain('TEST 54/54 ok');
+  });
+
   it('slices the last 20 lines of a long log', () => {
     const lines = Array.from({ length: 40 }, (_, i) => `line ${i + 1}`);
     const run = verify({ exits: { TYPES: 1 }, out: { TYPES: lines.join('\n') } });
 
-    const slice = run.stdout.split('\n').slice(2, -3);
+    const slice = run.stdout.split('\n').slice(3, -3);
     expect(slice).toEqual(lines.slice(-20));
     expect(slice).toHaveLength(20);
   });
