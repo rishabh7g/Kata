@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
 /**
- * The harness is exercised in a sandbox: a tmp dir holding a copy of verify.sh, the four files
+ * The harness is exercised in a sandbox: a tmp dir holding a copy of verify.sh, the five files
  * that guard its stages, and a `bin/` ahead of it on PATH with fake `npm`, `npx` and `node`.
  * Nothing here runs the real toolchain — a test that shelled out to `npm run test` would run
  * vitest inside vitest — so what these tests assert is the harness's own behaviour: stage order,
@@ -18,7 +18,7 @@ const VERIFY_SH = path.join(path.dirname(fileURLToPath(import.meta.url)), 'verif
 /** Canned vitest tail — the line `test_counts` parses. */
 const VITEST_OUT = ['', ' Test Files  7 passed (7)', '      Tests  54 passed (54)', ''].join('\n');
 
-type Stage = 'TYPES' | 'ESLINT' | 'PRETTIER' | 'TEST' | 'CONTENT' | 'BUILD';
+type Stage = 'TYPES' | 'ESLINT' | 'PRETTIER' | 'TEST' | 'CONTENT' | 'STRINGS' | 'BUILD';
 
 /** The file each stage is guarded by, relative to the sandbox root. */
 const GUARDS = {
@@ -26,6 +26,7 @@ const GUARDS = {
   eslint: 'eslint.config.js',
   vite: 'vite.config.ts',
   content: path.join('scripts', 'validate-content.mjs'),
+  strings: path.join('tools', 'strings-check.ts'),
 } as const;
 
 type Guard = keyof typeof GUARDS;
@@ -61,6 +62,7 @@ case "$(basename "$0") $*" in
   "npx prettier --check .") key=PRETTIER ;;
   "npm run test") key=TEST ;;
   "node scripts/validate-content.mjs") key=CONTENT ;;
+  "node tools/strings-check.ts") key=STRINGS ;;
   "npx vite build") key=BUILD ;;
   *) printf 'fake: unexpected invocation\\n' >&2; exit 99 ;;
 esac
@@ -70,8 +72,8 @@ exit_var="FAKE_\${key}_EXIT"
 exit "\${!exit_var-0}"
 `;
 
-const STAGES: Stage[] = ['TYPES', 'ESLINT', 'PRETTIER', 'TEST', 'CONTENT', 'BUILD'];
-const LOG_NAMES = ['types', 'lint', 'test', 'content', 'build'];
+const STAGES: Stage[] = ['TYPES', 'ESLINT', 'PRETTIER', 'TEST', 'CONTENT', 'STRINGS', 'BUILD'];
+const LOG_NAMES = ['types', 'lint', 'test', 'content', 'strings', 'build'];
 
 const sandboxes: string[] = [];
 
@@ -87,6 +89,7 @@ function verify(scenario: Scenario = {}): Run {
   writeFileSync(path.join(dir, 'scripts', 'verify.sh'), readFileSync(VERIFY_SH));
   for (const [guard, file] of Object.entries(GUARDS)) {
     if (scenario.without?.includes(guard as Guard)) continue;
+    mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
     writeFileSync(path.join(dir, file), '// stand-in for the real config\n');
   }
 
@@ -131,23 +134,26 @@ describe('a green run', () => {
     const run = verify();
 
     expect(run.status).toBe(0);
-    expect(run.stdout).toBe('TYPES ok | LINT ok | TEST 54/54 ok | CONTENT ok | BUILD ok\n');
+    expect(run.stdout).toBe(
+      'TYPES ok | LINT ok | TEST 54/54 ok | CONTENT ok | STRINGS ok | BUILD ok\n',
+    );
     expect(run.stderr).toBe('');
   });
 
-  it('runs the five stages in order, prettier inside LINT', () => {
+  it('runs the six stages in order, prettier inside LINT', () => {
     expect(verify().calls).toEqual([
       'npx tsc --noEmit',
       'npx eslint .',
       'npx prettier --check .',
       'npm run test',
       'node scripts/validate-content.mjs',
+      'node tools/strings-check.ts',
       'npx vite build',
     ]);
   });
 
   it('leaves one log per stage in .verify/', () => {
-    expect(verify().logs).toEqual(['types', 'lint', 'test', 'content', 'build']);
+    expect(verify().logs).toEqual(['types', 'lint', 'test', 'content', 'strings', 'build']);
   });
 
   it('reads the count off vitest, including when tests are skipped', () => {
@@ -161,7 +167,7 @@ describe('a green run', () => {
   it('falls back to a bare TEST ok if the reporter stops printing a count', () => {
     const run = verify({ out: { TEST: 'all good, trust me' } });
 
-    expect(run.stdout).toBe('TYPES ok | LINT ok | TEST ok | CONTENT ok | BUILD ok\n');
+    expect(run.stdout).toBe('TYPES ok | LINT ok | TEST ok | CONTENT ok | STRINGS ok | BUILD ok\n');
   });
 
   it('wipes stale logs from the previous run', () => {
@@ -188,6 +194,7 @@ describe('the first failure stops the run', () => {
     ['LINT', 'PRETTIER', 20],
     ['TEST', 'TEST', 30],
     ['CONTENT', 'CONTENT', 40],
+    ['STRINGS', 'STRINGS', 60],
     ['BUILD', 'BUILD', 50],
   ] as [string, Stage, number][])('%s failing (%s) exits %i', (label, stage, code) => {
     const run = verify({ exits: { [stage]: 1 } });
@@ -269,10 +276,12 @@ describe('the first failure stops the run', () => {
 
 describe('a stage whose tooling is absent', () => {
   it('says skip rather than passing silently', () => {
-    const run = verify({ without: ['tsconfig', 'eslint', 'vite', 'content'] });
+    const run = verify({ without: ['tsconfig', 'eslint', 'vite', 'content', 'strings'] });
 
     expect(run.status).toBe(0);
-    expect(run.stdout).toBe('TYPES skip | LINT skip | TEST skip | CONTENT skip | BUILD skip\n');
+    expect(run.stdout).toBe(
+      'TYPES skip | LINT skip | TEST skip | CONTENT skip | STRINGS skip | BUILD skip\n',
+    );
     expect(run.calls).toEqual([]);
     expect(run.logs).toEqual([]);
   });
@@ -281,7 +290,9 @@ describe('a stage whose tooling is absent', () => {
     const run = verify({ without: ['content'] });
 
     expect(run.status).toBe(0);
-    expect(run.stdout).toBe('TYPES ok | LINT ok | TEST 54/54 ok | CONTENT skip | BUILD ok\n');
+    expect(run.stdout).toBe(
+      'TYPES ok | LINT ok | TEST 54/54 ok | CONTENT skip | STRINGS ok | BUILD ok\n',
+    );
     expect(run.calls).not.toContain('node scripts/validate-content.mjs');
   });
 });
@@ -315,12 +326,14 @@ describe('the documented summary line quotes no snapshot count', () => {
   const SNAPSHOT_COUNT = /TEST \d+\/\d+/;
 
   it('matches a line that does quote one, so an empty result means something', () => {
-    expect(SNAPSHOT_COUNT.test('TYPES ok | LINT ok | TEST 83/83 ok | CONTENT ok | BUILD ok')).toBe(
-      true,
-    );
-    expect(SNAPSHOT_COUNT.test('TYPES ok | LINT ok | TEST n/n ok | CONTENT ok | BUILD ok')).toBe(
-      false,
-    );
+    expect(
+      SNAPSHOT_COUNT.test(
+        'TYPES ok | LINT ok | TEST 83/83 ok | CONTENT ok | STRINGS ok | BUILD ok',
+      ),
+    ).toBe(true);
+    expect(
+      SNAPSHOT_COUNT.test('TYPES ok | LINT ok | TEST n/n ok | CONTENT ok | STRINGS ok | BUILD ok'),
+    ).toBe(false);
   });
 
   it.each(DOCUMENTED_IN)('%s documents the shape, not a count', (doc) => {
