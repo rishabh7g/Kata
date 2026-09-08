@@ -30,11 +30,18 @@ The app is a Vite + React + TypeScript static build, served from
 <https://rishabh7g.github.io/Kata/>. Node 24.
 
 ```sh
-npm ci        # install
-npm run dev   # local dev server
-npm test      # Vitest
-npm run build # type-check (strict) + production build into dist/
+npm ci              # install
+npm run dev         # local dev server
+npm test            # Vitest
+npm run build       # type-check (strict) + production build into dist/
+scripts/verify.sh   # every gate, in order — the one command that answers "is this healthy?"
 ```
+
+[`scripts/verify.sh`](scripts/verify.sh) runs TYPES → LINT → TEST → CONTENT →
+BUILD, stops at the first failure, and prints one line
+(`TYPES ok | LINT ok | TEST 75/75 ok | CONTENT ok | BUILD ok`). Each stage's
+output goes to `.verify/<stage>.log`; its header comment holds the stage /
+exit-code table.
 
 `node scripts/validate-content.mjs` validates the committed content against the
 two schemas, and CI runs it before every build. `node tools/measure.mjs` drives
