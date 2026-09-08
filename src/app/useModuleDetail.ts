@@ -40,10 +40,7 @@ export type ModuleDetailState = {
  * never opened online fails offline and the screen has to tell that apart
  * from "still loading".
  */
-export function useModuleDetail(
-  curriculum: ICurriculum,
-  id: ModuleId,
-): ModuleDetailState {
+export function useModuleDetail(curriculum: ICurriculum, id: ModuleId): ModuleDetailState {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [attempt, setAttempt] = useState(0);
 

@@ -17,11 +17,7 @@ export function CurriculumProvider({
   curriculum: ICurriculum;
   children: ReactNode;
 }) {
-  return (
-    <CurriculumContext.Provider value={curriculum}>
-      {children}
-    </CurriculumContext.Provider>
-  );
+  return <CurriculumContext.Provider value={curriculum}>{children}</CurriculumContext.Provider>;
 }
 
 export function useCurriculum(): ICurriculum {

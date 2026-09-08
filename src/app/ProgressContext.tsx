@@ -19,11 +19,7 @@ export function ProgressProvider({
   progress: IProgress;
   children: ReactNode;
 }) {
-  return (
-    <ProgressContext.Provider value={progress}>
-      {children}
-    </ProgressContext.Provider>
-  );
+  return <ProgressContext.Provider value={progress}>{children}</ProgressContext.Provider>;
 }
 
 export function useProgress(): IProgress {

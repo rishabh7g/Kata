@@ -5,8 +5,7 @@ import type { CategoryLanguage } from '../curriculum';
  * `Record<CategoryLanguage, …>` means a new member of the union fails `tsc`
  * here until it has an entry.
  */
-export const LANGUAGE_TEST_COMMAND: Readonly<Record<CategoryLanguage, string>> =
-  {
-    csharp: 'dotnet test',
-    python: 'pytest',
-  };
+export const LANGUAGE_TEST_COMMAND: Readonly<Record<CategoryLanguage, string>> = {
+  csharp: 'dotnet test',
+  python: 'pytest',
+};

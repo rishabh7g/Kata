@@ -42,8 +42,7 @@ export const copy = {
   curriculum: {
     title: 'Curriculum',
     // The one fact the rows cannot show for themselves.
-    orientation:
-      'You write and run the code in your own IDE — Kata never runs or sees your code.',
+    orientation: 'You write and run the code in your own IDE — Kata never runs or sees your code.',
   },
 
   module: {

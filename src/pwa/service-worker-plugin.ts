@@ -52,10 +52,7 @@ export function precacheUrls(base: string, files: readonly string[]): string[] {
 }
 
 /** Replaces the worker's config placeholder with real values. */
-export function injectConfig(
-  template: string,
-  config: ServiceWorkerConfig,
-): string {
+export function injectConfig(template: string, config: ServiceWorkerConfig): string {
   if (!template.includes(PLACEHOLDER)) {
     throw new Error(`src/pwa/sw.js no longer contains ${PLACEHOLDER}`);
   }
@@ -99,9 +96,7 @@ export function serviceWorkerPlugin(): Plugin {
           file.type === 'chunk'
             ? Buffer.from(file.code)
             : Buffer.from(
-                typeof file.source === 'string'
-                  ? file.source
-                  : new Uint8Array(file.source),
+                typeof file.source === 'string' ? file.source : new Uint8Array(file.source),
               ),
       }));
       const copied = listFiles(publicDir).map((name) => ({
@@ -120,10 +115,7 @@ export function serviceWorkerPlugin(): Plugin {
       const cached = new Set(precache);
       const version = createHash('sha256');
       for (const file of [...emitted, ...copied]
-        .filter(
-          (file) =>
-            file.name === 'index.html' || cached.has(`${base}${file.name}`),
-        )
+        .filter((file) => file.name === 'index.html' || cached.has(`${base}${file.name}`))
         .sort((a, b) => a.name.localeCompare(b.name))) {
         version.update(file.name).update(file.bytes);
       }

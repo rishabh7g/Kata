@@ -20,7 +20,9 @@ function renderPack(file: string): string {
 }
 
 it('renders every authored Concept Page exactly as pinned', async () => {
-  const files = readdirSync(MODULES_DIR).filter((file) => file.endsWith('.json')).sort();
+  const files = readdirSync(MODULES_DIR)
+    .filter((file) => file.endsWith('.json'))
+    .sort();
   expect(files).toHaveLength(13);
   await expect(files.map(renderPack).join('\n')).toMatchFileSnapshot(
     './__snapshots__/Markdown.concept-pages.html',

@@ -19,21 +19,78 @@ import { createCurriculum, createHttpContentSource } from './curriculum';
 const index: ModuleIndex = {
   schemaVersion: 3,
   categories: [
-    { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+    {
+      id: 'software-design',
+      ordinal: 1,
+      title: 'Software Design',
+      description: 'Design fundamentals in C#.',
+      language: 'csharp',
+    },
   ],
   modules: [
-    { id: 'm03', categoryId: 'software-design', ordinal: 3, title: 'Testing at Boundaries', description: 'Test the Target Interface.' },
-    { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.' },
-    { id: 'm05', categoryId: 'software-design', ordinal: 5, title: 'Error Design', description: 'Define errors out of existence.' },
-    { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.' },
-    { id: 'm04', categoryId: 'software-design', ordinal: 4, title: 'Naming', description: 'Ubiquitous Language.' },
+    {
+      id: 'm03',
+      categoryId: 'software-design',
+      ordinal: 3,
+      title: 'Testing at Boundaries',
+      description: 'Test the Target Interface.',
+    },
+    {
+      id: 'm01',
+      categoryId: 'software-design',
+      ordinal: 1,
+      title: 'Deep Modules',
+      description: 'Hide complexity.',
+    },
+    {
+      id: 'm05',
+      categoryId: 'software-design',
+      ordinal: 5,
+      title: 'Error Design',
+      description: 'Define errors out of existence.',
+    },
+    {
+      id: 'm02',
+      categoryId: 'software-design',
+      ordinal: 2,
+      title: 'Dependency Direction',
+      description: 'Point at abstractions.',
+    },
+    {
+      id: 'm04',
+      categoryId: 'software-design',
+      ordinal: 4,
+      title: 'Naming',
+      description: 'Ubiquitous Language.',
+    },
   ],
 };
 
 const questions: readonly [SelfCheckQuestion, SelfCheckQuestion, SelfCheckQuestion] = [
-  { id: 'q1', prompt: 'Count the pass-throughs?', options: [{ value: '0', label: '0' }, { value: '1+', label: '1 or more' }] },
-  { id: 'q2', prompt: 'Any required call order?', options: [{ value: 'no', label: 'No' }, { value: 'yes', label: 'Yes' }] },
-  { id: 'q3', prompt: 'Grep found duplicates?', options: [{ value: 'no', label: 'No' }, { value: 'yes', label: 'Yes' }] },
+  {
+    id: 'q1',
+    prompt: 'Count the pass-throughs?',
+    options: [
+      { value: '0', label: '0' },
+      { value: '1+', label: '1 or more' },
+    ],
+  },
+  {
+    id: 'q2',
+    prompt: 'Any required call order?',
+    options: [
+      { value: 'no', label: 'No' },
+      { value: 'yes', label: 'Yes' },
+    ],
+  },
+  {
+    id: 'q3',
+    prompt: 'Grep found duplicates?',
+    options: [
+      { value: 'no', label: 'No' },
+      { value: 'yes', label: 'Yes' },
+    ],
+  },
 ];
 
 function contentFor(id: ModuleId): ModuleContent {
@@ -47,8 +104,26 @@ function contentFor(id: ModuleId): ModuleContent {
       { before: 'class C {}', after: 'class D {}', caption: 'what hid' },
     ],
     exercises: [
-      { id: `${id}-e1`, type: 'refactor', title: 'Refactor', concept: 'depth', smell: 'leak', targetInterfaceCode: 'interface I {}', sizeBudgetLoc: 120, folderUrl: null },
-      { id: `${id}-e2`, type: 'construct', title: 'Construct', concept: 'depth', smell: 'none', targetInterfaceCode: 'interface J {}', sizeBudgetLoc: 200, folderUrl: null },
+      {
+        id: `${id}-e1`,
+        type: 'refactor',
+        title: 'Refactor',
+        concept: 'depth',
+        smell: 'leak',
+        targetInterfaceCode: 'interface I {}',
+        sizeBudgetLoc: 120,
+        folderUrl: null,
+      },
+      {
+        id: `${id}-e2`,
+        type: 'construct',
+        title: 'Construct',
+        concept: 'depth',
+        smell: 'none',
+        targetInterfaceCode: 'interface J {}',
+        sizeBudgetLoc: 200,
+        folderUrl: null,
+      },
     ],
     selfCheckQuestions: questions,
   };
@@ -92,8 +167,20 @@ describe('getCategories', () => {
       loadIndex: async () => ({
         schemaVersion: 3,
         categories: [
-          { id: 'agentic-ai', ordinal: 2, title: 'Agentic AI', description: 'Agents in Python.', language: 'python' },
-          { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+          {
+            id: 'agentic-ai',
+            ordinal: 2,
+            title: 'Agentic AI',
+            description: 'Agents in Python.',
+            language: 'python',
+          },
+          {
+            id: 'software-design',
+            ordinal: 1,
+            title: 'Software Design',
+            description: 'Design fundamentals in C#.',
+            language: 'csharp',
+          },
         ],
         modules: [],
       }),
@@ -112,18 +199,28 @@ describe('getCategories', () => {
       loadIndex: async () => ({
         schemaVersion: 3,
         categories: [
-          { id: 'agentic-ai', ordinal: 1, title: 'Agentic AI', description: 'Agents in Python.', language: 'python' },
+          {
+            id: 'agentic-ai',
+            ordinal: 1,
+            title: 'Agentic AI',
+            description: 'Agents in Python.',
+            language: 'python',
+          },
         ],
         modules: [
-          { id: 'm06', categoryId: 'agentic-ai', ordinal: 1, title: 'Prompts', description: 'Say what you want.' },
+          {
+            id: 'm06',
+            categoryId: 'agentic-ai',
+            ordinal: 1,
+            title: 'Prompts',
+            description: 'Say what you want.',
+          },
         ],
       }),
       loadModuleContent: async (id) => contentFor(id),
     });
 
-    expect((await curriculum.getCategories()).map((c) => c.title)).toEqual([
-      'Agentic AI',
-    ]);
+    expect((await curriculum.getCategories()).map((c) => c.title)).toEqual(['Agentic AI']);
   });
 
   it('reads the same cached index the Modules come from', async () => {
@@ -192,14 +289,50 @@ describe('getModules ordering', () => {
     const twoCategories: ModuleIndex = {
       schemaVersion: 3,
       categories: [
-        { id: 'agentic-ai', ordinal: 2, title: 'Agentic AI', description: 'Agents in Python.', language: 'python' },
-        { id: 'software-design', ordinal: 1, title: 'Software Design', description: 'Design fundamentals in C#.', language: 'csharp' },
+        {
+          id: 'agentic-ai',
+          ordinal: 2,
+          title: 'Agentic AI',
+          description: 'Agents in Python.',
+          language: 'python',
+        },
+        {
+          id: 'software-design',
+          ordinal: 1,
+          title: 'Software Design',
+          description: 'Design fundamentals in C#.',
+          language: 'csharp',
+        },
       ],
       modules: [
-        { id: 'm07', categoryId: 'agentic-ai', ordinal: 2, title: 'Tools', description: 'Give the agent hands.' },
-        { id: 'm02', categoryId: 'software-design', ordinal: 2, title: 'Dependency Direction', description: 'Point at abstractions.' },
-        { id: 'm06', categoryId: 'agentic-ai', ordinal: 1, title: 'Prompts', description: 'Say what you want.' },
-        { id: 'm01', categoryId: 'software-design', ordinal: 1, title: 'Deep Modules', description: 'Hide complexity.' },
+        {
+          id: 'm07',
+          categoryId: 'agentic-ai',
+          ordinal: 2,
+          title: 'Tools',
+          description: 'Give the agent hands.',
+        },
+        {
+          id: 'm02',
+          categoryId: 'software-design',
+          ordinal: 2,
+          title: 'Dependency Direction',
+          description: 'Point at abstractions.',
+        },
+        {
+          id: 'm06',
+          categoryId: 'agentic-ai',
+          ordinal: 1,
+          title: 'Prompts',
+          description: 'Say what you want.',
+        },
+        {
+          id: 'm01',
+          categoryId: 'software-design',
+          ordinal: 1,
+          title: 'Deep Modules',
+          description: 'Hide complexity.',
+        },
       ],
     };
     const curriculum = createCurriculum({
@@ -303,9 +436,7 @@ describe('getModule', () => {
 // ── createHttpContentSource: the URLs it builds, the failures it passes on ─
 
 function stubFetch(responder: (url: string) => Response) {
-  const fetchMock = vi.fn(async (input: RequestInfo | URL) =>
-    responder(String(input)),
-  );
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => responder(String(input)));
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;
 }
@@ -324,15 +455,13 @@ describe('createHttpContentSource', () => {
     expect(loaded).toEqual(index);
   });
 
-  it('passes the Categories and each Module\'s categoryId through untouched', async () => {
+  it("passes the Categories and each Module's categoryId through untouched", async () => {
     stubFetch(() => Response.json(index));
 
     const loaded = await createHttpContentSource('/Kata/').loadIndex();
 
     expect(loaded.categories).toEqual(index.categories);
-    expect(loaded.modules.map((m) => m.categoryId)).toEqual(
-      index.modules.map((m) => m.categoryId),
-    );
+    expect(loaded.modules.map((m) => m.categoryId)).toEqual(index.modules.map((m) => m.categoryId));
   });
 
   it('loads a Module content file from <base>content/modules/<id>.json', async () => {
@@ -348,9 +477,7 @@ describe('createHttpContentSource', () => {
   it('rejects on a 404 — every indexed Module has a content file', async () => {
     stubFetch(() => new Response('not found', { status: 404 }));
 
-    await expect(
-      createHttpContentSource('/Kata/').loadModuleContent('m02'),
-    ).rejects.toThrow(/404/);
+    await expect(createHttpContentSource('/Kata/').loadModuleContent('m02')).rejects.toThrow(/404/);
   });
 
   it('propagates a failed Module fetch — offline is not a missing file', async () => {
@@ -365,9 +492,9 @@ describe('createHttpContentSource', () => {
       }),
     );
 
-    await expect(
-      createHttpContentSource('/Kata/').loadModuleContent('m03'),
-    ).rejects.toThrow(failure);
+    await expect(createHttpContentSource('/Kata/').loadModuleContent('m03')).rejects.toThrow(
+      failure,
+    );
   });
 
   it('throws on a non-404 failure loading the index', async () => {

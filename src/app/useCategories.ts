@@ -13,9 +13,7 @@ import { useAsyncValue } from './useAsyncValue';
  * is the same failure as the Module index it is read from — a first-ever
  * visit with no network — and there is nothing sensible to render for it.
  */
-export function useCategories(
-  curriculum: ICurriculum,
-): readonly Category[] | null {
+export function useCategories(curriculum: ICurriculum): readonly Category[] | null {
   const { key: locationKey } = useLocation();
   return useAsyncValue(
     () => curriculum.getCategories(),

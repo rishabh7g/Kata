@@ -31,9 +31,7 @@ export function CurriculumScreen() {
     <>
       <header className="curriculum-header">
         <h1 className="curriculum-title">{copy.curriculum.title}</h1>
-        <p className="curriculum-orientation text-muted">
-          {copy.curriculum.orientation}
-        </p>
+        <p className="curriculum-orientation text-muted">{copy.curriculum.orientation}</p>
       </header>
       {sections !== null && (
         <>
@@ -100,16 +98,10 @@ function CategorySection({
         <span className="tag tag-neutral curriculum-category-language">
           {copy.language[category.language]}
         </span>
-        <p className="text-muted curriculum-category-desc">
-          {category.description}
-        </p>
+        <p className="text-muted curriculum-category-desc">{category.description}</p>
       </header>
       {section.modules.map((module) => (
-        <ModuleRow
-          key={module.id}
-          module={module}
-          inProgress={answeredModuleIds.has(module.id)}
-        />
+        <ModuleRow key={module.id} module={module} inProgress={answeredModuleIds.has(module.id)} />
       ))}
     </section>
   );
@@ -147,10 +139,7 @@ async function readAnsweredModuleIds(
 }
 
 /** The Module's id when IProgress holds a record for it, `null` otherwise. */
-async function answeredModuleId(
-  progress: IProgress,
-  id: ModuleId,
-): Promise<ModuleId | null> {
+async function answeredModuleId(progress: IProgress, id: ModuleId): Promise<ModuleId | null> {
   const record = await progress.getSelfCheckAnswers(id);
   return record === null ? null : id;
 }
@@ -159,13 +148,7 @@ async function answeredModuleId(
  * One row, always a link: nothing blocks the reader, so there is no inert
  * state, no disabled cursor and no icon but the arrow into the Module.
  */
-function ModuleRow({
-  module,
-  inProgress,
-}: {
-  module: ModuleSummary;
-  inProgress: boolean;
-}) {
+function ModuleRow({ module, inProgress }: { module: ModuleSummary; inProgress: boolean }) {
   return (
     <Link to={`/modules/${module.id}`} className="curriculum-row">
       <div className="curriculum-row-ordinal">{ordinalLabel(module.ordinal)}</div>

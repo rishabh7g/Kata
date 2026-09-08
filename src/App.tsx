@@ -21,10 +21,7 @@ export function App() {
       <Route path="/" element={<AppShell />}>
         <Route index element={<CurriculumScreen />} />
         <Route path="modules/:id" element={<ModuleScreen />} />
-        <Route
-          path="modules/:id/exercises/:exerciseId"
-          element={<ExerciseScreen />}
-        />
+        <Route path="modules/:id/exercises/:exerciseId" element={<ExerciseScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

@@ -37,9 +37,8 @@ type Read = { readonly block: Block; readonly next: number };
 function parseBlocks(source: string): Block[] {
   const lines = source.split('\n');
   const blocks: Block[] = [];
-  for (let at = 0; at < lines.length; ) {
-    const read =
-      readHeading(lines, at) ?? readList(lines, at) ?? readParagraph(lines, at);
+  for (let at = 0; at < lines.length;) {
+    const read = readHeading(lines, at) ?? readList(lines, at) ?? readParagraph(lines, at);
     if (read !== null) {
       blocks.push(read.block);
     }
@@ -87,7 +86,10 @@ function readParagraph(lines: readonly string[], at: number): Read | null {
   if (end === at) {
     return null;
   }
-  const text = lines.slice(at, end).map((line) => line.trim()).join(' ');
+  const text = lines
+    .slice(at, end)
+    .map((line) => line.trim())
+    .join(' ');
   return { block: { kind: 'paragraph', text }, next: end };
 }
 
@@ -100,11 +102,7 @@ function isPlain(line: string): boolean {
 }
 
 /** Index of the first line at or after `at` that fails `keep`, or the end. */
-function endOfRun(
-  lines: readonly string[],
-  at: number,
-  keep: (line: string) => boolean,
-): number {
+function endOfRun(lines: readonly string[], at: number, keep: (line: string) => boolean): number {
   let end = at;
   while (end < lines.length && keep(lines[end] ?? '')) {
     end += 1;
@@ -124,11 +122,7 @@ function renderBlock(block: Block, index: number): ReactNode {
       const items = block.items.map((item, itemIndex) => (
         <li key={itemIndex}>{renderInline(item)}</li>
       ));
-      return block.ordered ? (
-        <ol key={index}>{items}</ol>
-      ) : (
-        <ul key={index}>{items}</ul>
-      );
+      return block.ordered ? <ol key={index}>{items}</ol> : <ul key={index}>{items}</ul>;
     }
     case 'paragraph':
       return <p key={index}>{renderInline(block.text)}</p>;

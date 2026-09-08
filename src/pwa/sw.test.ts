@@ -135,9 +135,7 @@ describe('service worker install', () => {
     const { scope } = await installedWorker();
 
     expect(scope.skipWaiting).toHaveBeenCalled();
-    expect(
-      scope.caches.opened.get(CACHE)?.entries.has(`${ORIGIN}${MISSING}`),
-    ).toBe(false);
+    expect(scope.caches.opened.get(CACHE)?.entries.has(`${ORIGIN}${MISSING}`)).toBe(false);
   });
 
   it('still installs when the network is down entirely', async () => {
@@ -213,18 +211,12 @@ describe('service worker fetch', () => {
     await expect(fresh?.text()).resolves.toBe('{"fresh":true}');
 
     worker.scope.fetch.mockRejectedValue(new Error('offline'));
-    await expect((await worker.request(url))?.text()).resolves.toBe(
-      '{"fresh":true}',
-    );
+    await expect((await worker.request(url))?.text()).resolves.toBe('{"fresh":true}');
   });
 
   it('leaves other origins, other paths and non-GET requests alone', async () => {
-    await expect(
-      worker.request('https://fonts.googleapis.com/css'),
-    ).resolves.toBeUndefined();
+    await expect(worker.request('https://fonts.googleapis.com/css')).resolves.toBeUndefined();
     await expect(worker.request(`${ORIGIN}/other/app.js`)).resolves.toBeUndefined();
-    await expect(
-      worker.request(`${ORIGIN}${SHELL}`, { method: 'POST' }),
-    ).resolves.toBeUndefined();
+    await expect(worker.request(`${ORIGIN}${SHELL}`, { method: 'POST' })).resolves.toBeUndefined();
   });
 });
