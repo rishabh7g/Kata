@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { ModuleUnavailable } from './ModuleUnavailable';
-import { useCurriculum } from './CurriculumContext';
+import { useCurriculum } from '../app/CurriculumContext';
 import { useModuleDetail } from './useModuleDetail';
 import type { ModuleDetail, ModuleId } from '../curriculum';
 

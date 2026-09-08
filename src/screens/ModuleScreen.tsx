@@ -1,10 +1,10 @@
 import { Link, useParams } from 'react-router-dom';
-import { ArrowRightIcon } from '../app/ArrowRightIcon';
-import { BackArrowIcon } from '../app/BackArrowIcon';
-import { Markdown } from '../app/Markdown';
-import { ModuleGate } from '../app/ModuleGate';
-import { ordinalLabel } from '../app/ordinalLabel';
-import { useDocumentTitle } from '../app/useDocumentTitle';
+import { ArrowRightIcon } from '../components/ArrowRightIcon';
+import { BackArrowIcon } from '../components/BackArrowIcon';
+import { Markdown } from '../components/Markdown';
+import { ModuleGate } from '../components/ModuleGate';
+import { ordinalLabel } from './ordinalLabel';
+import { useDocumentTitle } from '../shell/useDocumentTitle';
 import type { ExerciseBrief, ModelExample, ModuleDetail } from '../curriculum';
 import { copy, interpolate } from '../strings/copy';
 import { SelfCheck } from './SelfCheck';

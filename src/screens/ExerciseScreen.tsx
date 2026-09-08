@@ -1,8 +1,8 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { BackArrowIcon } from '../app/BackArrowIcon';
-import { ModuleGate } from '../app/ModuleGate';
-import { ordinalLabel } from '../app/ordinalLabel';
-import { useDocumentTitle } from '../app/useDocumentTitle';
+import { BackArrowIcon } from '../components/BackArrowIcon';
+import { ModuleGate } from '../components/ModuleGate';
+import { ordinalLabel } from './ordinalLabel';
+import { useDocumentTitle } from '../shell/useDocumentTitle';
 import type { CategoryLanguage, ExerciseBrief, ModuleDetail } from '../curriculum';
 import { LANGUAGE_TEST_COMMAND } from '../strings/language';
 import { copy, interpolate } from '../strings/copy';

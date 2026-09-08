@@ -23,6 +23,7 @@ needs to know none of that.
 | Piece | Decision |
 |---|---|
 | App | **React + Vite + TypeScript**, `strict: true`, no `any` in app code |
+| Layout | `src/` follows the shared folder vocabulary (`docs/repo-standards.md`). **Lifetime is the line between the first two:** `app/` is the composition root that runs once at startup — `bootstrap.tsx`, the two context providers, and the surface shown when IndexedDB will not open; `shell/` is the chrome that renders for as long as the app does. `components/` holds the pieces more than one screen renders through, `screens/` the routes and the helpers only their own bodies use. Tests and snapshots sit beside their subject |
 | Styling | **`src/styles/base.css` is the design system** — the single source of styling truth; `app.css` adds the layout around it |
 | Tokens | the custom properties `base.css` defines are the tokens; never hard-code a hex or size one already carries |
 | Fonts | **Self-hosted** Archivo 400/600/800 as committed `woff2` + `@font-face`, replacing the stylesheet's Google Fonts import (an offline PWA may not depend on a third-party origin) |
@@ -36,7 +37,7 @@ needs to know none of that.
 Not precaching the content JSON has one visible consequence, and it is a state,
 not a bug: a Module that has never been read online cannot be read offline.
 When `ICurriculum.getModule(id)` rejects, the Module and Exercise screens
-render the `ModuleUnavailable` notice (`src/app/ModuleUnavailable.tsx`) — the
+render the `ModuleUnavailable` notice (`src/components/ModuleUnavailable.tsx`) — the
 file that failed, why it is not offline-ready, the browser's own error text,
 `Try again`, and the way back to the Curriculum — rather than nothing at all.
 A **404 is a failure like any other status**: every indexed Module has a

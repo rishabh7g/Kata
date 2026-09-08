@@ -1,6 +1,6 @@
-import { describeError } from './describeError';
-import { KataMark } from './KataMark';
-import { Notice } from './Notice';
+import { describeError } from '../components/describeError';
+import { KataMark } from '../shell/KataMark';
+import { Notice } from '../components/Notice';
 import { copy, interpolate } from '../strings/copy';
 
 /**
