@@ -29,7 +29,8 @@ architecture: `docs/design.md`, `docs/engineering.md`. Cross-repo rules:
 ## How to verify it
 
 `scripts/verify.sh` → one line on success,
-`TYPES ok | LINT ok | TEST n/n ok | CONTENT ok | BUILD ok`, where the TEST
+`TYPES ok | LINT ok | TEST n/n ok | CONTENT ok | STRINGS ok | BUILD ok`, where
+the TEST
 segment carries that run's own passed/total count (per-stage logs in `.verify/`,
 exit-code table in the script's own header).
 
@@ -39,13 +40,19 @@ exit-code table in the script's own header).
   ships the native compiler and no JS compiler API, so typescript-eslint refuses
   to load against it and `npx eslint .` aborts before linting a single file.
   Measured, not assumed, and recorded where it bites, in `eslint.config.js`.
-- **`verify.sh` carries a fifth stage, `CONTENT` (exit 40), and runs it *before*
-  `BUILD` rather than after the four reserved names** — validating content after
-  the build would let invalid content reach `dist/`.
-- **The keyed string bundle has no gate.** Every string the shell renders is in
-  `src/strings/copy.ts` as one typed object, and `tsc` catches a key that does
-  not exist — but nothing stops a new hardcoded literal, and authored content is
-  deliberately outside it. A review habit, not a check.
+- **`verify.sh` carries two extra stages, `CONTENT` (exit 40) and `STRINGS`
+  (exit 60), and runs both *before* `BUILD` rather than after the four reserved
+  names** — validating content or copy after the build would let a bad one reach
+  `dist/`. The codes are what was left over, not the run order.
+- **The keyed string bundle is gated by its own key list, not by `tsc`.**
+  `src/strings/copy.ts` holds every string the shell renders;
+  `src/strings/copyKeys.ts` holds the canonical key list and each key's
+  `{placeholders}`, and `tools/strings-check.ts` compares the two (STRINGS, exit
+  60; `npm run build` runs it as well, so the deploy fails too). `tsc` only ever
+  caught a key that is *read* and then deleted — an unread key and an emptied
+  value both passed the whole gate before #240. Still outside it: a new
+  hardcoded literal, and authored content, which is deliberately validated as
+  content instead.
 - **`ajv` is exact-pinned to `8.20.0`, and no reason for that was ever
   recorded.** The commit that added it (2f59cc4, #6) says nothing about the pin
   and no doc explains it; 8.20.0 is also ajv's `latest`, so today the pin costs

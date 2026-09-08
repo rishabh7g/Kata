@@ -5,7 +5,7 @@
 # docs/repo-standards.md § "Every repository verifies itself with one command").
 # One line when everything passes, one failure block when it doesn't:
 #
-#   TYPES ok | LINT ok | TEST n/n ok | CONTENT ok | BUILD ok
+#   TYPES ok | LINT ok | TEST n/n ok | CONTENT ok | STRINGS ok | BUILD ok
 #
 # `n/n` is the shape, not a sample: the TEST segment carries whatever count the
 # run itself produced, so nothing here quotes a passing total that the next new
@@ -21,13 +21,18 @@
 #   LINT      20   npx eslint ., then npx prettier --check .
 #   TEST      30   npm run test           (segment carries the vitest count)
 #   CONTENT   40   node scripts/validate-content.mjs
+#   STRINGS   60   node tools/strings-check.ts
 #   BUILD     50   npx vite build
 #
+# The stage codes are not the run order: 10-30 and 50 are the four reserved
+# names, so Kata's two extra stages take the numbers left over (CONTENT 40,
+# STRINGS 60) and run where they belong rather than where they sort.
+#
 # Each stage is guarded by the file that configures it — tsconfig.json,
-# eslint.config.js, vite.config.ts (vitest's config lives there too) and
-# scripts/validate-content.mjs. A stage whose tooling is gone prints
-# `<STAGE> skip` rather than being dropped: silence and success must not look
-# alike.
+# eslint.config.js, vite.config.ts (vitest's config lives there too),
+# scripts/validate-content.mjs and tools/strings-check.ts. A stage whose tooling
+# is gone prints `<STAGE> skip` rather than being dropped: silence and success
+# must not look alike.
 #
 # usage: scripts/verify.sh
 
@@ -154,6 +159,17 @@ if [ -f "$repo_root/scripts/validate-content.mjs" ]; then
   segments+=('CONTENT ok')
 else
   segments+=('CONTENT skip')
+fi
+
+# The shell's copy bundle is checked against its canonical key list before the
+# build, for the same reason content is: a bundle with an emptied value or a key
+# nothing reads must not reach dist/. `tsc` does not see either — it catches a
+# key that is read and then deleted, and nothing else (#240).
+if [ -f "$repo_root/tools/strings-check.ts" ]; then
+  run STRINGS 60 "$log_dir/strings.log" node tools/strings-check.ts
+  segments+=('STRINGS ok')
+else
+  segments+=('STRINGS skip')
 fi
 
 # vite build directly, not `npm run build`: that would re-run tsc --noEmit, so a
