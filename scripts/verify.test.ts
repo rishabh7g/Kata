@@ -303,3 +303,29 @@ describe('arguments', () => {
     expect(run.calls).toEqual([]);
   });
 });
+
+/**
+ * The summary line is documented in three places, and an exact passing total quoted in prose has
+ * no way to stay true — it went stale two commits after it was written (#238). The docs carry the
+ * shape `TEST n/n`; this guards that they never drift back to a snapshot of one run's numbers.
+ */
+describe('the documented summary line quotes no snapshot count', () => {
+  const REPO_ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const DOCUMENTED_IN = ['CLAUDE.md', 'README.md', path.join('scripts', 'verify.sh')];
+  const SNAPSHOT_COUNT = /TEST \d+\/\d+/;
+
+  it('matches a line that does quote one, so an empty result means something', () => {
+    expect(SNAPSHOT_COUNT.test('TYPES ok | LINT ok | TEST 83/83 ok | CONTENT ok | BUILD ok')).toBe(
+      true,
+    );
+    expect(SNAPSHOT_COUNT.test('TYPES ok | LINT ok | TEST n/n ok | CONTENT ok | BUILD ok')).toBe(
+      false,
+    );
+  });
+
+  it.each(DOCUMENTED_IN)('%s documents the shape, not a count', (doc) => {
+    const lines = readFileSync(path.join(REPO_ROOT, doc), 'utf8').split('\n');
+
+    expect(lines.filter((line) => SNAPSHOT_COUNT.test(line))).toEqual([]);
+  });
+});

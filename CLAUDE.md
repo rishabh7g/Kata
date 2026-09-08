@@ -28,8 +28,10 @@ architecture: `docs/design.md`, `docs/engineering.md`. Cross-repo rules:
 
 ## How to verify it
 
-`scripts/verify.sh` → `TYPES ok | LINT ok | TEST 81/81 ok | CONTENT ok | BUILD ok`
-(per-stage logs in `.verify/`, exit-code table in the script's own header).
+`scripts/verify.sh` → one line on success,
+`TYPES ok | LINT ok | TEST n/n ok | CONTENT ok | BUILD ok`, where the TEST
+segment carries that run's own passed/total count (per-stage logs in `.verify/`,
+exit-code table in the script's own header).
 
 ## Deviations from the repo standards
 

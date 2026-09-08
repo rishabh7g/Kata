@@ -39,9 +39,9 @@ scripts/verify.sh   # every gate, in order — the one command that answers "is 
 
 [`scripts/verify.sh`](scripts/verify.sh) runs TYPES → LINT → TEST → CONTENT →
 BUILD, stops at the first failure, and prints one line
-(`TYPES ok | LINT ok | TEST 75/75 ok | CONTENT ok | BUILD ok`). Each stage's
-output goes to `.verify/<stage>.log`; its header comment holds the stage /
-exit-code table.
+(`TYPES ok | LINT ok | TEST n/n ok | CONTENT ok | BUILD ok`, the TEST segment
+carrying that run's own passed/total count). Each stage's output goes to
+`.verify/<stage>.log`; its header comment holds the stage / exit-code table.
 
 `node scripts/validate-content.mjs` validates the committed content against the
 two schemas, and CI runs it before every build. `node tools/measure.mjs` drives
