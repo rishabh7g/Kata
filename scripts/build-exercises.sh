@@ -80,19 +80,33 @@ csprojs_in() {
   done <"$MATERIAL" | sort
 }
 
+# Where to look is a precondition, like dotnet and pytest below — checked
+# before discovery rather than answered by it. A missing EXERCISES_DIR is a
+# typo in KATA_EXERCISES_DIR, or a path right on one host and wrong on another;
+# it is never an empty tree. This used to skip discovery in silence and print
+# the zero-folder pass (#235), which also left the find guard below unreachable
+# — that guard was always sound, it was simply never arrived at. Past here,
+# zero folders can only mean the tree really is empty.
+if [[ ! -d "$EXERCISES_DIR" ]]; then
+  if [[ -e "$EXERCISES_DIR" ]]; then
+    echo "EXERCISES PRECONDITION FAIL: $EXERCISES_DIR is not a directory"
+  else
+    echo "EXERCISES PRECONDITION FAIL: $EXERCISES_DIR does not exist"
+  fi
+  exit 2
+fi
+
 : >"$MATERIAL"
 FOLDERS=()
-if [[ -d "$EXERCISES_DIR" ]]; then
-  find "$EXERCISES_DIR" -mindepth 3 \( -name '*.csproj' -o -name '*.py' \) -print >"$MATERIAL" || {
-    echo "EXERCISES PRECONDITION FAIL: could not list material under $EXERCISES_DIR (find exited $?)"
-    exit 2
-  }
-  while IFS= read -r folder; do
-    FOLDERS+=("$folder")
-  done < <(
-    while IFS= read -r file; do folder_of "$file"; done <"$MATERIAL" | sort -u
-  )
-fi
+find "$EXERCISES_DIR" -mindepth 3 \( -name '*.csproj' -o -name '*.py' \) -print >"$MATERIAL" || {
+  echo "EXERCISES PRECONDITION FAIL: could not list material under $EXERCISES_DIR (find exited $?)"
+  exit 2
+}
+while IFS= read -r folder; do
+  FOLDERS+=("$folder")
+done < <(
+  while IFS= read -r file; do folder_of "$file"; done <"$MATERIAL" | sort -u
+)
 
 if ((${#FOLDERS[@]} == 0)); then
   echo "no exercise folders under exercises/ — nothing to build" >>"$LOG"

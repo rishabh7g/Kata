@@ -50,8 +50,11 @@ architecture: `docs/design.md`, `docs/engineering.md`. Cross-repo rules:
 - **`EXERCISES ok | 0 Test Suites (none committed yet)` means the tree really
   is empty, and nothing else.** It used to mean discovery had failed: GNU `find
   -printf` with stderr discarded, so on macOS 11 committed folders read as none
-  (#234). Discovery is now one POSIX `find` whose status is checked — it cannot
-  fail quietly — and `scripts/build-exercises.test.ts` pins all three cases.
+  (#234); or it meant `KATA_EXERCISES_DIR` pointed at nothing at all, which
+  skipped discovery in silence and printed the same green line (#235). Where to
+  look is now a precondition checked before discovery, discovery itself is one
+  POSIX `find` whose status is checked, and `scripts/build-exercises.test.ts`
+  pins every case.
 - **`src/app/__snapshots__/Markdown.concept-pages.html` is behaviour, not a
   fixture** — every authored Concept Page's rendered HTML. Re-pin it on purpose
   with `npx vitest run -u`; an unexplained diff is a parser change, not noise.

@@ -143,6 +143,38 @@ describe('discovery', () => {
     expect(run.calls).toEqual([]);
   });
 
+  // #235: an EXERCISES_DIR that is not there is a typo in KATA_EXERCISES_DIR, or a path that is
+  // right on one host and wrong on another — never an empty tree. It used to print the
+  // zero-folder pass byte for byte and exit 0, so silence and success looked alike.
+  it('fails when the exercises directory does not exist', () => {
+    const parent = mkdtempSync(path.join(tmpdir(), 'kata-missing-'));
+    sandboxes.push(parent);
+    const missing = path.join(parent, 'not-here');
+
+    const run = check({ exercises: missing });
+
+    expect(run.status).toBe(2);
+    expect(run.stdout).toContain('EXERCISES PRECONDITION FAIL');
+    expect(run.stdout).toContain(missing);
+    expect(run.stdout).not.toContain('0 Test Suites');
+    expect(run.calls).toEqual([]);
+  });
+
+  it('fails when the exercises path exists but is a file', () => {
+    const parent = mkdtempSync(path.join(tmpdir(), 'kata-notadir-'));
+    sandboxes.push(parent);
+    const file = path.join(parent, 'exercises');
+    writeFileSync(file, '');
+
+    const run = check({ exercises: file });
+
+    expect(run.status).toBe(2);
+    expect(run.stdout).toContain('EXERCISES PRECONDITION FAIL');
+    expect(run.stdout).toContain(file);
+    expect(run.stdout).not.toContain('0 Test Suites');
+    expect(run.calls).toEqual([]);
+  });
+
   it('fails loudly when discovery itself cannot run, instead of finding nothing', () => {
     const run = check({ brokenFind: true });
 
