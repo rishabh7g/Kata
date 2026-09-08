@@ -5,7 +5,11 @@
 # docs/repo-standards.md § "Every repository verifies itself with one command").
 # One line when everything passes, one failure block when it doesn't:
 #
-#   TYPES ok | LINT ok | TEST 54/54 ok | CONTENT ok | BUILD ok
+#   TYPES ok | LINT ok | TEST n/n ok | CONTENT ok | BUILD ok
+#
+# `n/n` is the shape, not a sample: the TEST segment carries whatever count the
+# run itself produced, so nothing here quotes a passing total that the next new
+# test would falsify.
 #
 # Stages run in order and the FIRST failure stops the run, so a red run names
 # exactly one thing. Every stage's stdout+stderr goes to .verify/<stage>.log
