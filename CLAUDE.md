@@ -44,6 +44,12 @@ architecture: `docs/design.md`, `docs/engineering.md`. Cross-repo rules:
   `src/strings/copy.ts` as one typed object, and `tsc` catches a key that does
   not exist — but nothing stops a new hardcoded literal, and authored content is
   deliberately outside it. A review habit, not a check.
+- **`ajv` is exact-pinned to `8.20.0`, and no reason for that was ever
+  recorded.** The commit that added it (2f59cc4, #6) says nothing about the pin
+  and no doc explains it; 8.20.0 is also ajv's `latest`, so today the pin costs
+  nothing. #237 left it standing rather than retiring a constraint whose purpose
+  is unknown — clearing the fast-uri advisories needed no ajv move at all. Retire
+  it on purpose or not at all.
 
 ## What a newcomer gets wrong
 
@@ -61,6 +67,11 @@ architecture: `docs/design.md`, `docs/engineering.md`. Cross-repo rules:
 - **`docs/simplification-plan.md` is a plan record, not the present state.** It
   still names DevGym, `design/` and other things already deleted. The naming
   question is closed: Kata.
+- **`npm ls ajv` shows two, and only one of them reaches `fast-uri`.** The
+  direct devDependency `ajv@8.20.0` — the one `scripts/validate-content.mjs`
+  imports as `ajv/dist/2020.js` — depends on `fast-uri`; `eslint@10.10.0`'s
+  nested `ajv@6.15.0` depends on `uri-js` instead and is not on that path.
+  "Fixing" the eslint one clears nothing (#237).
 - **`verify.sh` was once seen printing `FAIL TEST (exit 30)` with all tests
   passing (#233), and 84 runs under CPU load could not reproduce it.** A red
   TEST is still a red TEST: read the second line of the failure block, which
