@@ -53,13 +53,44 @@ mkdir -p -- "$WORK"
 # ─── discover ───────────────────────────────────────────────────────────────
 # Exercise folders are exercises/<module>/<exercise>/ — the first two path
 # segments above any .csproj or .py file (docs/engineering.md § 6 layout).
+#
+# One find, and its status is checked. `-print`, never GNU's `-printf`: BSD
+# find (macOS) rejects the whole expression, and with its stderr discarded that
+# read as "no material committed yet" — a green run that checked nothing (#234).
+# Silence and success must not look alike, so a discovery that cannot run is a
+# precondition failure, not an empty list.
+MATERIAL="$WORK/material.txt"
+
+# The Exercise folder a material file belongs to: the two path segments below
+# $EXERCISES_DIR. Trimmed by parameter expansion, so a repo path carrying
+# regex or field characters cannot change the answer.
+folder_of() {
+  local rel=${1#"$EXERCISES_DIR/"} rest
+  [[ "$rel" == */*/* ]] || return 1
+  rest=${rel#*/}
+  printf '%s/%s\n' "${rel%%/*}" "${rest%%/*}"
+}
+
+# Every .csproj under an Exercise folder, in path order (tests/ reference src/),
+# read off the one discovery listing. Empty for a Python folder.
+csprojs_in() {
+  local prefix="$EXERCISES_DIR/$1/" file
+  while IFS= read -r file; do
+    [[ "$file" == "$prefix"* && "$file" == *.csproj ]] && printf '%s\n' "$file"
+  done <"$MATERIAL" | sort
+}
+
+: >"$MATERIAL"
 FOLDERS=()
 if [[ -d "$EXERCISES_DIR" ]]; then
+  find "$EXERCISES_DIR" -mindepth 3 \( -name '*.csproj' -o -name '*.py' \) -print >"$MATERIAL" || {
+    echo "EXERCISES PRECONDITION FAIL: could not list material under $EXERCISES_DIR (find exited $?)"
+    exit 2
+  }
   while IFS= read -r folder; do
     FOLDERS+=("$folder")
   done < <(
-    find "$EXERCISES_DIR" -mindepth 3 \( -name '*.csproj' -o -name '*.py' \) -printf '%P\n' 2>/dev/null |
-      awk -F/ '{ print $1 "/" $2 }' | sort -u
+    while IFS= read -r file; do folder_of "$file"; done <"$MATERIAL" | sort -u
   )
 fi
 
@@ -74,7 +105,7 @@ fi
 CSHARP=0
 PYTHON_FOLDERS=0
 for folder in "${FOLDERS[@]}"; do
-  if [[ -n "$(find "$EXERCISES_DIR/$folder" -name '*.csproj' -print -quit)" ]]; then
+  if [[ -n "$(csprojs_in "$folder")" ]]; then
     CSHARP=1
   else
     PYTHON_FOLDERS=1
@@ -100,15 +131,13 @@ for folder in "${FOLDERS[@]}"; do
   FOLDER_LOG="$WORK/${folder//\//__}.log"
   FOLDER_OK=1
 
-  if [[ -n "$(find "$EXERCISES_DIR/$folder" -name '*.csproj' -print -quit)" ]]; then
+  if [[ -n "$(csprojs_in "$folder")" ]]; then
     while IFS= read -r csproj; do
       {
-        printf '\n=== dotnet build %s (%s)\n' "$csproj" "$(date -u +%H:%M:%SZ)"
-        dotnet build "$EXERCISES_DIR/$csproj" -nologo --verbosity minimal 2>&1
+        printf '\n=== dotnet build %s (%s)\n' "${csproj#"$EXERCISES_DIR/"}" "$(date -u +%H:%M:%SZ)"
+        dotnet build "$csproj" -nologo --verbosity minimal 2>&1
       } >>"$FOLDER_LOG" || FOLDER_OK=0
-    done < <(
-      find "$EXERCISES_DIR/$folder" -name '*.csproj' -printf "$folder/%P\n" | sort
-    )
+    done < <(csprojs_in "$folder")
   else
     # --collect-only never executes a test; -p no:cacheprovider keeps pytest
     # from writing .pytest_cache into the committed folder. Exit 5 (no tests
