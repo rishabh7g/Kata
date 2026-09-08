@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 /**
- * Renders Concept Page markdown (docs/engineering.md § 7: ~1 page of prose)
+ * Renders Concept Page markdown (docs/02-engineering.md § 7: ~1 page of prose)
  * as React elements — no HTML strings, so nothing to sanitize.
  *
  * Deliberately covers only the constructs the authored packs use: `#`–`####`

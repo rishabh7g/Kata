@@ -153,7 +153,7 @@ else
 fi
 
 # Content is validated against its schemas before the build, so invalid content
-# can never reach dist/ (docs/engineering.md § 3).
+# can never reach dist/ (docs/02-engineering.md § 3).
 if [ -f "$repo_root/scripts/validate-content.mjs" ]; then
   run CONTENT 40 "$log_dir/content.log" node scripts/validate-content.mjs
   segments+=('CONTENT ok')

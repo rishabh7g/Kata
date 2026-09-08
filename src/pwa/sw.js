@@ -1,7 +1,7 @@
 /**
  * Kata's service worker.
  *
- * docs/engineering.md § 1 Stack: "Web app manifest + a service worker
+ * docs/02-engineering.md § 1 Stack: "Web app manifest + a service worker
  * precaching the app shell **and** the content JSON; cache-first, versioned so
  * a new deploy activates on the next online load."
  *

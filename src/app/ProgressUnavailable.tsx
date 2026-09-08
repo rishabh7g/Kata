@@ -6,7 +6,7 @@ import { copy, interpolate } from '../strings/copy';
 /**
  * What the learner sees when IndexedDB refuses to open: site data
  * blocked for this origin, a hardened privacy profile, some embedded
- * webviews. IProgress is the app's only write path (docs/engineering.md § 4),
+ * webviews. IProgress is the app's only write path (docs/02-engineering.md § 4),
  * so there is no Kata to run without it — but a blank page tells the learner
  * nothing, and the browser is the only place that can fix it.
  *

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "kata:schemas/module-index.schema.json",
   "title": "Kata Module index",
-  "description": "docs/engineering.md \u00a7 3 Content schema \u2014 the machine-checkable twin of the ModuleIndex TypeScript type (\u00a7 2). Validated by scripts/validate-content.mjs against public/content/index.json, locally and in CI before the build. Ordinal contiguity and title verbatim-ness against docs/design.md \u00a7 Curriculum are held by scripts/harness.test.ts, not expressible here.",
+  "description": "docs/02-engineering.md \u00a7 3 Content schema \u2014 the machine-checkable twin of the ModuleIndex TypeScript type (\u00a7 2). Validated by scripts/validate-content.mjs against public/content/index.json, locally and in CI before the build. Ordinal contiguity and title verbatim-ness against docs/01-design.md \u00a7 Curriculum are held by scripts/harness.test.ts, not expressible here.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -93,7 +93,7 @@
             "minimum": 1
           },
           "title": {
-            "description": "Matches docs/design.md \u00a7 Curriculum verbatim.",
+            "description": "Matches docs/01-design.md \u00a7 Curriculum verbatim.",
             "type": "string",
             "minLength": 1
           },

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "kata:schemas/module-content.schema.json",
   "title": "Kata Module content pack",
-  "description": "docs/engineering.md \u00a7 3 Content schema \u2014 the machine-checkable twin of the ModuleContent TypeScript type (\u00a7 2). One file per non-pending Module at public/content/modules/<id>.json, validated by scripts/validate-content.mjs before every deploy. The \u2264 40-line rule on Model Example C# sides is an authoring rule checked in review, not here.",
+  "description": "docs/02-engineering.md \u00a7 3 Content schema \u2014 the machine-checkable twin of the ModuleContent TypeScript type (\u00a7 2). One file per non-pending Module at public/content/modules/<id>.json, validated by scripts/validate-content.mjs before every deploy. The \u2264 40-line rule on Model Example C# sides is an authoring rule checked in review, not here.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -43,7 +43,7 @@
       }
     },
     "exercises": {
-      "description": "0..n Exercise briefs; [] is valid and means the Module only explains. How many a Module carries is an authoring convention (docs/design.md \u00a7 Module anatomy: a Software Design Module ships one refactor and one construct), not a schema rule.",
+      "description": "0..n Exercise briefs; [] is valid and means the Module only explains. How many a Module carries is an authoring convention (docs/01-design.md \u00a7 Module anatomy: a Software Design Module ships one refactor and one construct), not a schema rule.",
       "type": "array",
       "items": {
         "$ref": "#/$defs/exerciseBrief"
@@ -160,12 +160,12 @@
           "pattern": "^q\\d+$"
         },
         "prompt": {
-          "description": "Behaviorally answerable \u2014 countable or doable (docs/design.md \u00a7 Pedagogy).",
+          "description": "Behaviorally answerable \u2014 countable or doable (docs/01-design.md \u00a7 Pedagogy).",
           "type": "string",
           "minLength": 1
         },
         "explanation": {
-          "description": "Optional teaching line, revealed once the reader picks any option and identical whichever one was picked \u2014 never a right/wrong marking. 1\u20133 sentences in the novice voice (docs/design.md \u00a7 Editorial standard).",
+          "description": "Optional teaching line, revealed once the reader picks any option and identical whichever one was picked \u2014 never a right/wrong marking. 1\u20133 sentences in the novice voice (docs/01-design.md \u00a7 Editorial standard).",
           "type": "string",
           "minLength": 1
         },

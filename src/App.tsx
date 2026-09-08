@@ -11,7 +11,7 @@ import { ModuleScreen } from './screens/ModuleScreen';
  * link is always served by index.html and never hits a GitHub Pages 404.
  * Unknown paths fall back to the root route rather than a dead end.
  *
- * Three screens only (docs/design.md): Curriculum at the index route (#10),
+ * Three screens only (docs/01-design.md): Curriculum at the index route (#10),
  * Module (#11), Exercise (#15) — a brief is only reachable through its
  * Module, so the Exercise route carries both ids.
  */

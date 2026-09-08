@@ -6,7 +6,7 @@ labels: ''
 ---
 
 ## Context
-Build-order step (docs/engineering.md § 7) and one sentence of intent.
+Build-order step (docs/02-engineering.md § 7) and one sentence of intent.
 
 ## Scope
 The exact slice: screen, states covered, data source (which Target Interface / ICurriculum / IProgress call).

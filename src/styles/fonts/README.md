@@ -1,7 +1,7 @@
 # Self-hosted Archivo
 
 `styles.css` used to pull Archivo from Google Fonts. Kata is an offline PWA, so
-it may not depend on a third-party origin (`docs/engineering.md` § 1 Stack) —
+it may not depend on a third-party origin (`docs/02-engineering.md` § 1 Stack) —
 the font ships from this folder instead, through the `@font-face` rule at the
 top of `styles.css`.
 
@@ -21,5 +21,5 @@ curl -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
 ```
 
 Latin only, on purpose: every string Kata renders is English
-(`docs/ubiquitous-language.md`), and the `unicode-range` in `styles.css` lets
+(`docs/03-ubiquitous-language.md`), and the `unicode-range` in `styles.css` lets
 the browser fall back to `system-ui` for anything outside it.

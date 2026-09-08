@@ -1,7 +1,7 @@
 // The two Target Interfaces and every shape they exchange.
 //
 // This file is the contract — the one the compiler reads and the one
-// docs/engineering.md § 2 points at. Change it here.
+// docs/02-engineering.md § 2 points at. Change it here.
 
 // ── Ids and scalars ──────────────────────────────────────────────────────
 
@@ -77,7 +77,7 @@ export interface SelfCheckQuestion {
   readonly options: readonly SelfCheckOption[]; // 2–4 radios
   /** Revealed once any option is picked, and the SAME text whichever one was:
    *  it teaches, it never marks an answer right or wrong. 1–3 sentences in the
-   *  novice voice (docs/design.md § Editorial standard). Absent = the question
+   *  novice voice (docs/01-design.md § Editorial standard). Absent = the question
    *  reveals nothing at all. */
   readonly explanation?: string;
 }

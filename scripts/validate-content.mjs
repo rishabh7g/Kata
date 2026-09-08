@@ -2,7 +2,7 @@
 /**
  * Validates authored content JSON against its JSON Schema (draft 2020-12).
  *
- * docs/engineering.md § 3 Content schema: content is static JSON committed to
+ * docs/02-engineering.md § 3 Content schema: content is static JSON committed to
  * the repo and validated by a schema, "locally and in CI **before** the build,
  * so invalid content can never deploy".
  *
@@ -34,7 +34,7 @@ const LOG = join(CHECKS_DIR, 'content.log');
 /** Distinct per failure kind, so a caller can branch without parsing text. */
 const EXIT = { ok: 0, usage: 2, invalid: 3, missing: 4 };
 
-/** The repo layout of docs/engineering.md § 3, in validation order. */
+/** The repo layout of docs/02-engineering.md § 3, in validation order. */
 const REPO_PAIRS = [
   { schema: 'schemas/module-index.schema.json', content: 'public/content/index.json' },
   { schema: 'schemas/module-content.schema.json', content: 'public/content/modules' },
@@ -119,7 +119,7 @@ function formatErrors(errors) {
 
 /**
  * The one index rule draft 2020-12 cannot state: a Module's `categoryId` must
- * name a Category the same file declares (docs/engineering.md § 3). Reference
+ * name a Category the same file declares (docs/02-engineering.md § 3). Reference
  * integrity inside one document is invisible to the schema, so it is checked
  * here rather than in a test — that way a dangling reference fails the same
  * gate locally, in CI, and against the DEPLOYED index in scripts/smoke.sh.
@@ -137,7 +137,7 @@ function danglingCategoryErrors(data) {
 }
 
 /**
- * The two Module-content rules draft 2020-12 cannot state (docs/engineering.md
+ * The two Module-content rules draft 2020-12 cannot state (docs/02-engineering.md
  * § 3): question ids unique within the Module, option values unique within a
  * question. `uniqueItems` compares whole objects, so two options differing
  * only in label slip past it — and a duplicate value makes one radio
@@ -234,7 +234,7 @@ function usage(message) {
   done(EXIT.usage, [
     `CONTENT USAGE ERROR: ${message}`,
     'usage: node scripts/validate-content.mjs [<schema.json> <content-file-or-dir>]',
-    '       no arguments = validate the repo layout (docs/engineering.md § 3)',
+    '       no arguments = validate the repo layout (docs/02-engineering.md § 3)',
   ]);
 }
 

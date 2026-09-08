@@ -65,5 +65,5 @@ nonsense.
   100, well inside the 150-line budget.
 - CI does not run this suite. It collects it (`pytest --collect-only`), which
   is the Python analogue of `dotnet build` for the C# folders — Kata never
-  gates on test execution (docs/engineering.md § 6), and a skeleton that is
+  gates on test execution (docs/02-engineering.md § 6), and a skeleton that is
   red by design could never pass such a gate.

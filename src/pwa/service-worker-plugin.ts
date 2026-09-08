@@ -17,7 +17,7 @@ import type { Plugin } from 'vite';
 const PLACEHOLDER = '__KATA_SW_CONFIG__';
 const SERVICE_WORKER_FILE = 'sw.js';
 
-/** Authored content lives under `public/content/` (docs/engineering.md § 3). */
+/** Authored content lives under `public/content/` (docs/02-engineering.md § 3). */
 const CONTENT_DIR = 'content';
 
 export interface ServiceWorkerConfig {

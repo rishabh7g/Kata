@@ -16,7 +16,7 @@
     "skipLibCheck": true,
     "noEmit": true,
 
-    /* docs/engineering.md § 1 Stack: strict, and no `any` in app code. */
+    /* docs/02-engineering.md § 1 Stack: strict, and no `any` in app code. */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

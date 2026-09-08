@@ -45,7 +45,7 @@ export function createCurriculum(content: ContentSource): ICurriculum {
           index.categories.map((category) => [category.id, category]),
         );
         // A Module naming an undeclared Category is a content error the schema
-        // rejects before a deploy (docs/engineering.md § 3); at runtime it is
+        // rejects before a deploy (docs/02-engineering.md § 3); at runtime it is
         // simply not placed, so the shelf shows what it can rather than
         // throwing a screen away.
         const placed: PlacedModule[] = [];

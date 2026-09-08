@@ -1,4 +1,4 @@
-// IProgress specs — written from docs/engineering.md § "IProgress — behaviour"
+// IProgress specs — written from docs/02-engineering.md § "IProgress — behaviour"
 // and § 4 "Storage (IndexedDB)" (Module 0 discipline, § 8). fake-indexeddb is
 // the doc's prescribed test environment; a fresh IDBFactory per test is the
 // "clear site data" reset.

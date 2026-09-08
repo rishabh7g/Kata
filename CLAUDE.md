@@ -8,7 +8,7 @@ backend, no code execution. React 19 + react-router 7 on Vite 8, TypeScript
 strict, vitest. The only thing stored is the reader's Self-Check
 answers, in this browser's IndexedDB. Node 24. Served from GitHub Pages at
 <https://rishabh7g.github.io/Kata/>, under base path `/Kata/`. Intent and
-architecture: `docs/design.md`, `docs/engineering.md`. Cross-repo rules:
+architecture: `docs/01-design.md`, `docs/02-engineering.md`. Cross-repo rules:
 [`docs/repo-standards.md`](https://github.com/rishabh7g/claude-setup/blob/main/docs/repo-standards.md).
 
 ## How to run it
@@ -73,7 +73,7 @@ exit-code table in the script's own header).
 - **`src/components/__snapshots__/Markdown.concept-pages.html` is behaviour, not a
   fixture** — every authored Concept Page's rendered HTML. Re-pin it on purpose
   with `npx vitest run -u`; an unexplained diff is a parser change, not noise.
-- **`docs/simplification-plan.md` is a plan record, not the present state.** It
+- **`docs/04-simplification-plan.md` is a plan record, not the present state.** It
   still names DevGym, `design/` and other things already deleted. The naming
   question is closed: Kata.
 - **`npm ls ajv` shows two, and only one of them reaches `fast-uri`.** The
