@@ -21,12 +21,11 @@
 #                  analogue of `dotnet build`: it proves the imports resolve
 #                  and the tests are discoverable without running them.
 #
-# Output contract (scripts/README.md), adapted per #22: one `ok <folder>` line
-# per Exercise folder plus a final count; ZERO folders is an explicit pass
-# ("0 Test Suites (none committed yet)"). Full dotnet/pytest output goes to
-# .checks/exercises.log (uploaded as a CI artifact, never inlined in the job
-# log); on failure print the failing folder, a ~20-line error slice, and the
-# log path.
+# Output contract, adapted per #22: one `ok <folder>` line per Exercise folder
+# plus a final count; ZERO folders is an explicit pass ("0 Test Suites (none
+# committed yet)"). Full dotnet/pytest output goes to .checks/exercises.log
+# (uploaded as a CI artifact, never inlined in the job log); on failure print
+# the failing folder, a ~20-line error slice, and the log path.
 #
 # Exit codes: 0 ok (including zero folders) · 2 usage/precondition ·
 #             3 one or more folders failed to build or collect
