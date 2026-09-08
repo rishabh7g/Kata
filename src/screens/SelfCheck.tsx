@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useProgress } from '../app/ProgressContext';
-import { useAsyncValue } from '../app/useAsyncValue';
+import { useAsyncValue } from './useAsyncValue';
 import type {
   SelfCheckOption as SelfCheckOptionData,
   SelfCheckQuestion,

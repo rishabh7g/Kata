@@ -63,7 +63,7 @@ exit-code table in the script's own header).
   look is now a precondition checked before discovery, discovery itself is one
   POSIX `find` whose status is checked, and `scripts/build-exercises.test.ts`
   pins every case.
-- **`src/app/__snapshots__/Markdown.concept-pages.html` is behaviour, not a
+- **`src/components/__snapshots__/Markdown.concept-pages.html` is behaviour, not a
   fixture** — every authored Concept Page's rendered HTML. Re-pin it on purpose
   with `npx vitest run -u`; an unexplained diff is a parser change, not noise.
 - **`docs/simplification-plan.md` is a plan record, not the present state.** It

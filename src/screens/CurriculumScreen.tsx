@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
-import { ArrowRightIcon } from '../app/ArrowRightIcon';
-import { ordinalLabel } from '../app/ordinalLabel';
-import { useAsyncValue } from '../app/useAsyncValue';
-import { useCategories } from '../app/useCategories';
+import { ArrowRightIcon } from '../components/ArrowRightIcon';
+import { ordinalLabel } from './ordinalLabel';
+import { useAsyncValue } from './useAsyncValue';
+import { useCategories } from './useCategories';
 import { useCurriculum } from '../app/CurriculumContext';
 import { useProgress } from '../app/ProgressContext';
-import { useDocumentTitle } from '../app/useDocumentTitle';
-import { useModuleSummaries } from '../app/useModuleSummaries';
+import { useDocumentTitle } from '../shell/useDocumentTitle';
+import { useModuleSummaries } from './useModuleSummaries';
 import type { Category, ModuleId, ModuleSummary } from '../curriculum';
 import type { IProgress } from '../progress';
 import { copy } from '../strings/copy';

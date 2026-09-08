@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { AppShell } from './app/AppShell';
+import { AppShell } from './shell/AppShell';
 import { CurriculumScreen } from './screens/CurriculumScreen';
 import { ExerciseScreen } from './screens/ExerciseScreen';
 import { ModuleScreen } from './screens/ModuleScreen';
