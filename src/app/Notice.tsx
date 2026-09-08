@@ -15,13 +15,7 @@ import type { ReactNode } from 'react';
  * A notice raised inside a screen that already has an `h1` would need a
  * level prop; nothing does that today.
  */
-export function Notice({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+export function Notice({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="app-notice" role="alert">
       <h1 className="app-notice-title">{title}</h1>

@@ -1,10 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import {
-  injectConfig,
-  precacheUrls,
-  readServiceWorkerTemplate,
-} from './service-worker-plugin';
+import { injectConfig, precacheUrls, readServiceWorkerTemplate } from './service-worker-plugin';
 
 const BASE = '/Kata/';
 
@@ -39,11 +35,7 @@ describe('precacheUrls', () => {
   });
 
   it('leaves the authored content JSON out — it is fetched network-first', () => {
-    const urls = precacheUrls(BASE, [
-      ...built,
-      'content/index.json',
-      'content/modules/m01.json',
-    ]);
+    const urls = precacheUrls(BASE, [...built, 'content/index.json', 'content/modules/m01.json']);
 
     expect(urls.filter((url) => url.includes('/content/'))).toEqual([]);
   });
@@ -70,8 +62,6 @@ describe('injectConfig', () => {
   });
 
   it('fails the build if the worker loses its placeholder', () => {
-    expect(() => injectConfig('const CONFIG = {};', config)).toThrow(
-      /__KATA_SW_CONFIG__/,
-    );
+    expect(() => injectConfig('const CONFIG = {};', config)).toThrow(/__KATA_SW_CONFIG__/);
   });
 });

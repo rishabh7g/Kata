@@ -151,9 +151,7 @@ function encodePng(pixels, size) {
 const mark = readMark(readFileSync(markPath, 'utf8'));
 // The one definition of the ground colour is the custom property the app
 // paints with; the icons take it from there rather than from a second copy.
-const groundColour = /--color-bg:\s*(#[0-9a-fA-F]{3,8})/.exec(
-  readFileSync(stylesPath, 'utf8'),
-);
+const groundColour = /--color-bg:\s*(#[0-9a-fA-F]{3,8})/.exec(readFileSync(stylesPath, 'utf8'));
 if (groundColour === null) {
   throw new Error('src/styles/base.css defines no --color-bg');
 }

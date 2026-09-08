@@ -1,0 +1,22 @@
+# Prettier owns the source tree — TypeScript, CSS, HTML and the app's own JSON.
+
+dist/
+node_modules/
+package-lock.json
+
+# public/ and schemas/ are authored content and the JSON Schema that validates
+# it; exercises/ is the .NET exercise solutions, formatted by dotnet's tooling.
+public/
+schemas/
+exercises/
+
+# src/app/__snapshots__/ is written by vitest's toMatchFileSnapshot, not by a
+# person. Reformatting it would make the file differ from what the renderer
+# emits and fail src/app/Markdown.test.tsx on the next run.
+src/app/__snapshots__/
+
+# The markdown is hand-formatted prose and it stays that way. Measured, not
+# assumed: prettier pads the tables in docs/engineering.md § 1 and § 6 out to
+# 400-plus columns, which is unreadable in an editor and unreviewable in a diff.
+# rung/.prettierignore excludes markdown for the same reason.
+*.md

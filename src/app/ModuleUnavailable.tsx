@@ -39,14 +39,11 @@ export function ModuleUnavailable({
       </Link>
       <Notice title={copy.notice.moduleUnavailable.title}>
         <p>
-          {copy.notice.moduleUnavailable.body1Before}{' '}
-          <code>content/modules/{moduleId}.json</code>
+          {copy.notice.moduleUnavailable.body1Before} <code>content/modules/{moduleId}.json</code>
           {copy.notice.moduleUnavailable.body1After}
         </p>
         <p>{copy.notice.moduleUnavailable.body2}</p>
-        {detail !== null && (
-          <p className="text-muted app-notice-detail">{detail}</p>
-        )}
+        {detail !== null && <p className="text-muted app-notice-detail">{detail}</p>}
         <div className="app-notice-actions">
           <button type="button" className="btn btn-ghost" onClick={onRetry}>
             {copy.notice.moduleUnavailable.retry}

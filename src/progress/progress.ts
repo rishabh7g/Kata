@@ -35,10 +35,8 @@ function openDatabase(name: string): Promise<IDBDatabase> {
 /** One IDB request as a promise. Absence is always null, never undefined. */
 function read<T>(request: IDBRequest): Promise<T | null> {
   return new Promise((resolve, reject) => {
-    request.onsuccess = () =>
-      resolve((request.result as T | undefined) ?? null);
-    request.onerror = () =>
-      reject(request.error ?? new Error('IndexedDB read failed'));
+    request.onsuccess = () => resolve((request.result as T | undefined) ?? null);
+    request.onerror = () => reject(request.error ?? new Error('IndexedDB read failed'));
   });
 }
 
@@ -46,10 +44,8 @@ function read<T>(request: IDBRequest): Promise<T | null> {
 function committed(tx: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve();
-    tx.onabort = () =>
-      reject(tx.error ?? new Error('IndexedDB transaction aborted'));
-    tx.onerror = () =>
-      reject(tx.error ?? new Error('IndexedDB transaction failed'));
+    tx.onabort = () => reject(tx.error ?? new Error('IndexedDB transaction aborted'));
+    tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed'));
   });
 }
 
@@ -64,10 +60,7 @@ export async function createProgress(): Promise<IProgress> {
   indexedDB.deleteDatabase(ABANDONED_DATABASE);
 
   return {
-    async saveSelfCheckAnswers(
-      moduleId: ModuleId,
-      answers: SelfCheckAnswers,
-    ): Promise<void> {
+    async saveSelfCheckAnswers(moduleId: ModuleId, answers: SelfCheckAnswers): Promise<void> {
       // Replace, last write wins. A partial map is the normal case: the panel
       // autosaves every pick, and a reader may answer one question or none.
       const record: ModuleSelfCheck = {
@@ -84,6 +77,5 @@ export async function createProgress(): Promise<IProgress> {
       const tx = db.transaction(ANSWERS, 'readonly');
       return read<ModuleSelfCheck>(tx.objectStore(ANSWERS).get(moduleId));
     },
-
   };
 }

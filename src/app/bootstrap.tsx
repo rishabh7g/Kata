@@ -18,10 +18,7 @@ import { StandaloneZoomLock } from '../pwa/StandaloneZoomLock';
  * so nothing renders until it either opened or failed. One render either way,
  * so a working IndexedDB never flashes anything first.
  */
-export async function startKata(
-  container: HTMLElement,
-  baseUrl: string,
-): Promise<void> {
+export async function startKata(container: HTMLElement, baseUrl: string): Promise<void> {
   const root = createRoot(container);
 
   // The one real IProgress: the `kata` IndexedDB database. The

@@ -32,9 +32,7 @@ export function ProgressUnavailable({ error }: { error: unknown }) {
           <Notice title={copy.notice.progressUnavailable.title}>
             <p>{interpolate(copy.notice.progressUnavailable.body1, { origin })}</p>
             <p>{interpolate(copy.notice.progressUnavailable.body2, { origin })}</p>
-            {detail !== null && (
-              <p className="text-muted app-notice-detail">{detail}</p>
-            )}
+            {detail !== null && <p className="text-muted app-notice-detail">{detail}</p>}
           </Notice>
         </div>
       </main>

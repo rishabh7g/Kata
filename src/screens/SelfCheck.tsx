@@ -63,9 +63,7 @@ export function SelfCheck({
       <h2 className="module-section-label">{copy.selfCheck.heading}</h2>
       {/* What a Self-Check is: without it the reader meets a new term as a
           bare label, and nothing else says the questions are optional. */}
-      <p className="text-muted self-check-definition">
-        {copy.selfCheck.definition}
-      </p>
+      <p className="text-muted self-check-definition">{copy.selfCheck.definition}</p>
       {questions.map((question) => (
         <SelfCheckItem
           key={question.id}
@@ -84,10 +82,7 @@ export function SelfCheck({
  * IndexedDB refusing to open is the only real failure, and every read surface
  * on the screen still works without the panel.
  */
-async function loadStoredPicks(
-  progress: IProgress,
-  moduleId: string,
-): Promise<SelfCheckAnswers> {
+async function loadStoredPicks(progress: IProgress, moduleId: string): Promise<SelfCheckAnswers> {
   const record = await progress.getSelfCheckAnswers(moduleId);
   return record?.answers ?? {};
 }
@@ -135,11 +130,7 @@ function SelfCheckItem({
         ))}
       </div>
       {hasExplanation && (
-        <p
-          className="text-muted self-check-explanation"
-          id={explanationId}
-          aria-live="polite"
-        >
+        <p className="text-muted self-check-explanation" id={explanationId} aria-live="polite">
           {answer === undefined ? '' : question.explanation}
         </p>
       )}
@@ -161,13 +152,7 @@ function SelfCheckOption({
 }) {
   return (
     <label className="radio">
-      <input
-        type="radio"
-        name={name}
-        value={option.value}
-        checked={checked}
-        onChange={onPick}
-      />
+      <input type="radio" name={name} value={option.value} checked={checked} onChange={onPick} />
       <span className="dot" />
       <span>{option.label}</span>
     </label>

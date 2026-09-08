@@ -11,7 +11,5 @@ export function describeError(error: unknown): string | null {
   if (typeof error !== 'object' || error === null) return null;
   const { name, message } = error as { name?: unknown; message?: unknown };
   if (typeof name !== 'string' || name === '') return null;
-  return typeof message === 'string' && message !== ''
-    ? `${name}: ${message}`
-    : name;
+  return typeof message === 'string' && message !== '' ? `${name}: ${message}` : name;
 }

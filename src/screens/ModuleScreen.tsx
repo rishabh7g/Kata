@@ -22,11 +22,7 @@ import { SelfCheck } from './SelfCheck';
  */
 export function ModuleScreen() {
   const { id } = useParams();
-  return (
-    <ModuleGate id={id ?? ''}>
-      {(module) => <ModuleView module={module} />}
-    </ModuleGate>
-  );
+  return <ModuleGate id={id ?? ''}>{(module) => <ModuleView module={module} />}</ModuleGate>;
 }
 
 function ModuleView({ module }: { module: ModuleDetail }) {
@@ -59,20 +55,14 @@ function ModuleView({ module }: { module: ModuleDetail }) {
             which is where "answer them as you read" says it is. */}
         {module.selfCheckQuestions.length > 0 && (
           <aside className="module-aside">
-            <SelfCheck
-              key={module.id}
-              moduleId={module.id}
-              questions={module.selfCheckQuestions}
-            />
+            <SelfCheck key={module.id} moduleId={module.id} questions={module.selfCheckQuestions} />
           </aside>
         )}
         <div className="module-sections">
           {module.modelExamples.length > 0 && (
             <section>
               <div className="hr module-rule" />
-              <h2 className="module-section-label">
-                {copy.module.sectionLabel.modelExamples}
-              </h2>
+              <h2 className="module-section-label">{copy.module.sectionLabel.modelExamples}</h2>
               {module.modelExamples.map((example, index) => (
                 <ModelExampleFigure key={index} example={example} />
               ))}
@@ -94,16 +84,10 @@ function ExercisesSection({ module }: { module: ModuleDetail }) {
   return (
     <section>
       <div className="hr module-rule" />
-      <h2 className="module-section-label">
-        {copy.module.sectionLabel.exercises}
-      </h2>
+      <h2 className="module-section-label">{copy.module.sectionLabel.exercises}</h2>
       <div className="module-exercises">
         {module.exercises.map((exercise) => (
-          <ExerciseCard
-            key={exercise.id}
-            moduleId={module.id}
-            exercise={exercise}
-          />
+          <ExerciseCard key={exercise.id} moduleId={module.id} exercise={exercise} />
         ))}
       </div>
     </section>
@@ -114,22 +98,14 @@ function ExercisesSection({ module }: { module: ModuleDetail }) {
  * One Exercise card, the whole of it a link. The route carries both ids
  * because a brief is only reachable through its Module.
  */
-function ExerciseCard({
-  moduleId,
-  exercise,
-}: {
-  moduleId: string;
-  exercise: ExerciseBrief;
-}) {
+function ExerciseCard({ moduleId, exercise }: { moduleId: string; exercise: ExerciseBrief }) {
   return (
     <Link
       to={`/modules/${moduleId}/exercises/${exercise.id}`}
       className="card module-exercise-card"
     >
       <span className="tag tag-outline">
-        {exercise.type === 'refactor'
-          ? copy.exercise.tagRefactor
-          : copy.exercise.tagConstruct}
+        {exercise.type === 'refactor' ? copy.exercise.tagRefactor : copy.exercise.tagConstruct}
       </span>
       <div className="module-exercise-text">
         <div className="module-exercise-title">{exercise.title}</div>

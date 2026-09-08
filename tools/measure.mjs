@@ -49,9 +49,7 @@ let chromium;
 try {
   ({ chromium } = await loadPlaywright());
 } catch {
-  console.error(
-    'tools/measure.mjs needs Playwright: npm i -g playwright, then re-run.',
-  );
+  console.error('tools/measure.mjs needs Playwright: npm i -g playwright, then re-run.');
   process.exit(2);
 }
 
@@ -73,17 +71,14 @@ try {
         // the furthest bottom edge any element reaches.
         const bottom = Math.max(
           ...Array.from(document.querySelectorAll('body *')).map(
-            (element) =>
-              element.getBoundingClientRect().bottom + window.scrollY,
+            (element) => element.getBoundingClientRect().bottom + window.scrollY,
           ),
         );
         const tops = {};
         for (const [label, selector] of Object.entries(anchors)) {
           const element = document.querySelector(selector);
           if (element !== null) {
-            tops[label] = Math.round(
-              element.getBoundingClientRect().top + window.scrollY,
-            );
+            tops[label] = Math.round(element.getBoundingClientRect().top + window.scrollY);
           }
         }
         return {

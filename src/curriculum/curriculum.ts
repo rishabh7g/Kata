@@ -56,15 +56,12 @@ export function createCurriculum(content: ContentSource): ICurriculum {
         // Category ordinal first, then the Module's ordinal within it: the
         // Curriculum reads shelf by shelf, in the order the data gives.
         placed.sort(
-          (a, b) =>
-            a.category.ordinal - b.category.ordinal || a.entry.ordinal - b.entry.ordinal,
+          (a, b) => a.category.ordinal - b.category.ordinal || a.entry.ordinal - b.entry.ordinal,
         );
         // The shelves themselves, in their own ordinal order — what the
         // Curriculum's Category headings read. Sorted here, from a
         // copy, so no caller depends on the authored file order either.
-        const shelves = [...index.categories].sort(
-          (a, b) => a.ordinal - b.ordinal,
-        );
+        const shelves = [...index.categories].sort((a, b) => a.ordinal - b.ordinal);
         return { categories: shelves, modules: placed };
       })
       .catch((error: unknown) => {

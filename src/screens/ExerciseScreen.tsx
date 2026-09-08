@@ -19,24 +19,14 @@ export function ExerciseScreen() {
   const { id, exerciseId } = useParams();
   return (
     <ModuleGate id={id ?? ''}>
-      {(module) => (
-        <ExerciseView module={module} exerciseId={exerciseId ?? ''} />
-      )}
+      {(module) => <ExerciseView module={module} exerciseId={exerciseId ?? ''} />}
     </ModuleGate>
   );
 }
 
-function ExerciseView({
-  module,
-  exerciseId,
-}: {
-  module: ModuleDetail;
-  exerciseId: string;
-}) {
+function ExerciseView({ module, exerciseId }: { module: ModuleDetail; exerciseId: string }) {
   const exercise = module.exercises.find((brief) => brief.id === exerciseId);
-  useDocumentTitle(
-    exercise === undefined ? null : `${exercise.id} ${exercise.title}`,
-  );
+  useDocumentTitle(exercise === undefined ? null : `${exercise.id} ${exercise.title}`);
 
   // Unknown brief id, or a Module that ships none: back to the owning Module,
   // mirroring the gate's unknown-Module fallback.
@@ -60,9 +50,7 @@ function ExerciseView({
         </p>
         <h1 className="exercise-title">{exercise.title}</h1>
         <span className="tag tag-outline">
-          {exercise.type === 'refactor'
-            ? copy.exercise.tagRefactor
-            : copy.exercise.tagConstruct}
+          {exercise.type === 'refactor' ? copy.exercise.tagRefactor : copy.exercise.tagConstruct}
         </span>
       </header>
       <section>
@@ -92,9 +80,7 @@ function ExerciseView({
         </div>
         <TargetInterfaceDefinition />
         {/* Display-only — never a textarea, never editable. */}
-        <pre className="exercise-interface-code">
-          {exercise.targetInterfaceCode}
-        </pre>
+        <pre className="exercise-interface-code">{exercise.targetInterfaceCode}</pre>
       </section>
       <div className="hr exercise-rule" />
       <PracticeMaterial exercise={exercise} language={module.language} />

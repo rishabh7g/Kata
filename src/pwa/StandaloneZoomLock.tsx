@@ -28,9 +28,7 @@ function syncViewport(meta: HTMLMetaElement, standalone: boolean): void {
 
 export function StandaloneZoomLock(): null {
   useEffect(() => {
-    const meta = document.querySelector<HTMLMetaElement>(
-      'meta[name="viewport"]',
-    );
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
     if (!meta) return;
 
     const query = window.matchMedia('(display-mode: standalone)');

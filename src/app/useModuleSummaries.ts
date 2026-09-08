@@ -13,9 +13,7 @@ import { useAsyncValue } from './useAsyncValue';
  * whether its list is still current. A failed read only happens on a
  * first-ever visit with no network, and there is nothing sensible to render.
  */
-export function useModuleSummaries(
-  curriculum: ICurriculum,
-): readonly ModuleSummary[] | null {
+export function useModuleSummaries(curriculum: ICurriculum): readonly ModuleSummary[] | null {
   const { key: locationKey } = useLocation();
   return useAsyncValue(
     () => curriculum.getModules(),

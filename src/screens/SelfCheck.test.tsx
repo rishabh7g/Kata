@@ -11,8 +11,7 @@ import type { IProgress, ModuleSelfCheck, SelfCheckAnswers } from '../progress';
 import { SelfCheck } from './SelfCheck';
 
 // React's act() refuses to run outside an environment that declares itself.
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
-  true;
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const questions: readonly SelfCheckQuestion[] = [
   {

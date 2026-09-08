@@ -38,7 +38,8 @@
 /* Needed for .app-shell's `height: 100%` fallback line to mean anything —
    percentage heights resolve against the containing block's own height,
    which is otherwise auto all the way up (#104). */
-html, body {
+html,
+body {
   height: 100%;
 }
 

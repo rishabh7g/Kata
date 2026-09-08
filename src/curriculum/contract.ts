@@ -90,20 +90,14 @@ export interface ModuleContent {
   readonly conceptPageMarkdown: string;
   readonly modelExamples: readonly ModelExample[]; // 2–3
   readonly exercises: readonly ExerciseBrief[]; // 0..n; [] = explains only
-  readonly selfCheckQuestions: readonly [
-    SelfCheckQuestion,
-    SelfCheckQuestion,
-    SelfCheckQuestion,
-  ]; // exactly 3
+  readonly selfCheckQuestions: readonly [SelfCheckQuestion, SelfCheckQuestion, SelfCheckQuestion]; // exactly 3
 }
 
 // ── Reader answers (the only data Kata ever persists) ────────────────────
 
 /** A Module's Self-Check picks: one option value per question id. Always
  *  partial — none, some, or all three answered are equally normal. */
-export type SelfCheckAnswers = Readonly<
-  Partial<Record<SelfCheckQuestionId, string>>
->;
+export type SelfCheckAnswers = Readonly<Partial<Record<SelfCheckQuestionId, string>>>;
 
 /** One Module's stored Self-Check answers; at most one record per Module. */
 export interface ModuleSelfCheck {
@@ -157,14 +151,9 @@ export declare function createCurriculum(content: ContentSource): ICurriculum;
 
 export interface IProgress {
   /** Autosave of a Module's Self-Check picks; replaces what was stored. */
-  saveSelfCheckAnswers(
-    moduleId: ModuleId,
-    answers: SelfCheckAnswers,
-  ): Promise<void>;
+  saveSelfCheckAnswers(moduleId: ModuleId, answers: SelfCheckAnswers): Promise<void>;
   /** One Module's stored answers; null when that Module has none. */
   getSelfCheckAnswers(moduleId: ModuleId): Promise<ModuleSelfCheck | null>;
 }
 
-export declare function createProgress(
-  databaseName?: string,
-): Promise<IProgress>;
+export declare function createProgress(databaseName?: string): Promise<IProgress>;
