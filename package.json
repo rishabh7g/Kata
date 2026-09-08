@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "description": "Kata — a read-only, offline-capable PWA for learning software design fundamentals",
+  "engines": {
+    "node": "^22.22.2 || >=24.15.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && node tools/strings-check.ts && vite build",
