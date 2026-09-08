@@ -3,7 +3,7 @@ dist/
 build/
 coverage/
 *.log
-# scripts/README.md: transcripts from the check scripts
+# scripts/build-exercises.sh, scripts/validate-content.mjs: their transcripts
 .checks/
 # scripts/verify.sh: one log per stage, wiped at the start of every run
 .verify/

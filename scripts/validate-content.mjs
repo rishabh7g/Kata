@@ -18,9 +18,9 @@
  * path below only fires if those files ever go missing — it never pretends to
  * have passed.
  *
- * Output contract (scripts/README.md): one line on success, full transcript to
- * .checks/content.log, and on failure only the offending files with their
- * errors plus the transcript path.
+ * Output contract: one line on success, full transcript to .checks/content.log,
+ * and on failure only the offending files with their errors plus the transcript
+ * path.
  */
 import { mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';

@@ -134,8 +134,9 @@ behind it.
 - Every Module is authored and the Agentic AI Category is explain-only by design, so the
   authoring generators have no next customer. Delete `draft-concept.mjs`,
   `draft-exercise.mjs`, `scripts/lib/`, `scripts/fixtures/`, their tests, `smoke.sh`
-  (693 lines, 23 exit codes, five of them one-per-Module), `build-exercises.sh`,
-  `test-scoped.sh`, `scripts/README.md`.
+  (693 lines, 23 exit codes, five of them one-per-Module), `test-scoped.sh`, and the
+  scripts directory's own README — every surviving script states its own output contract
+  in its header instead (#236).
 - Keep `validate-content.mjs` (the content gate) and `generate-icons.mjs` (committed
   output). Keep `build-exercises.sh`, run by hand: it is the one check the Exercise folders have.
 - Move `sizeBudgetLoc ≤ 300` from the deleted generator into `validate-content.mjs`, as a
